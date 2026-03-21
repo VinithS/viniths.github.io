@@ -1,23 +1,109 @@
+---
+import '../styles/global.css';
+const { title = "Eden's Retro Space" } = Astro.props;
+---
+
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
-	</head>
-	<body>
-		<slot />
-	</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+  </head>
+  <body>
+    <!-- The Desktop Area -->
+    <main class="desktop">
+      <slot />
+    </main>
+
+    <!-- The Windows XP Taskbar -->
+    <footer class="taskbar">
+      <button class="start-btn">
+        <span class="start-logo">🪟</span>
+        Start
+      </button>
+      <div class="taskbar-divider"></div>
+      <div class="taskbar-programs">
+        <!-- Open programs will go here theoretically -->
+      </div>
+      <div class="taskbar-tray">
+        <span class="clock">12:00 PM</span>
+      </div>
+    </footer>
+  </body>
 </html>
 
 <style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
+  .desktop {
+    flex-grow: 1;
+    position: relative;
+    padding: 20px;
+  }
+
+  .taskbar {
+    height: 35px;
+    background: linear-gradient(to bottom, #245edb 0%, #3f8cf3 9%, #245edb 18%, #245edb 92%, #333 100%);
+    display: flex;
+    align-items: center;
+    padding: 0;
+    box-shadow: 0 -1px 3px rgba(0,0,0,0.3);
+    z-index: 999;
+  }
+
+  .start-btn {
+    background: linear-gradient(to bottom, #419b38 0%, #358d2e 9%, #318a2b 18%, #2d8227 92%, #226b1d 100%);
+    border: none;
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+    font-style: italic;
+    height: 100%;
+    padding: 0 15px 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    border-radius: 0 15px 15px 0;
+    cursor: pointer;
+    box-shadow: 2px 0 3px rgba(0,0,0,0.3);
+  }
+  
+  .start-btn:active {
+    background: #1f6b1a;
+  }
+
+  .start-logo {
+    font-style: normal;
+    font-size: 18px;
+  }
+
+  .taskbar-divider {
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.3), transparent);
+    margin: 0 10px;
+  }
+
+  .taskbar-programs {
+    flex-grow: 1;
+    display: flex;
+    gap: 2px;
+  }
+
+  .taskbar-tray {
+    background: linear-gradient(to bottom, #0f8ddd, #096caf);
+    border-left: 1px solid #144983;
+    height: 100%;
+    padding: 0 15px;
+    display: flex;
+    align-items: center;
+    color: white;
+    font-size: 12px;
+    box-shadow: inset 1px 0 2px rgba(255,255,255,0.2);
+  }
+  
+  .clock {
+    margin-left: 10px;
+  }
 </style>
