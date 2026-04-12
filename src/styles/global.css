@@ -1,116 +1,89 @@
-/* 
-  Global Retro Theme Variables
-  Windows XP and Handheld Console Vibes 
+/*
+  Global Theme — Dark Minimal Retro
+  Inspired by RetroCatalog dark mode
 */
 
 :root {
-  /* Windows XP Colors */
-  --xp-bg-blue: #3A6EA5; /* Classic desktop background */
-  --xp-window-bg: #ece9d8;
-  --xp-titlebar-start: #0058e6;
-  --xp-titlebar-end: #3a93ff;
-  --xp-titlebar-text: #ffffff;
-  --xp-frame: #003399;
-  --xp-taskbar: #245edb;
-  --xp-start-button: #318a2b;
-  --xp-start-text: #ffffff;
-  
-  /* Handheld Console Colors (Gameboy / Retro LCD) */
-  --lcd-bg: #8bac0f;
-  --lcd-dark: #0f380f;
-  --lcd-light: #9bbc0f;
-  --lcd-mid: #306230;
+  /* Core palette */
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-surface: #1c2128;
+  --bg-hover: #21262d;
+
+  /* Borders */
+  --border-default: #30363d;
+  --border-subtle: #21262d;
+
+  /* Text */
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+
+  /* Accent — muted teal */
+  --accent: #39d353;
+  --accent-muted: #238636;
+  --accent-subtle: rgba(57, 211, 83, 0.15);
 
   /* Fonts */
-  --font-xp: 'Tahoma', 'MS Sans Serif', sans-serif;
-  --font-lcd: 'Courier New', Courier, monospace; /* Can be replaced with a pixel font later */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
 
-  /* Utility Variables */
-  --border-radius-window: 8px 8px 0 0;
-  --shadow-window: 2px 2px 10px rgba(0, 0, 0, 0.5);
+  /* Sizing */
+  --max-width: 1080px;
+  --nav-height: 56px;
+  --radius: 6px;
 }
 
-/* Reset and Global Styles */
-* {
+/* Reset */
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+html {
+  color-scheme: dark;
+}
+
 body {
-  font-family: var(--font-xp);
-  background-color: var(--xp-bg-blue);
-  color: #000;
+  font-family: var(--font-sans);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden; /* Desktop vibe */
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Base XP Window Container */
-.xp-window {
-  background-color: var(--xp-window-bg);
-  border: 3px solid var(--xp-frame);
-  border-radius: var(--border-radius-window);
-  box-shadow: var(--shadow-window);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.15s ease;
 }
 
-.xp-titlebar {
-  background: linear-gradient(to right, var(--xp-titlebar-start), var(--xp-titlebar-end));
-  color: var(--xp-titlebar-text);
-  padding: 4px 8px;
-  font-weight: bold;
-  font-size: 14px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid var(--xp-frame);
+a:hover {
+  color: var(--text-primary);
 }
 
-.xp-titlebar-controls {
-  display: flex;
-  gap: 2px;
+/* Reusable card surface */
+.card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius);
 }
 
-.xp-titlebar-btn {
-  width: 22px;
-  height: 22px;
-  background-color: #e8e8e5;
-  border: 1px solid #fff;
-  border-right-color: #8c8a8c;
-  border-bottom-color: #8c8a8c;
-  border-radius: 3px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  font-family: Arial, sans-serif;
-  cursor: pointer;
+/* Subtle badge/tag */
+.tag {
+  display: inline-block;
+  padding: 2px 10px;
+  font-size: 12px;
+  border-radius: 999px;
+  background: var(--accent-subtle);
+  color: var(--accent);
+  border: 1px solid var(--accent-muted);
 }
 
-.xp-titlebar-btn.close {
-  background-color: #e04343;
-  color: white;
-}
-
-.xp-content {
-  padding: 16px;
-  background-color: white;
-  margin: 4px;
-  border: 1px inset #8c8a8c;
-  flex-grow: 1;
-  overflow-y: auto;
-}
-
-/* LCD Screen Vibe Element */
-.lcd-screen {
-  background-color: var(--lcd-bg);
-  color: var(--lcd-dark);
-  border: 4px solid var(--lcd-dark);
-  font-family: var(--font-lcd);
-  padding: 10px;
-  box-shadow: inset 2px 2px 5px rgba(0,0,0,0.3);
+/* Monospace accent text */
+.mono {
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
 }

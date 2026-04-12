@@ -1,6 +1,6 @@
 ---
 import '../styles/global.css';
-const { title = "Eden's Retro Space" } = Astro.props;
+const { title = "Eden" } = Astro.props;
 ---
 
 <!doctype html>
@@ -13,97 +13,92 @@ const { title = "Eden's Retro Space" } = Astro.props;
     <title>{title}</title>
   </head>
   <body>
-    <!-- The Desktop Area -->
-    <main class="desktop">
+    <nav class="nav">
+      <div class="nav-inner">
+        <a href="/" class="nav-logo">
+          <span class="logo-icon">&#9670;</span>
+          Eden
+        </a>
+        <div class="nav-links">
+          <a href="/">Home</a>
+          <a href="/blog">Blog</a>
+          <a href="/photos">Photos</a>
+          <a href="/about">About</a>
+        </div>
+      </div>
+    </nav>
+
+    <main class="main">
       <slot />
     </main>
 
-    <!-- The Windows XP Taskbar -->
-    <footer class="taskbar">
-      <button class="start-btn">
-        <span class="start-logo">🪟</span>
-        Start
-      </button>
-      <div class="taskbar-divider"></div>
-      <div class="taskbar-programs">
-        <!-- Open programs will go here theoretically -->
-      </div>
-      <div class="taskbar-tray">
-        <span class="clock">12:00 PM</span>
-      </div>
+    <footer class="footer">
+      <span class="mono">&copy; 2026 Eden</span>
     </footer>
   </body>
 </html>
 
 <style>
-  .desktop {
-    flex-grow: 1;
-    position: relative;
-    padding: 20px;
+  .nav {
+    height: var(--nav-height);
+    border-bottom: 1px solid var(--border-default);
+    background: var(--bg-secondary);
+    position: sticky;
+    top: 0;
+    z-index: 100;
   }
 
-  .taskbar {
-    height: 35px;
-    background: linear-gradient(to bottom, #245edb 0%, #3f8cf3 9%, #245edb 18%, #245edb 92%, #333 100%);
-    display: flex;
-    align-items: center;
-    padding: 0;
-    box-shadow: 0 -1px 3px rgba(0,0,0,0.3);
-    z-index: 999;
-  }
-
-  .start-btn {
-    background: linear-gradient(to bottom, #419b38 0%, #358d2e 9%, #318a2b 18%, #2d8227 92%, #226b1d 100%);
-    border: none;
-    color: white;
-    font-weight: bold;
-    font-size: 16px;
-    font-style: italic;
+  .nav-inner {
+    max-width: var(--max-width);
+    margin: 0 auto;
     height: 100%;
-    padding: 0 15px 0 10px;
     display: flex;
     align-items: center;
-    gap: 5px;
-    border-radius: 0 15px 15px 0;
-    cursor: pointer;
-    box-shadow: 2px 0 3px rgba(0,0,0,0.3);
-  }
-  
-  .start-btn:active {
-    background: #1f6b1a;
+    justify-content: space-between;
+    padding: 0 24px;
   }
 
-  .start-logo {
-    font-style: normal;
+  .nav-logo {
+    font-weight: 600;
     font-size: 18px;
-  }
-
-  .taskbar-divider {
-    width: 2px;
-    height: 100%;
-    background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.3), transparent);
-    margin: 0 10px;
-  }
-
-  .taskbar-programs {
-    flex-grow: 1;
-    display: flex;
-    gap: 2px;
-  }
-
-  .taskbar-tray {
-    background: linear-gradient(to bottom, #0f8ddd, #096caf);
-    border-left: 1px solid #144983;
-    height: 100%;
-    padding: 0 15px;
+    color: var(--text-primary);
     display: flex;
     align-items: center;
-    color: white;
-    font-size: 12px;
-    box-shadow: inset 1px 0 2px rgba(255,255,255,0.2);
+    gap: 8px;
   }
-  
-  .clock {
-    margin-left: 10px;
+
+  .logo-icon {
+    color: var(--accent);
+    font-size: 14px;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 28px;
+    font-size: 14px;
+  }
+
+  .nav-links a {
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .nav-links a:hover {
+    color: var(--text-primary);
+  }
+
+  .main {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 48px 24px;
+    min-height: calc(100vh - var(--nav-height) - 60px);
+  }
+
+  .footer {
+    border-top: 1px solid var(--border-default);
+    padding: 16px 24px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
   }
 </style>
