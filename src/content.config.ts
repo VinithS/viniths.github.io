@@ -20,4 +20,19 @@ const tweets = defineCollection({
   }),
 });
 
-export const collections = { blog, tweets };
+const photos = defineCollection({
+  loader: file("src/content/photos.json"),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    cover: z.string(),
+    images: z.array(
+      z.object({
+        src: z.string(),
+        alt: z.string(),
+      }),
+    ),
+  }),
+});
+
+export const collections = { blog, tweets, photos };

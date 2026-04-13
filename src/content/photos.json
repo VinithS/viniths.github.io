@@ -1,0 +1,16 @@
+[
+  {
+    "id": "nostalgia",
+    "title": "Nostalgia",
+    "description": "Games that defined the early 2000s.",
+    "cover": "/photos/nostalgia/spiderman-2.jpg",
+    "images": [
+      { "src": "/photos/nostalgia/spiderman-2.jpg", "alt": "Spider-Man 2" },
+      {
+        "src": "/photos/nostalgia/delta-ops.jpg",
+        "alt": "Delta Ops: Army Special Forces"
+      },
+      { "src": "/photos/nostalgia/far-cry-1.jpg", "alt": "Far Cry" }
+    ]
+  }
+]
