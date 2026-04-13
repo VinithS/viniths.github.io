@@ -1,0 +1,44 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="About — Vinith">
+  <section class="about">
+    <h1>About</h1>
+    <div class="card bio">
+      <p>
+        Hey, I'm <strong>Vinith</strong> - a Software Development Engineer at Amazon,
+        currently on the <span class="tag">Bedrock AgentCore</span> team.
+      </p>
+      <p>This site is a place for my thoughts, projects, and experiences.</p>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .about h1 {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 24px;
+    letter-spacing: -0.02em;
+  }
+
+  .bio {
+    padding: 28px;
+    max-width: 600px;
+  }
+
+  .bio p {
+    color: var(--text-secondary);
+    line-height: 1.7;
+    font-size: 15px;
+  }
+
+  .bio p + p {
+    margin-top: 16px;
+  }
+
+  .bio strong {
+    color: var(--text-primary);
+  }
+</style>
