@@ -1,0 +1,68 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { getCollection } from "astro:content";
+
+const tweets = (await getCollection("tweets")).sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime(),
+);
+---
+
+<Layout title="Tweets — Vinith">
+  <section class="tweets-page">
+    <h1>Tweets</h1>
+    <p class="page-desc">Short thoughts, under 250 characters.</p>
+    <div class="feed">
+      {
+        tweets.map((tweet) => (
+          <div class="card tweet">
+            <p class="tweet-body">{tweet.data.text}</p>
+            <time class="mono" datetime={tweet.data.date.toISOString()}>
+              {tweet.data.date.toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })}
+            </time>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .tweets-page h1 {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+
+  .page-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 30px;
+  }
+
+  .feed {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .tweet {
+    padding: 10px 20px;
+  }
+
+  .tweet-body {
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    margin-bottom: 5px;
+  }
+
+  .tweet time {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+</style>
