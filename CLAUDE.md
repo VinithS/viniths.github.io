@@ -11,33 +11,47 @@ Retro-themed personal website (blog/photo album/portfolio) with a dark, minimali
 - `npm run dev` — Start dev server (localhost:4321)
 - `npm run build` — Build static site to `./dist/`
 - `npm run preview` — Preview production build locally
+- `npm run astro -- --help` — Access Astro CLI (e.g. `astro add`, `astro check`)
 
 No lint or test commands are configured.
 
 ## Tech Stack
 
 - **Astro v6** — Static site generator with file-based routing and zero-JS-by-default
-- **Svelte v5** — Integrated via `@astrojs/svelte` for future interactive components (islands architecture); not yet actively used
+- **Svelte v5** — Integrated via `@astrojs/svelte` for interactive islands. Uses runes syntax (`$props()`, `$state()`) — not legacy reactive declarations.
 - **Vanilla CSS** — Dark theme via CSS custom properties (no Tailwind or CSS framework)
 - **TypeScript** — Strict mode (`astro/tsconfigs/strict`)
 - **Node >= 22.12.0**
 
 ## Architecture
 
-- `src/pages/` — File-based routing. `.astro` and `.md` files become routes automatically.
-- `src/layouts/Layout.astro` — Main layout with sticky top nav, content area, and footer.
-- `src/components/` — Reusable Astro components. Svelte components go here too when added.
-- `src/styles/global.css` — Global dark theme with CSS variables and reusable `.card` and `.tag` utility classes.
-- `src/assets/` — Static assets (SVGs, images).
+### Routing
 
-## Design Context
+- `src/pages/` — File-based routing. `.astro` and `.md` files become routes.
+- Dynamic routes use bracketed filenames: `src/pages/blog/[slug].astro` and `src/pages/photos/[album].astro`. Each exports `getStaticPaths()` that iterates a content collection to produce one page per entry at build time.
+- `src/layouts/Layout.astro` — Shared shell: sticky top nav, `<main>` slot, footer. Pages wrap their content in `<Layout title="...">`.
 
-Dark minimal retro aesthetic. Dark charcoal background (`--bg-primary: #0d1117`), subtle borders, muted green accent (`--accent: #39d353`), clean sans-serif typography. Content is max-width 1080px, centered. See `DESIGN.md` for the original design brief and `TASKS.md` for milestone tracking.
+### Content collections (the data layer)
+
+Content is defined in `src/content.config.ts` using Astro's content collections API. Three collections exist, each with a Zod schema enforced at build time:
+
+- **`blog`** — Markdown files under `src/content/blog/*.md` (glob loader). Frontmatter: `title`, `date`, `description`, `tags?`. Rendered via `render(entry)` on the `[slug]` route.
+- **`tweets`** — JSON array at `src/content/tweets.json` (file loader). Each entry: `date`, `text` (max 250 chars). Listed on `/tweets`.
+- **`photos`** — JSON array at `src/content/photos.json` (file loader). Each album has `title`, `description`, `cover`, and an `images[]` array of `{src, alt}`. `/photos` shows album tiles; `/photos/[album]` renders the album via the Svelte `PhotoViewer` island.
+
+When adding content: add the file(s) to the appropriate `src/content/` location — the schema and existing routes pick it up automatically. To add a new collection type, register it in `src/content.config.ts` and export it from `collections`.
+
+### Interactive islands
+
+`src/components/PhotoViewer.svelte` is the only Svelte component and is the reference for the islands pattern: hydrated in `[album].astro` with `client:load` and receives album data as props from the Astro page.
 
 ## Styling Conventions
 
-- Use CSS variables from `global.css` for all colors: `--bg-*` for backgrounds, `--text-*` for text, `--border-*` for borders, `--accent*` for accents
-- Use `--font-sans` for body text, `--font-mono` for code/decorative monospace text
-- Use `.card` class for surface containers (dark bg + border + radius)
-- Use `.tag` class for small badges/labels
-- Component-scoped styles go in `<style>` tags within `.astro` files
+- All colors come from CSS variables in `src/styles/global.css`: `--bg-*`, `--text-*`, `--border-*`, `--accent*`. Don't hardcode hex values in components.
+- `--font-sans` for body, `--font-mono` for code and decorative terminal-style text (greetings, status bars, timestamps).
+- `.card` for surface containers, `.tag` for small badges, `.mono` for inline monospace text.
+- Component-scoped styles live in `<style>` tags inside `.astro`/`.svelte` files — prefer these over adding new global rules.
+
+## Design Context
+
+Dark charcoal background (`--bg-primary: #0d1117`), subtle borders, muted green accent (`--accent: #39d353`), sans-serif body with monospace accents. Content column is `--max-width: 1080px`, centered.

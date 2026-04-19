@@ -2,43 +2,150 @@
 import Layout from "../layouts/Layout.astro";
 ---
 
-<Layout title="About — Vinith">
-  <section class="about">
-    <h1>About</h1>
-    <div class="card bio">
-      <p>
-        Hey, I'm <strong>Vinith</strong> - a Software Development Engineer at Amazon,
-        currently on the <span class="tag">Bedrock AgentCore</span> team.
-      </p>
-      <p>This site is a place for my thoughts, projects, and experiences.</p>
+<Layout title="About - Vinith">
+  <section class="band">
+    <header class="section-head">
+      <div class="section-tag">
+        <span class="sq"></span>
+        [ 04 ] &nbsp; About
+      </div>
+      <h1>A little <em>about</em> me.</h1>
+    </header>
+
+    <div class="bio-grid">
+      <article class="bio">
+        <p>
+          Hey, I'm <strong>Vinith</strong> - a Software Development Engineer at Amazon,
+          currently on the <span class="tag-pixel">Bedrock AgentCore</span> team.
+        </p>
+        <p>
+          This site is a slow-growing place for my thoughts, projects, and the
+          things I notice. It's also where I'm teaching myself Astro and the
+          small, hand-made web.
+        </p>
+        <p>
+          Outside of work: long walks, retro games from the floppy-disk era, and
+          coffee that's a little too strong.
+        </p>
+      </article>
+
+      <aside class="facts">
+        <div class="fact">
+          <div class="fact-label">Currently</div>
+          <div class="fact-value">Building at Amazon.</div>
+        </div>
+        <div class="fact">
+          <div class="fact-label">Reading</div>
+          <div class="fact-value">A little of everything.</div>
+        </div>
+        <div class="fact">
+          <div class="fact-label">Based in</div>
+          <div class="fact-value">Seattle, WA.</div>
+        </div>
+      </aside>
     </div>
   </section>
 </Layout>
 
 <style>
-  .about h1 {
-    font-size: 32px;
-    font-weight: 700;
-    margin-bottom: 24px;
-    letter-spacing: -0.02em;
+  .band {
+    padding: 40px 0 20px;
+  }
+
+  .section-head {
+    margin-bottom: 36px;
+  }
+  .section-head h1 {
+    font-variation-settings:
+      "opsz" 72,
+      "SOFT" 60,
+      "wght" 500;
+    font-size: clamp(32px, 4.5vw, 54px);
+    letter-spacing: -0.025em;
+    line-height: 1.02;
+    margin-top: 10px;
+  }
+  .section-head h1 em {
+    font-style: italic;
+    color: var(--em);
+  }
+  .section-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-pixel);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .section-tag .sq {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background: var(--green);
+    box-shadow: 0 0 0 2px var(--rule);
+  }
+
+  .bio-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 32px;
+    align-items: start;
   }
 
   .bio {
-    padding: 28px;
-    max-width: 600px;
-  }
-
-  .bio p {
-    color: var(--text-secondary);
+    font-family: var(--font-serif);
+    font-variation-settings:
+      "opsz" 18,
+      "SOFT" 70,
+      "wght" 400;
+    font-size: 18px;
     line-height: 1.7;
-    font-size: 15px;
+    color: var(--ink-soft);
+    max-width: 58ch;
   }
-
   .bio p + p {
     margin-top: 16px;
   }
-
   .bio strong {
-    color: var(--text-primary);
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .facts {
+    background: var(--bg-card);
+    border: 2px solid var(--rule);
+    box-shadow: 4px 4px 0 var(--rule);
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .fact + .fact {
+    border-top: 1px solid var(--rule-soft);
+    padding-top: 16px;
+  }
+  .fact-label {
+    font-family: var(--font-pixel);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 4px;
+  }
+  .fact-value {
+    font-family: var(--font-serif);
+    font-variation-settings:
+      "opsz" 16,
+      "wght" 500;
+    font-size: 16px;
+    color: var(--ink);
+  }
+
+  @media (max-width: 720px) {
+    .bio-grid {
+      grid-template-columns: 1fr;
+    }
   }
 </style>

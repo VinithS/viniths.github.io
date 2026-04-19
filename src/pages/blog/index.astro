@@ -7,94 +7,167 @@ const posts = (await getCollection("blog")).sort(
 );
 ---
 
-<Layout title="Blog — Vinith">
-  <section class="blog">
-    <h1>Blog</h1>
-    <div class="post-list">
+<Layout title="Writing - Vinith">
+  <section class="band">
+    <header class="section-head">
+      <div class="section-tag">
+        <span class="sq"></span>
+        [ 01 ] &nbsp; Writing
+      </div>
+      <h1>Recent posts.</h1>
+    </header>
+
+    <ul class="writing-list">
       {
         posts.map((post) => (
-          <a href={`/blog/${post.id}`} class="card post-card">
-            <div class="post-meta">
-              <time class="mono" datetime={post.data.date.toISOString()}>
-                {post.data.date.toLocaleDateString("en-US", {
+          <li>
+            <span class="writing-date">
+              {post.data.date
+                .toLocaleDateString("en-US", {
                   year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                })}
-              </time>
-              {post.data.tags && (
-                <div class="post-tags">
-                  {post.data.tags.map((tag) => (
-                    <span class="tag">{tag}</span>
-                  ))}
-                </div>
-              )}
+                  month: "2-digit",
+                  day: "2-digit",
+                })
+                .replace(/\//g, "·")}
+            </span>
+            <div>
+              <a href={`/blog/${post.id}`} class="writing-title">
+                {post.data.title}
+              </a>
+              <span class="writing-desc">{post.data.description}</span>
             </div>
-            <h2>{post.data.title}</h2>
-            <p>{post.data.description}</p>
-          </a>
+            {post.data.tags && (
+              <div class="writing-tags">
+                {post.data.tags.map((tag) => (
+                  <span class="tag-pixel">{tag}</span>
+                ))}
+              </div>
+            )}
+          </li>
         ))
       }
-    </div>
+    </ul>
   </section>
 </Layout>
 
 <style>
-  .blog h1 {
-    font-size: 32px;
-    font-weight: 700;
-    margin-bottom: 32px;
-    letter-spacing: -0.02em;
+  .band {
+    padding: 40px 0 20px;
   }
 
-  .post-list {
+  .section-head {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 32px;
+    margin-bottom: 36px;
   }
-
-  .post-card {
-    padding: 20px 24px;
-    text-decoration: none;
-    color: inherit;
-    transition:
-      border-color 0.15s ease,
-      background 0.15s ease;
+  .section-head h1 {
+    font-variation-settings:
+      "opsz" 72,
+      "SOFT" 60,
+      "wght" 500;
+    font-size: clamp(32px, 4.5vw, 54px);
+    letter-spacing: -0.025em;
+    line-height: 1;
   }
-
-  .post-card:hover {
-    border-color: var(--text-muted);
-    background: var(--bg-hover);
-    color: inherit;
-  }
-
-  .post-meta {
-    display: flex;
+  .section-tag {
+    display: inline-flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 8px;
+    gap: 10px;
+    font-family: var(--font-pixel);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .section-tag .sq {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background: var(--blue);
+    box-shadow: 0 0 0 2px var(--rule);
   }
 
-  .post-meta time {
-    font-size: 13px;
-    color: var(--text-muted);
+  .writing-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .writing-list li {
+    display: grid;
+    grid-template-columns: 96px 1fr auto;
+    gap: 28px;
+    align-items: baseline;
+    padding: 22px 0;
+    border-top: 1px solid var(--rule-soft);
+    position: relative;
+    transition: padding 0.2s ease;
+  }
+  .writing-list li:last-child {
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .writing-list li::before {
+    content: "";
+    position: absolute;
+    left: -16px;
+    top: 50%;
+    width: 6px;
+    height: 6px;
+    background: var(--marker);
+    transform: translateY(-50%) scale(0);
+    transition: transform 0.2s ease;
+  }
+  .writing-list li:hover {
+    padding-left: 16px;
+  }
+  .writing-list li:hover::before {
+    transform: translateY(-50%) scale(1);
   }
 
-  .post-tags {
+  .writing-date {
+    font-family: var(--font-pixel);
+    font-size: 11px;
+    color: var(--ink-muted);
+    letter-spacing: 0.1em;
+  }
+  .writing-title {
+    font-family: var(--font-serif);
+    font-variation-settings:
+      "opsz" 32,
+      "SOFT" 60,
+      "wght" 500;
+    font-size: 22px;
+    color: var(--ink);
+    text-decoration: none;
+    letter-spacing: -0.015em;
+  }
+  .writing-title:hover {
+    color: var(--link-hover);
+  }
+  .writing-desc {
+    display: block;
+    font-variation-settings:
+      "opsz" 14,
+      "SOFT" 70,
+      "wght" 380;
+    font-size: 14px;
+    color: var(--ink-muted);
+    margin-top: 4px;
+    max-width: 58ch;
+  }
+  .writing-tags {
     display: flex;
     gap: 6px;
   }
 
-  .post-card h2 {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 4px;
-    color: var(--text-primary);
-  }
-
-  .post-card p {
-    font-size: 14px;
-    color: var(--text-secondary);
-    line-height: 1.5;
+  @media (max-width: 720px) {
+    .writing-list li {
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
+    .writing-tags {
+      margin-top: 10px;
+    }
   }
 </style>

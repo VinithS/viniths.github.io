@@ -1,9 +1,112 @@
-I want to build a simple personal website with retro aesthetic. Something like windows XP vibes and retro handheld console vibes. I liked this website a bit: https://retrocatalog.com/ . I want it to be a blog / book / photo album vibes for now and maybe I will add "loading screen" intro the website and maybe have widgets. I want to use this website as a platform to share my thoughts, projects, and experiences. I want it to be a place where people can get to know me better and see what I'm passionate about. 
+# Design Philosophy
 
-I just want to start learning a new technology / framework / stack. I was thinking of svelte or astro or rust or go? Like the firs two for frontend, and the last two for backend but I am not sure what they do and how to even use it. I want to stay fairly lean in my stack though.
+This document is the source of truth for how this site should look, feel, and be built. It is written for both humans and LLM agents maintaining the project. If you are an agent picking up a new task, read this file before writing CSS, adding components, or making visual decisions. If a request conflicts with the rules here, raise the conflict before implementing — don't silently deviate.
 
-I want to start getting comfortable with spinning up websites easily and quickly. I want it to be a journey of learning everything step by step while generating viewable progress each milestone. 
+## The direction: Warm Arcade Paper
 
-I am on ubuntu with wsl with almost nothing really installed except git so I will need to properly setup my workspace. I just have this git repo pf-website installed. As you work and plan, create files inside this directory to track tasks, plans, etc. Create a README that also explains how to start developing on this repo for wsl and macos.
+The site is retro-inspired but not a retro *pastiche*. Think: a page from a well-made arcade-era magazine, reprinted on warm paper. The retro vocabulary (pixel ornaments, chunky buttons, scanline textures, arcade-primary accents) is used as *ornament on top of editorial typography*, not as the primary voice. Typography carries the site; pixels and color accents are the spice.
 
-Write up a full implementation guide that I can follow to build up this service from scratch including the workspace, etc. It should explain concepts we are using and implementing and why they are needed. I really want this to be a learning process.
+Two anchors:
+
+1. **It should feel like paper, not a screen.** Both light and dark modes are paper. Light is eggshell; dark is "dusk paper" — the same paper, late in the day, lit by a warm lamp. Dark mode is *not* GitHub-dark, *not* cold, *not* generic-tech. Grain, warm blacks, and cream text keep the paper identity consistent across themes.
+2. **Typography is the voice.** A variable serif (`Fraunces`) does the heavy lifting — display, body, italic emphasis. A pixel face (`Silkscreen`) is reserved for *labels*: dates, tags, section markers, keyboard keys, status text. Pixel type is never used for prose. The proportion is roughly 95% serif, 5% pixel.
+
+When in doubt: more serif, less chrome.
+
+## Color: token layers and the four rules
+
+Color lives in CSS custom properties defined in `:root[data-theme="light"]` and `:root[data-theme="dark"]` blocks. Components never inline hex values and never override colors inside `[data-theme="..."]` selectors. The four rules below are the contract — they exist so that a visual discrepancy in one theme can always be fixed by editing tokens in one place, not by chasing component overrides across the codebase.
+
+### Rule 1 — Layers don't mix
+
+There are three color layers. Only specific combinations are valid:
+
+- **Surface tokens** (`--bg`, `--bg-card`, `--bg-raised`, `--bg-inset`) are for backgrounds.
+- **Ink tokens** (`--ink`, `--ink-soft`, `--ink-muted`) are text *on surfaces*.
+- **Accent tokens** (`--red`, `--yellow`, `--blue`, `--green`) are colored fills. Text on an accent uses that accent's paired `--on-*` token — never `--ink`.
+
+Valid: `--ink-soft` on `--bg-card`. `--on-red` on `--red`.
+Invalid: `--ink` on `--red` (it might look fine in one theme and fail in the other).
+
+### Rule 2 — Every theme defines every token
+
+Both theme blocks must define the same set of tokens. There should be **zero** `[data-theme="dark"] .component { ... }` rules in component CSS. If a component needs to look different between themes, the difference lives in the `:root` blocks by rebinding a token — not in a component override.
+
+If you find yourself writing a theme-specific override for a component, stop and ask: "what *role* is this color playing here?" Then promote that role to a semantic token (rule 3).
+
+### Rule 3 — Use semantic roles, not literal colors
+
+Components reference *meaning*, not *hue*. The accent palette is rebound to semantic role tokens in each theme. Components use the roles:
+
+- `--em` — italic emphasis in display type
+- `--highlight-bg` / `--highlight-ink` — text highlighter (matched pair)
+- `--link-hover` — hovered link color in body copy
+- `--marker` — small decorative bullets (e.g. list hover dot)
+- `--signal` — "present/alive" status dots
+- `--toggle-dot` — theme-toggle indicator
+
+Why: the same highlighter that reads well as `yellow behind dark ink` in light mode will fail as `yellow behind cream` in dark mode. Rebinding `--highlight-bg` to terracotta + `--highlight-ink` to cream in the dark theme fixes it once. The component code never changes.
+
+**Direct references to `--red` / `--yellow` / `--blue` / `--green` are only permitted for explicit decorative use** — the four button color variants (`.btn--red`), palette swatches in a type-specimen panel, section markers that *intentionally* cycle through the four, and pixel-art SVG fills. If a color communicates *meaning* (emphasis, hover, state), it gets a semantic role.
+
+### Rule 4 — Pair foreground with background
+
+When adding any colored surface token, define its paired `--on-*` token beside it on the same line. They travel together. This prevents future contrast bugs where someone adds a new accent but forgets to define what text should go on it.
+
+Example:
+```css
+--red: #d64933;   --on-red: #fffaea;
+```
+
+## Typography
+
+- **Display & body** use `Fraunces` (variable, with `opsz` and `SOFT` axes). Display sizes dial `opsz` up (72–120) for tighter, more expressive letterforms; body sizes dial `opsz` down (14–18) for readability. Italic Fraunces is a signature element — use it for emphasis in headlines and quoted phrases.
+- **Meta / labels** use `Silkscreen` — tags, dates, section numbers, keyboard keys, status bars, nav links, eyebrows. Always uppercase, always tracked (`letter-spacing: 0.1em`–`0.18em`), always small (9–12px).
+- **Never use Silkscreen for prose.** Never use Fraunces for tiny pixel labels. The contrast between the two is the aesthetic.
+- **No system-font fallbacks that change the character.** If a web font fails, fall back to a serif (Georgia) or mono, not to `Inter` or `system-ui`.
+
+## Components & surfaces
+
+- Surfaces are **paper, not glass**. No translucent frosted-glass panels. Backdrop blur is allowed only on the sticky nav, and only lightly.
+- **Chunky hard-offset shadows** (`3px 3px 0 var(--rule)`) are the site's idiom for interactive affordance on buttons and cards. On `:active`, the shadow collapses and the element translates into the shadow — it feels physical, like pressing a real button. Do not replace with soft/blurred shadows.
+- **Borders are 1–2px, hard edges, using `--rule-*` tokens.** No rounded-pill everything. Corner radius is 0 for buttons and ornament frames; small (`--radius: 6px`) only where it meaningfully helps (soft content cards).
+- **Grain overlay** (SVG noise, fixed position, very subtle) is part of the paper identity. Don't remove it. Its blend mode and opacity are tuned per theme in tokens (`--grain-blend`, `--grain-opacity`).
+
+## Motion
+
+- **One orchestrated page-load.** A staggered reveal (~100ms steps, `cubic-bezier(.2,.8,.2,1)`, translate + fade) on the hero elements. Not every element on every page needs to animate in.
+- **Micro-interactions are physical, not decorative.** Button press collapses the shadow. List-item hover nudges and reveals a marker. Theme-toggle clack. Nothing spins or bounces without a reason.
+- **Always respect `prefers-reduced-motion: reduce`.** Every animation block should have a reduce-motion override that disables it.
+- **Never use JavaScript for animation when CSS can do it.** Transitions and keyframes only. Exceptions: theme toggle state, typing effects (if ever added).
+
+## What this site is *not*
+
+Avoid these, even when tempted:
+
+- **Purple-gradient-on-white "startup landing page" aesthetic.** No gradient meshes as primary backgrounds. No glassmorphism. No `Inter` + soft shadows + rounded-2xl.
+- **Full pixel-everything.** Pixel fonts for body copy, 8-bit everything — reads as tacky costume. Pixels are ornament, not wardrobe.
+- **Neon cyberpunk dark mode.** Saturated green-on-black, glowing CRT phosphor as a primary theme. Our dark mode is warm dusk, not neon.
+- **Generic monospace code-editor aesthetic.** Mono is for code blocks and the existing terminal-style greeting; it is not the site's voice.
+- **Windows XP chrome.** The original brief mentioned XP vibes; that was exploratory. The actual direction is editorial + arcade-primary accents + pixel ornament. XP-style gradient title bars and beveled chrome are out.
+
+## Decision checklist (for agents)
+
+Before adding a new style or component, run through this:
+
+1. **Is there a token for this color?** If yes, use it. If I need a new color, does it warrant a new semantic role, or is it a variant of an existing one?
+2. **Will this work in both themes without an override?** If not, rethink — the fix belongs in the `:root` token blocks, not in the component.
+3. **Am I using Fraunces for the voice and Silkscreen only for labels?** If I'm reaching for a third font, stop.
+4. **Does interactive feedback feel physical (shadow collapse, color shift) rather than soft (glow, blur)?**
+5. **Did I respect `prefers-reduced-motion`?**
+6. **Am I adding ornament because it serves the page, or because the page feels empty?** Empty is often correct. Generous whitespace is part of the paper identity.
+
+## Source of truth
+
+When in doubt about tokens, components, or rules, read:
+
+- `src/styles/global.css` — the canonical token system and utility components (`.btn`, `.card`, `.tag-pixel`, `.reveal`, `.pixel`). Every rule in this document is encoded there.
+- `src/layouts/Layout.astro` — the global chrome: nav, theme toggle, footer, and the pre-paint inline script that sets the theme before first paint (to avoid a flash).
+- `src/pages/index.astro` — the reference implementation of the hero pattern (eyebrow, display type with italic emphasis, lede with `.under` highlighter, pixel ornament, arcade-button CTA row).
+- `src/components/PhotoViewer.svelte` — the reference Svelte island for how hard-offset shadows, pixel status bars, and scanline overlays should feel on interactive surfaces.
+
+If you add a new page or component, read these four first and borrow their patterns — don't invent new typographic scales, shadow recipes, or color references.

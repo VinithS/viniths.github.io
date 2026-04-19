@@ -14,13 +14,13 @@ const { post } = Astro.props;
 const { Content } = await render(post);
 ---
 
-<Layout title={`${post.data.title} — Vinith`}>
+<Layout title={`${post.data.title} - Vinith`}>
   <article class="post">
+    <a href="/blog" class="back">&larr; BACK</a>
     <header>
-      <a href="/blog" class="back mono">&larr; back</a>
       <h1>{post.data.title}</h1>
       <div class="meta">
-        <time class="mono" datetime={post.data.date.toISOString()}>
+        <span class="writing-date">
           {
             post.data.date.toLocaleDateString("en-US", {
               year: "numeric",
@@ -28,18 +28,19 @@ const { Content } = await render(post);
               day: "numeric",
             })
           }
-        </time>
+        </span>
         {
           post.data.tags && (
             <div class="tags">
               {post.data.tags.map((tag) => (
-                <span class="tag">{tag}</span>
+                <span class="tag-pixel">{tag}</span>
               ))}
             </div>
           )
         }
       </div>
     </header>
+
     <div class="prose">
       <Content />
     </div>
@@ -49,122 +50,158 @@ const { Content } = await render(post);
 <style>
   .post {
     max-width: 680px;
+    margin: 0 auto;
+    padding: 20px 0;
   }
 
   .back {
-    font-size: 13px;
-    color: var(--text-muted);
+    font-family: var(--font-pixel);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--ink-muted);
     display: inline-block;
-    margin-bottom: 24px;
+    margin-bottom: 32px;
   }
-
   .back:hover {
-    color: var(--text-secondary);
+    color: var(--ink);
   }
 
   header h1 {
-    font-size: 32px;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    margin-bottom: 12px;
+    font-family: var(--font-serif);
+    font-variation-settings:
+      "opsz" 72,
+      "SOFT" 60,
+      "wght" 500;
+    font-size: clamp(34px, 5vw, 52px);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    margin-bottom: 18px;
+  }
+  header h1 em {
+    font-style: italic;
+    color: var(--em);
   }
 
   .meta {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 40px;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 48px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--rule-soft);
   }
-
-  .meta time {
-    font-size: 13px;
-    color: var(--text-muted);
+  .writing-date {
+    font-family: var(--font-pixel);
+    font-size: 11px;
+    color: var(--ink-muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
   }
-
   .tags {
     display: flex;
     gap: 6px;
   }
 
-  /* Prose styles for rendered markdown */
   .prose {
-    font-size: 16px;
-    line-height: 1.75;
-    color: var(--text-secondary);
+    font-family: var(--font-serif);
+    font-variation-settings:
+      "opsz" 18,
+      "SOFT" 70,
+      "wght" 400;
+    font-size: 18px;
+    line-height: 1.7;
+    color: var(--ink-soft);
   }
 
   .prose :global(h2) {
-    font-size: 22px;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 32px 0 12px;
+    font-variation-settings:
+      "opsz" 36,
+      "SOFT" 60,
+      "wght" 500;
+    font-size: 28px;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+    margin: 40px 0 14px;
   }
-
   .prose :global(h3) {
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 24px 0 8px;
+    font-variation-settings:
+      "opsz" 24,
+      "SOFT" 60,
+      "wght" 500;
+    font-size: 22px;
+    color: var(--ink);
+    margin: 28px 0 10px;
   }
-
   .prose :global(p) {
-    margin-bottom: 16px;
+    margin-bottom: 18px;
   }
-
+  .prose :global(em) {
+    color: var(--em);
+    font-style: italic;
+  }
+  .prose :global(strong) {
+    color: var(--ink);
+    font-weight: 600;
+  }
   .prose :global(a) {
-    color: var(--accent);
+    color: var(--ink);
     text-decoration: underline;
-    text-underline-offset: 2px;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    text-decoration-color: var(--rule-soft);
+  }
+  .prose :global(a:hover) {
+    color: var(--link-hover);
+    text-decoration-color: currentColor;
   }
 
   .prose :global(code) {
     font-family: var(--font-mono);
     font-size: 14px;
-    background: var(--bg-surface);
-    padding: 2px 6px;
-    border-radius: 4px;
+    background: var(--bg-inset);
+    border: 1px solid var(--rule-soft);
+    padding: 1px 6px;
   }
-
   .prose :global(pre) {
-    background: var(--bg-surface);
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius);
+    background: var(--bg-inset);
+    border: 1px solid var(--rule);
     padding: 16px;
     overflow-x: auto;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
   }
-
   .prose :global(pre code) {
     background: none;
+    border: none;
     padding: 0;
+    font-size: 13px;
   }
 
   .prose :global(ul),
   .prose :global(ol) {
     padding-left: 24px;
-    margin-bottom: 16px;
+    margin-bottom: 18px;
   }
-
   .prose :global(li) {
-    margin-bottom: 4px;
+    margin-bottom: 6px;
   }
 
   .prose :global(blockquote) {
-    border-left: 3px solid var(--border-default);
-    padding-left: 16px;
-    color: var(--text-muted);
-    margin-bottom: 16px;
+    border-left: 3px solid var(--marker);
+    padding: 4px 0 4px 20px;
+    color: var(--ink-muted);
+    font-style: italic;
+    margin: 20px 0;
   }
 
   .prose :global(img) {
-    max-width: 100%;
-    border-radius: var(--radius);
-    margin: 16px 0;
+    border: 2px solid var(--rule);
+    margin: 20px 0;
   }
 
   .prose :global(hr) {
     border: none;
-    border-top: 1px solid var(--border-default);
-    margin: 32px 0;
+    border-top: 1px solid var(--rule-soft);
+    margin: 40px 0;
   }
 </style>
