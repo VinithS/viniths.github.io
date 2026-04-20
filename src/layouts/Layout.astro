@@ -75,7 +75,7 @@ const { title = "Vinith" } = Astro.props;
         var label = document.getElementById("themeLabel");
         function sync() {
           label.textContent =
-            root.getAttribute("data-theme") === "light" ? "Dusk" : "Paper";
+            root.getAttribute("data-theme") === "light" ? "Dawn" : "Dusk";
         }
         function setTheme(next) {
           root.setAttribute("data-theme", next);

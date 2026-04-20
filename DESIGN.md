@@ -4,14 +4,25 @@ This document is the source of truth for how this site should look, feel, and be
 
 ## The direction: Warm Arcade Paper
 
-The site is retro-inspired but not a retro *pastiche*. Think: a page from a well-made arcade-era magazine, reprinted on warm paper. The retro vocabulary (pixel ornaments, chunky buttons, scanline textures, arcade-primary accents) is used as *ornament on top of editorial typography*, not as the primary voice. Typography carries the site; pixels and color accents are the spice.
+The site is retro-inspired but not a retro _pastiche_. Think: a page from a well-made arcade-era magazine, reprinted on warm paper. The retro vocabulary (pixel ornaments, chunky buttons, scanline textures, arcade-primary accents) is used as _ornament on top of editorial typography_, not as the primary voice. Typography carries the site; pixels and color accents are the spice.
 
 Two anchors:
 
-1. **It should feel like paper, not a screen.** Both light and dark modes are paper. Light is eggshell; dark is "dusk paper" — the same paper, late in the day, lit by a warm lamp. Dark mode is *not* GitHub-dark, *not* cold, *not* generic-tech. Grain, warm blacks, and cream text keep the paper identity consistent across themes.
-2. **Typography is the voice.** A variable serif (`Fraunces`) does the heavy lifting — display, body, italic emphasis. A pixel face (`Silkscreen`) is reserved for *labels*: dates, tags, section markers, keyboard keys, status text. Pixel type is never used for prose. The proportion is roughly 95% serif, 5% pixel.
+1. **It should feel like paper, not a screen.** Both light and dark modes are paper. Light is eggshell; dark is "dusk paper" — the same paper, late in the day, lit by a warm lamp. Dark mode is _not_ GitHub-dark, _not_ cold, _not_ generic-tech. Grain, warm blacks, and cream text keep the paper identity consistent across themes.
+2. **Typography is the voice.** A variable serif (`Fraunces`) does the heavy lifting — display, body, italic emphasis. A pixel face (`Silkscreen`) is reserved for _labels_: dates, tags, section markers, keyboard keys, status text. Pixel type is never used for prose. The proportion is roughly 95% serif, 5% pixel.
 
 When in doubt: more serif, less chrome.
+
+## Scale: the emergent-observer frame
+
+The conceptual frame underneath the visual direction is _cosmological_. The site owner treats the self as an emergent observer — an entity born in and of the universe, registering what it sees. This scale should quietly inform design choices on pages that introduce or identify the person.
+
+- **The Cosmos is the institution.** When a page presents identity (e.g. `/about`), treat it as a document _issued by_ the universe rather than a self-promotional bio. Mastheads carry a universe crest; the person is the entry, not the headline.
+- **The `<UniverseLogo>` component is the crest.** A dithered three-tone black hole (event horizon + accretion disk + pixel dither halo) rendered via `src/components/UniverseLogo.astro`. Use it where an institutional seal, passport crest, or university mark would sit — top-left of an identity card, masthead banners, authority marks on formal documents. Don't scatter it decoratively elsewhere.
+- **Hierarchy flips on identity pages.** The universe logo sits above, bigger-in-authority-if-not-in-pixels, than the person's portrait. The portrait is an entry in a registry, not the hero image.
+- **Language at the margins leans cosmological — sparingly.** Labels like _specimen_, _entry_, _observer_, _registry_, _designation_ signal the frame without becoming sci-fi cosplay. One or two per page is the limit; the serif voice stays grounded and human.
+
+Do not extend this frame to every page. Blog posts, photo albums, and notes are _transmissions from the observer_ — they don't need crests or cosmological framing. The frame surfaces only where the observer is being identified or situated.
 
 ## Color: token layers and the four rules
 
@@ -22,7 +33,7 @@ Color lives in CSS custom properties defined in `:root[data-theme="light"]` and 
 There are three color layers. Only specific combinations are valid:
 
 - **Surface tokens** (`--bg`, `--bg-card`, `--bg-raised`, `--bg-inset`) are for backgrounds.
-- **Ink tokens** (`--ink`, `--ink-soft`, `--ink-muted`) are text *on surfaces*.
+- **Ink tokens** (`--ink`, `--ink-soft`, `--ink-muted`) are text _on surfaces_.
 - **Accent tokens** (`--red`, `--yellow`, `--blue`, `--green`) are colored fills. Text on an accent uses that accent's paired `--on-*` token — never `--ink`.
 
 Valid: `--ink-soft` on `--bg-card`. `--on-red` on `--red`.
@@ -32,11 +43,11 @@ Invalid: `--ink` on `--red` (it might look fine in one theme and fail in the oth
 
 Both theme blocks must define the same set of tokens. There should be **zero** `[data-theme="dark"] .component { ... }` rules in component CSS. If a component needs to look different between themes, the difference lives in the `:root` blocks by rebinding a token — not in a component override.
 
-If you find yourself writing a theme-specific override for a component, stop and ask: "what *role* is this color playing here?" Then promote that role to a semantic token (rule 3).
+If you find yourself writing a theme-specific override for a component, stop and ask: "what _role_ is this color playing here?" Then promote that role to a semantic token (rule 3).
 
 ### Rule 3 — Use semantic roles, not literal colors
 
-Components reference *meaning*, not *hue*. The accent palette is rebound to semantic role tokens in each theme. Components use the roles:
+Components reference _meaning_, not _hue_. The accent palette is rebound to semantic role tokens in each theme. Components use the roles:
 
 - `--em` — italic emphasis in display type
 - `--highlight-bg` / `--highlight-ink` — text highlighter (matched pair)
@@ -47,15 +58,17 @@ Components reference *meaning*, not *hue*. The accent palette is rebound to sema
 
 Why: the same highlighter that reads well as `yellow behind dark ink` in light mode will fail as `yellow behind cream` in dark mode. Rebinding `--highlight-bg` to terracotta + `--highlight-ink` to cream in the dark theme fixes it once. The component code never changes.
 
-**Direct references to `--red` / `--yellow` / `--blue` / `--green` are only permitted for explicit decorative use** — the four button color variants (`.btn--red`), palette swatches in a type-specimen panel, section markers that *intentionally* cycle through the four, and pixel-art SVG fills. If a color communicates *meaning* (emphasis, hover, state), it gets a semantic role.
+**Direct references to `--red` / `--yellow` / `--blue` / `--green` are only permitted for explicit decorative use** — the four button color variants (`.btn--red`), palette swatches in a type-specimen panel, section markers that _intentionally_ cycle through the four, and pixel-art SVG fills. If a color communicates _meaning_ (emphasis, hover, state), it gets a semantic role.
 
 ### Rule 4 — Pair foreground with background
 
 When adding any colored surface token, define its paired `--on-*` token beside it on the same line. They travel together. This prevents future contrast bugs where someone adds a new accent but forgets to define what text should go on it.
 
 Example:
+
 ```css
---red: #d64933;   --on-red: #fffaea;
+--red: #d64933;
+--on-red: #fffaea;
 ```
 
 ## Typography
@@ -79,7 +92,7 @@ Example:
 - **Always respect `prefers-reduced-motion: reduce`.** Every animation block should have a reduce-motion override that disables it.
 - **Never use JavaScript for animation when CSS can do it.** Transitions and keyframes only. Exceptions: theme toggle state, typing effects (if ever added).
 
-## What this site is *not*
+## What this site is _not_
 
 Avoid these, even when tempted:
 

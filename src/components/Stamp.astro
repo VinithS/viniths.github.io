@@ -1,0 +1,79 @@
+---
+interface Props {
+  lines: string[];
+  accent?: "red" | "yellow" | "blue" | "green";
+  size?: "sm" | "md" | "lg";
+  rotate?: number;
+  class?: string;
+}
+const {
+  lines,
+  accent = "red",
+  size = "md",
+  rotate = 0,
+  class: className = "",
+} = Astro.props;
+---
+
+<div
+  class:list={["stamp", `stamp--${accent}`, `stamp--${size}`, className]}
+  style={`--stamp-rotate: ${rotate}deg;`}
+  aria-hidden="true"
+>
+  <div class="stamp-inner">
+    {lines.map((line) => <div class="stamp-line">{line}</div>)}
+  </div>
+</div>
+
+<style>
+  .stamp {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--stamp-color);
+    background: transparent;
+    border: 3px solid var(--stamp-color);
+    outline: 1px solid var(--stamp-color);
+    outline-offset: 3px;
+    font-family: var(--font-pixel);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    text-align: center;
+    line-height: 1.1;
+    transform: rotate(var(--stamp-rotate));
+    user-select: none;
+  }
+
+  .stamp--red {
+    --stamp-color: var(--red);
+  }
+  .stamp--yellow {
+    --stamp-color: var(--yellow);
+  }
+  .stamp--blue {
+    --stamp-color: var(--blue);
+  }
+  .stamp--green {
+    --stamp-color: var(--green);
+  }
+
+  .stamp--sm {
+    padding: 6px 10px;
+    font-size: 9px;
+  }
+  .stamp--md {
+    padding: 10px 14px;
+    font-size: 11px;
+  }
+  .stamp--lg {
+    padding: 14px 20px;
+    font-size: 14px;
+  }
+
+  .stamp-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+</style>

@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 64" shape-rendering="crispEdges" preserveAspectRatio="xMidYMid slice">
+  <!-- background -->
+  <rect width="48" height="64" fill="#ebe1c4"/>
+  <!-- shoulder/torso -->
+  <rect x="4"  y="48" width="40" height="16" fill="#3a342a"/>
+  <rect x="6"  y="46" width="36" height="4"  fill="#3a342a"/>
+  <!-- shirt collar -->
+  <rect x="20" y="46" width="8"  height="6"  fill="#d64933"/>
+  <rect x="22" y="48" width="4"  height="4"  fill="#1c1814"/>
+  <!-- neck -->
+  <rect x="18" y="40" width="12" height="8"  fill="#c99a6e"/>
+  <rect x="18" y="44" width="12" height="2"  fill="#a17a52"/>
+  <!-- head -->
+  <rect x="12" y="14" width="24" height="30" fill="#c99a6e"/>
+  <!-- jaw shading -->
+  <rect x="12" y="36" width="24" height="4"  fill="#a17a52"/>
+  <rect x="14" y="40" width="20" height="2"  fill="#a17a52"/>
+  <!-- hair top -->
+  <rect x="10" y="10" width="28" height="8"  fill="#1c1814"/>
+  <rect x="12" y="8"  width="24" height="4"  fill="#1c1814"/>
+  <rect x="14" y="6"  width="20" height="2"  fill="#1c1814"/>
+  <!-- hair sides -->
+  <rect x="10" y="16" width="4"  height="10" fill="#1c1814"/>
+  <rect x="34" y="16" width="4"  height="10" fill="#1c1814"/>
+  <!-- eyes -->
+  <rect x="16" y="24" width="4"  height="2"  fill="#1c1814"/>
+  <rect x="28" y="24" width="4"  height="2"  fill="#1c1814"/>
+  <rect x="16" y="24" width="2"  height="2"  fill="#3a342a"/>
+  <rect x="28" y="24" width="2"  height="2"  fill="#3a342a"/>
+  <!-- eyebrows -->
+  <rect x="16" y="22" width="4"  height="1"  fill="#1c1814"/>
+  <rect x="28" y="22" width="4"  height="1"  fill="#1c1814"/>
+  <!-- nose -->
+  <rect x="23" y="28" width="2"  height="4"  fill="#a17a52"/>
+  <rect x="22" y="32" width="4"  height="1"  fill="#a17a52"/>
+  <!-- mouth -->
+  <rect x="20" y="36" width="8"  height="1"  fill="#6d3a2a"/>
+  <rect x="22" y="37" width="4"  height="1"  fill="#3a342a"/>
+  <!-- cheek blush -->
+  <rect x="14" y="32" width="2"  height="2"  fill="#d64933" opacity="0.35"/>
+  <rect x="32" y="32" width="2"  height="2"  fill="#d64933" opacity="0.35"/>
+  <!-- signature pixel glints -->
+  <rect x="44" y="4"  width="2"  height="2"  fill="#f5b712"/>
+  <rect x="2"  y="60" width="2"  height="2"  fill="#d64933"/>
+</svg>

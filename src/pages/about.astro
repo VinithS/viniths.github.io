@@ -1,151 +1,358 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import Stamp from "../components/Stamp.astro";
+import UniverseLogo from "../components/UniverseLogo.astro";
 ---
 
 <Layout title="About - Vinith">
-  <section class="band">
-    <header class="section-head">
-      <div class="section-tag">
-        <span class="sq"></span>
-        [ 04 ] &nbsp; About
+  <section class="about-page">
+    <article class="card-about">
+      <!-- Stamp overlaps the top-right corner of the card. Modular: swap
+           `lines`, `accent`, or `size` via props. -->
+      <Stamp
+        class="card-stamp"
+        lines={["Est · 1997", "Entry · 001"]}
+        accent="green"
+        size="md"
+        rotate={-15}
+      />
+
+      <!-- Masthead: the universe is the institution issuing this card.
+           The logo is the authority mark; the person below is the entry. -->
+      <header class="masthead">
+        <UniverseLogo size={52} accent="yellow" />
+        <div class="masthead-text">
+          <div class="institution">Observable Universe</div>
+          <div class="department">Registry of Emergent Observers</div>
+        </div>
+      </header>
+
+      <div class="card-grid">
+        <!-- Portrait -->
+        <figure class="portrait">
+          <img
+            src="/portrait-placeholder.svg"
+            alt="A pixelated portrait of Vinith."
+          />
+          <figcaption class="portrait-caption">
+            <span class="dot"></span>
+            Homo Sapien
+          </figcaption>
+        </figure>
+
+        <!-- Spec panel: id-card metadata -->
+        <dl class="spec">
+          <div class="spec-row">
+            <dt>Designation</dt>
+            <dd>Vinith</dd>
+          </div>
+          <div class="spec-row">
+            <dt>Passion</dt>
+            <dd>Builder</dd>
+          </div>
+          <div class="spec-row">
+            <dt>Currently</dt>
+            <dd>[Svelte + Astro] & [Flutter + Dart]</dd>
+          </div>
+          <div class="spec-row">
+            <dt>Reading</dt>
+            <dd><em>The Power of Now</em> - Eckhart Tolle</dd>
+          </div>
+        </dl>
       </div>
-      <h1>A little <em>about</em> me.</h1>
-    </header>
 
-    <div class="bio-grid">
-      <article class="bio">
-        <p>
-          Hey, I'm <strong>Vinith</strong> - a Software Development Engineer at Amazon,
-          currently on the <span class="tag-pixel">Bedrock AgentCore</span> team.
-        </p>
-        <p>
-          This site is a slow-growing place for my thoughts, projects, and the
-          things I notice. It's also where I'm teaching myself Astro and the
-          small, hand-made web.
-        </p>
-        <p>
-          Outside of work: long walks, retro games from the floppy-disk era, and
-          coffee that's a little too strong.
-        </p>
-      </article>
+      <p class="flavor">
+        Stray thoughts that didn't fit anywhere else. I'm drawn to automation,
+        unique creative expression, and a coffee a little too strong. Trying to
+        build more, break less. Lets see where this takes us.
+      </p>
 
-      <aside class="facts">
-        <div class="fact">
-          <div class="fact-label">Currently</div>
-          <div class="fact-value">Building at Amazon.</div>
+      <!-- Signature row: links disguised as a retro menu.
+           The field names are deliberately slightly odd - "frequency," "broadcast" -
+           to feel like the back of a trading card instead of a footer. -->
+      <footer class="signoff">
+        <div class="signoff-group">
+          <span class="signoff-label">Frequency</span>
+          <a href="/blog" class="signoff-value">/writing</a>
         </div>
-        <div class="fact">
-          <div class="fact-label">Reading</div>
-          <div class="fact-value">A little of everything.</div>
+        <div class="signoff-group">
+          <span class="signoff-label">Broadcast</span>
+          <a href="/tweets" class="signoff-value">/notes</a>
         </div>
-        <div class="fact">
-          <div class="fact-label">Based in</div>
-          <div class="fact-value">Seattle, WA.</div>
+        <div class="signoff-group">
+          <span class="signoff-label">Transmit</span>
+          <!-- todo: how to obuscate email from scrapers -->
+          <a href="mailto:hello@example.com" class="signoff-value">say hi</a>
         </div>
-      </aside>
-    </div>
+        <div class="signoff-group">
+          <span class="signoff-label">Coordinates</span>
+          <span class="signoff-value">Seattle, WA</span>
+        </div>
+      </footer>
+    </article>
   </section>
 </Layout>
 
 <style>
-  .band {
-    padding: 40px 0 20px;
+  .about-page {
+    min-height: calc(100vh - var(--nav-height) - 200px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 0 16px;
   }
 
-  .section-head {
-    margin-bottom: 36px;
+  /* ----------------------------------------------------------------
+     THE CARD
+     One large artifact, grid-aligned, pinned to the wall.
+     ---------------------------------------------------------------- */
+  .card-about {
+    position: relative;
+    width: 100%;
+    max-width: 860px;
+    background: var(--bg-card);
+    border: 2px solid var(--rule);
+    box-shadow: 6px 6px 0 var(--rule);
+    padding: 36px 36px 28px;
   }
-  .section-head h1 {
-    font-variation-settings:
-      "opsz" 72,
-      "SOFT" 60,
-      "wght" 500;
-    font-size: clamp(32px, 4.5vw, 54px);
-    letter-spacing: -0.025em;
-    line-height: 1.02;
-    margin-top: 10px;
+
+  /* Stamp pokes over the top-right edge: the one break from the grid. */
+  .card-stamp {
+    position: absolute;
+    top: -18px;
+    right: 32px;
+    z-index: 2;
+    background: var(--bg-card);
   }
-  .section-head h1 em {
-    font-style: italic;
-    color: var(--em);
-  }
-  .section-tag {
-    display: inline-flex;
+
+  /* ----------------------------------------------------------------
+     MASTHEAD
+     The universe is the institution issuing the card. The logo is
+     the crest; the text beside it is the department of registry.
+     Sits at the top, above the grid, ruled off like a document header.
+     ---------------------------------------------------------------- */
+  .masthead {
+    display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 16px;
+    padding-bottom: 20px;
+    margin-bottom: 28px;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .masthead-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .institution {
+    font-family: var(--font-serif);
+    font-variation-settings:
+      "opsz" 24,
+      "SOFT" 40,
+      "wght" 600;
+    font-size: 22px;
+    color: var(--ink);
+    line-height: 1.1;
+    letter-spacing: -0.005em;
+  }
+  .department {
     font-family: var(--font-pixel);
-    font-size: 11px;
+    font-size: 10px;
+    color: var(--ink-muted);
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--ink-muted);
-  }
-  .section-tag .sq {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    background: var(--green);
-    box-shadow: 0 0 0 2px var(--rule);
   }
 
-  .bio-grid {
+  .card-grid {
     display: grid;
-    grid-template-columns: 1.5fr 1fr;
+    grid-template-columns: minmax(140px, 180px) 1fr;
     gap: 32px;
     align-items: start;
   }
 
-  .bio {
+  /* ----------------------------------------------------------------
+     PORTRAIT
+     3:4, double-bordered so it feels mounted on the card rather than
+     printed into it.
+     ---------------------------------------------------------------- */
+  .portrait {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .portrait img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    image-rendering: pixelated;
+    background: var(--bg-inset);
+    border: 2px solid var(--rule);
+    box-shadow:
+      0 0 0 4px var(--bg-card),
+      0 0 0 5px var(--rule-soft);
+  }
+  .portrait-caption {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-pixel);
+    font-size: 10px;
+    color: var(--ink-muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-top: 8px;
+  }
+  .portrait-caption .dot {
+    width: 7px;
+    height: 7px;
+    background: var(--signal);
+  }
+
+  /* ----------------------------------------------------------------
+     SPEC PANEL
+     Ruled rows. Silkscreen label on the left, Fraunces value on the
+     right. Keeps most of the character in the serif column.
+     ---------------------------------------------------------------- */
+  .spec {
+    margin: 0;
+    display: grid;
+    gap: 0;
+  }
+  .spec-row {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    align-items: baseline;
+    gap: 20px;
+    padding: 14px 0;
+    border-top: 1px solid var(--rule-soft);
+  }
+  .spec-row:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
+  .spec-row:last-child {
+    padding-bottom: 0;
+  }
+
+  .spec dt {
+    font-family: var(--font-pixel);
+    font-size: 10px;
+    color: var(--ink-muted);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .spec dd {
+    margin: 0;
     font-family: var(--font-serif);
     font-variation-settings:
-      "opsz" 18,
-      "SOFT" 70,
-      "wght" 400;
+      "opsz" 20,
+      "SOFT" 60,
+      "wght" 500;
     font-size: 18px;
-    line-height: 1.7;
+    color: var(--ink);
+    line-height: 1.35;
+  }
+  .spec dd em {
+    font-style: italic;
+    color: var(--em);
+  }
+
+  /* ----------------------------------------------------------------
+     FLAVOR PARAGRAPH
+     The voice. Wider than the spec column - spans the whole card below.
+     ---------------------------------------------------------------- */
+  .flavor {
+    margin: 32px 0 0;
+    padding: 28px 0 28px;
+    border-top: 1px solid var(--rule-soft);
+    border-bottom: 1px solid var(--rule-soft);
+    font-family: var(--font-serif);
+    font-variation-settings:
+      "opsz" 22,
+      "SOFT" 80,
+      "wght" 400;
+    font-size: 19px;
+    line-height: 1.55;
     color: var(--ink-soft);
     max-width: 58ch;
   }
-  .bio p + p {
-    margin-top: 16px;
-  }
-  .bio strong {
-    color: var(--ink);
-    font-weight: 600;
-  }
 
-  .facts {
-    background: var(--bg-card);
-    border: 2px solid var(--rule);
-    box-shadow: 4px 4px 0 var(--rule);
-    padding: 20px 22px;
+  /* ----------------------------------------------------------------
+     SIGNATURE ROW
+     Back-of-card fields. Not a nav, not a footer - *part of the card*.
+     ---------------------------------------------------------------- */
+  .signoff {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    margin-top: 24px;
+  }
+  .signoff-group {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 4px;
   }
-  .fact + .fact {
-    border-top: 1px solid var(--rule-soft);
-    padding-top: 16px;
-  }
-  .fact-label {
+  .signoff-label {
     font-family: var(--font-pixel);
-    font-size: 10px;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
+    font-size: 9px;
     color: var(--ink-muted);
-    margin-bottom: 4px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
   }
-  .fact-value {
+  .signoff-value {
     font-family: var(--font-serif);
     font-variation-settings:
-      "opsz" 16,
+      "opsz" 18,
       "wght" 500;
     font-size: 16px;
     color: var(--ink);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  a.signoff-value {
+    border-bottom: 1px solid var(--rule-soft);
+    padding-bottom: 2px;
+    display: inline-block;
+    width: max-content;
+  }
+  a.signoff-value:hover {
+    color: var(--link-hover);
+    border-bottom-color: currentColor;
   }
 
+  /* ----------------------------------------------------------------
+     RESPONSIVE
+     Below 720px the portrait stacks above the spec panel. The stamp
+     moves toward the corner to avoid the narrower layout.
+     ---------------------------------------------------------------- */
   @media (max-width: 720px) {
-    .bio-grid {
+    .card-about {
+      padding: 28px 22px 22px;
+    }
+    .card-grid {
       grid-template-columns: 1fr;
+      gap: 24px;
+    }
+    .portrait {
+      max-width: 180px;
+    }
+    .masthead {
+      gap: 12px;
+      padding-bottom: 16px;
+      margin-bottom: 22px;
+    }
+    .institution {
+      font-size: 18px;
+    }
+    .card-stamp {
+      right: 16px;
+      top: -14px;
+    }
+    .signoff {
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
     }
   }
 </style>
