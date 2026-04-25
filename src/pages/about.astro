@@ -2,14 +2,23 @@
 import Layout from "../layouts/Layout.astro";
 import FoilCard from "../components/primitives/FoilCard.astro";
 import Stamp from "../components/primitives/Stamp.astro";
-import InkStamp from "../components/primitives/InkStamp.astro";
-import ColorStamp from "../components/primitives/ColorStamp.astro";
-import DateStamp from "../components/primitives/DateStamp.astro";
 import Serial from "../components/primitives/Serial.astro";
 import SpecList from "../components/primitives/SpecList.astro";
 import SpecRow from "../components/primitives/SpecRow.astro";
 import UniverseLogo from "../components/UniverseLogo.astro";
 import DisplayFlipBoard from "../components/primitives/DisplayFlipBoard.astro";
+import StampArea from "../components/StampArea.svelte";
+import StampTray from "../components/StampTray.svelte";
+
+// Single source of truth for the four available stamps. Both the tray
+// (outside the card) and the stamp area (inside the card) read this.
+const STAMPS = [
+  { id: "bee",      kind: "ink",   src: "/assets/bee.svg",      accent: "yellow", label: "Bee" },
+  { id: "coffee",   kind: "ink",   src: "/assets/coffee.svg",   accent: "red",    label: "Coffee" },
+  { id: "wisteria", kind: "ink",   src: "/assets/wisteria.svg", accent: "blue",   label: "Wisteria" },
+  { id: "galaxy",   kind: "color", src: "/assets/galaxy.svg",                      label: "Galaxy" },
+  { id: "date",     kind: "date",                                                   label: "Date" },
+];
 ---
 
 <Layout title="About - Vinith">
@@ -27,98 +36,81 @@ import DisplayFlipBoard from "../components/primitives/DisplayFlipBoard.astro";
         rotate={-15}
       />
 
-      <!-- Three rubber stamps scattered across the card. Absolute-
-           positioned; all share the #rubber-ink SVG filter in Layout.astro.
-           Eventually these will be pressable by the visitor and fade
-           after 7s — for now they're static samples to preview texture. -->
-      <InkStamp
-        class="scatter-stamp scatter-stamp--bee"
-        src="/assets/bee.svg"
-        accent="yellow"
-        size={120}
-        rotate={-10}
-        label="A honeybee rubber stamp"
-      />
-      <InkStamp
-        class="scatter-stamp scatter-stamp--coffee"
-        src="/assets/coffee.svg"
-        accent="red"
-        size={88}
-        rotate={8}
-        label="A coffee cup rubber stamp"
-      />
-      <DateStamp
-        class="scatter-stamp scatter-stamp--date"
-        ringText="RECEIVED · OBSERVABLE UNIVERSE · "
-        ringAccent="red"
-        dateAccent="green"
-        size={130}
-        rotate={-6}
-      />
-      <ColorStamp
-        class="scatter-stamp scatter-stamp--galaxy"
-        src="/assets/galaxy.svg"
-        size={110}
-        rotate={12}
-        label="A galaxy rubber stamp"
-      />
+      <!-- .paper-zone wraps everything that counts as stampable paper.
+           StampArea is mounted inside and fills the zone via inset:0,
+           so the digital display below (outside the zone) is not
+           reachable by the armed cursor. Stamps also clip at the
+           zone's bounds, so nothing bleeds onto the display. -->
+      <div class="paper-zone">
+        <StampArea client:load ageMs={30000} />
 
-      <header class="masthead">
-        <UniverseLogo size={52} accent="yellow" />
-        <div class="masthead-text">
-          <div class="institution">Observable Universe</div>
-          <div class="department">Registry of Emergent Observers</div>
-        </div>
-        <Serial
-          class="masthead-serial"
-          items={[
-            { k: "Issue", v: "N-0001" },
-            { k: "Foil", v: "Gravitational" },
-          ]}
-        />
-      </header>
-
-      <div class="card-grid">
-        <figure class="portrait">
-          <img
-            src="/portrait-placeholder.svg"
-            alt="A pixelated portrait of Vinith."
+        <header class="masthead">
+          <UniverseLogo size={52} accent="yellow" />
+          <div class="masthead-text">
+            <div class="institution">Observable Universe</div>
+            <div class="department">Registry of Emergent Observers</div>
+          </div>
+          <Serial
+            class="masthead-serial"
+            items={[
+              { k: "Issue", v: "N-0001" },
+              { k: "Foil", v: "Gravitational" },
+            ]}
           />
-          <figcaption class="portrait-caption">
-            <span class="dot"></span>
-            Homo Sapien
-          </figcaption>
-        </figure>
+        </header>
 
-        <SpecList>
-          <SpecRow label="Designation">Vinith</SpecRow>
-          <SpecRow label="Passion">Builder</SpecRow>
-          <SpecRow label="Currently">[Svelte + Astro] & [Flutter + Dart]</SpecRow>
-          <SpecRow label="Reading">
-            <em>The Power of Now</em> — Eckhart Tolle
-          </SpecRow>
-        </SpecList>
+        <div class="card-grid">
+          <figure class="portrait">
+            <img
+              src="/portrait-placeholder.svg"
+              alt="A pixelated portrait of Vinith."
+            />
+            <figcaption class="portrait-caption">
+              <span class="dot"></span>
+              Homo Sapien
+            </figcaption>
+          </figure>
+
+          <SpecList>
+            <SpecRow label="Designation">Vinith</SpecRow>
+            <SpecRow label="Passion">Builder</SpecRow>
+            <SpecRow label="Currently">[Svelte + Astro] & [Flutter + Dart]</SpecRow>
+            <SpecRow label="Reading">
+              <em>The Power of Now</em> — Eckhart Tolle
+            </SpecRow>
+          </SpecList>
+        </div>
+
+        <p class="flavor">
+          Stray thoughts that didn't fit anywhere else. I'm drawn to automation,
+          unique creative expression, and a coffee a little too strong. Trying to
+          build more, break less. Lets see where this takes us.
+        </p>
       </div>
 
-      <p class="flavor">
-        Stray thoughts that didn't fit anywhere else. I'm drawn to automation,
-        unique creative expression, and a coffee a little too strong. Trying to
-        build more, break less. Lets see where this takes us.
-      </p>
-
+      <!-- Digital display sits OUTSIDE .paper-zone — deliberately
+           unreachable by the stamp area so presses can't land on it. -->
       <DisplayFlipBoard
         fused
         email="hello@vinith.dev"
         fields={[{ label: "Coordinates", value: "47.62, -122.35" }]}
       />
     </FoilCard>
+
+    <!-- Tiny icon-only tray, positioned outside the card at bottom-right.
+         Shares state with the StampArea via stamp-store.svelte.js. -->
+    <div class="stamp-tray-wrap">
+      <StampTray client:load stamps={STAMPS} />
+    </div>
   </section>
 </Layout>
 
 <style>
   .about-page {
+    position: relative;
     min-height: calc(100vh - var(--nav-height) - 200px);
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 48px 0 32px;
@@ -136,85 +128,32 @@ import DisplayFlipBoard from "../components/primitives/DisplayFlipBoard.astro";
     background: var(--bg-card);
   }
 
-  /* Scattered rubber stamps — positioned absolutely inside .foil-content
-     so they sit above the foil/holo layers but don't reflow content.
-     Mix-blend-mode: multiply fuses the ink into the paper. */
-  :global(.scatter-stamp) {
-    position: absolute;
-    z-index: 7;
-    mix-blend-mode: multiply;
-    opacity: 0.88;
-  }
-  :global(:root[data-theme="dark"]) :global(.scatter-stamp) {
-    /* Dusk paper absorbs multiply into black — use screen to let the
-       ink glow against the warm dark. */
-    mix-blend-mode: screen;
-    opacity: 0.92;
+  /* The stampable "paper" region of the card — masthead, grid, flavor.
+     Establishes the stacking + hit-test area the StampArea island fills.
+     The digital display below lives as a sibling to this zone (not
+     inside), so presses can't land on it. Stamps are NOT clipped at
+     the zone edges — they can visually spill onto the rest of the
+     card for a more organic hand-pressed feel. */
+  .paper-zone {
+    position: relative;
   }
 
-  :global(.scatter-stamp--bee) {
-    top: 6%;
-    right: 14%;
-  }
-  :global(.scatter-stamp--coffee) {
-    bottom: 18%;
-    left: -10px;
-  }
-  :global(.scatter-stamp--date) {
-    bottom: 6%;
-    right: 6%;
-  }
-  :global(.scatter-stamp--galaxy) {
-    /* Top-left, tucked between masthead and portrait. The galaxy SVG
-       carries its own palette (yellow burst + pastel stars), so we opt
-       out of mix-blend-mode — multiply would mute the light pastels
-       and screen would blow them out. */
-    top: 34%;
-    left: -24px;
-    mix-blend-mode: normal;
-    opacity: 0.95;
-  }
-  :global(:root[data-theme="dark"]) :global(.scatter-stamp--galaxy) {
-    mix-blend-mode: normal;
-    opacity: 0.95;
+  /* Tray sits outside the card at the bottom-right, on the same
+     centered column as the card. Pointer-events stays enabled even
+     when stamping is armed — users need to click the tray to change
+     or deselect their stamp. */
+  .stamp-tray-wrap {
+    width: 100%;
+    max-width: 880px;
+    margin-top: 12px;
+    display: flex;
+    justify-content: flex-end;
+    padding: 0 4px;
   }
 
-  @media (max-width: 860px) {
-    :global(.scatter-stamp--bee) {
-      top: 4%;
-      right: 4%;
-    }
-    :global(.scatter-stamp--galaxy) {
-      top: 30%;
-      left: -16px;
-    }
-  }
   @media (max-width: 720px) {
-    /* On narrow screens the card is tight — shrink and tuck stamps so
-       they don't cover the portrait or spec list. */
-    :global(.scatter-stamp--bee) {
-      width: 80px !important;
-      height: 80px !important;
-      top: 2%;
-      right: 2%;
-    }
-    :global(.scatter-stamp--coffee) {
-      width: 64px !important;
-      height: 64px !important;
-      bottom: 2%;
-      left: 4%;
-    }
-    :global(.scatter-stamp--date) {
-      width: 90px !important;
-      height: 90px !important;
-      bottom: 2%;
-      right: 4%;
-    }
-    :global(.scatter-stamp--galaxy) {
-      width: 70px !important;
-      height: 70px !important;
-      top: 32%;
-      left: -8px;
+    .stamp-tray-wrap {
+      padding: 0 16px;
     }
   }
 

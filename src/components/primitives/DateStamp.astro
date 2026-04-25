@@ -88,7 +88,11 @@ const fullRing = (ringText.repeat(3)).slice(0, 72);
     height: var(--date-stamp-size);
     transform: rotate(var(--date-stamp-rotate));
     transform-origin: center;
-    filter: url(#rubber-ink)
+    /* Uses the no-erosion rubber-ink variant so the stamp can overlap
+       the dark digital display strip without dry-patches punching
+       through to reveal the display color. Keeps the displacement
+       wobble and ink bleed so it still reads as hand-pressed. */
+    filter: url(#rubber-ink-solid)
       drop-shadow(0 0 0.6px color-mix(in oklab, var(--ring-color) 50%, transparent));
     user-select: none;
     pointer-events: none;
