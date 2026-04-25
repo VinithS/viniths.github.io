@@ -198,16 +198,26 @@ const inlineStyle = stampSrc
 
   /* Shaped foil stamp — an SVG masks a conic iridescent gradient so
      only the stamp's silhouette takes on the foil, like real hot-stamp
-     foil pressed into paper. Cursor rotates the gradient's hue axis. */
+     foil pressed into paper. Cursor rotates the gradient's hue axis.
+
+     Conic center sits at the bottom-right corner (at 100% 100%), not
+     the card center — a conic gradient has a hue-convergence point
+     right at its center, which would otherwise plant a visible "sharp
+     pinwheel" singularity inside the masked fairy-tail silhouette.
+     Off-card center makes the iridescent read as hue bands *sweeping*
+     across the foil as you tilt, closer to how real holographic foil
+     behaves. */
   .stamp {
     z-index: 1;
     /* Gently brighter when the cursor is over the card, but always
        visible so it reads as a printed watermark, not a screen effect. */
     opacity: calc(0.55 + var(--active) * 0.35);
-    transition: opacity 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transition:
+      opacity 0.45s cubic-bezier(0.2, 0.8, 0.2, 1),
+      filter 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
     mix-blend-mode: screen;
     background: conic-gradient(
-      from calc(var(--mxn) * 3.6deg) at 50% 50%,
+      from calc(var(--mxn) * 3.6deg) at 90% 90%,
       var(--red) 0deg,
       var(--yellow) 72deg,
       var(--green) 144deg,
@@ -298,14 +308,24 @@ const inlineStyle = stampSrc
   }
 
   /* Theme tuning: dark dusk paper swallows color, push foil harder.
-     Light cream burns out faster, ease it off. */
+     Light cream burns out faster, ease it off.
+
+     Dark mode stays on screen (not color-dodge). color-dodge's
+     result = base / (1 - blend) amplifies each hue-to-hue transition
+     in the conic gradient into a crisp banded rainbow wheel — fine
+     under .holo's 40px blur, but the masked .stamp is unblurred so
+     the banding shows through as a spinning pinwheel. Opacity is
+     bumped ~0.1 to keep the "stronger in dark" intent without relying
+     on a blend mode that amplifies gradient discontinuities. */
   :global(:root[data-theme="dark"]) .stamp {
-    opacity: calc(0.7 + var(--active) * 0.3);
-    mix-blend-mode: color-dodge;
+    opacity: calc(0.85 + var(--active) * 0.35);
+    /* Dusk paper's dark base (#241f18) doesn't soften saturated hues
+       through `screen` the way the light cream does — pull saturation
+       down so the stamp reads as warm iridescence, not a rainbow. */
+    filter: saturate(0.7);
   }
   :global(:root[data-theme="dark"]) .holo {
-    opacity: calc(0.22 + var(--active) * 0.25);
-    mix-blend-mode: color-dodge;
+    opacity: calc(0.32 + var(--active) * 0.3);
   }
   :global(:root[data-theme="dark"]) .gloss {
     mix-blend-mode: soft-light;
