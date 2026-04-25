@@ -1,0 +1,34 @@
+---
+/*
+  SpecList - dl wrapper for SpecRow children.
+
+  Usage:
+    <SpecList>
+      <SpecRow label="Designation">Vinith</SpecRow>
+      <SpecRow label="Reading"><em>The Power of Now</em> - Eckhart Tolle</SpecRow>
+    </SpecList>
+
+  Rows are ruled with a thin top border; the first row drops its rule.
+  The label column is a pixel-font dt, the value column is a serif dd.
+*/
+
+interface Props {
+  class?: string;
+}
+
+const { class: className = "" } = Astro.props;
+---
+
+<dl class:list={["spec-list", className]}>
+  <slot />
+</dl>
+
+<style>
+  .spec-list {
+    margin: 0;
+    display: grid;
+    gap: 0;
+  }
+  /* Row styling lives on SpecRow itself; SpecList only provides the
+     <dl> wrapper so semantic markup stays correct. */
+</style>

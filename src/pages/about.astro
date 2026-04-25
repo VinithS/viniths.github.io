@@ -1,163 +1,90 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import FoilCard from "../components/primitives/FoilCard.astro";
 import Stamp from "../components/primitives/Stamp.astro";
+import Serial from "../components/primitives/Serial.astro";
+import SpecList from "../components/primitives/SpecList.astro";
+import SpecRow from "../components/primitives/SpecRow.astro";
 import UniverseLogo from "../components/UniverseLogo.astro";
 ---
 
 <Layout title="About - Vinith">
   <section class="about-page">
-    <!--
-      The card is a foil-pressed issue of the Observer Registry.
-      Layers (back to front):
-        .foil         static diagonal hairline grain, always visible (paper stock)
-        .holo         iridescent conic gradient, cursor-masked, mix-blend screen
-        .horizon      dark event-horizon radial at cursor, mix-blend multiply
-        .gloss        specular cursor highlight, mix-blend overlay
-        .content      the actual "printed" document — stamp, masthead, spec, etc.
-    -->
-    <article class="card-futuristic" data-reduce-motion-safe>
-      <span class="foil" aria-hidden="true"></span>
-      <span class="holo" aria-hidden="true"></span>
-      <span class="horizon" aria-hidden="true"></span>
-      <span class="gloss" aria-hidden="true"></span>
+    <FoilCard maxWidth={880}>
+      <Stamp
+        slot="corner"
+        class="card-stamp"
+        lines={["Est · 1997", "Entry · 001"]}
+        accent="green"
+        size="md"
+        rotate={-15}
+      />
 
-      <!-- Corner viewfinder ticks: technical-document cue. -->
-      <span class="tick tick--tl" aria-hidden="true"></span>
-      <span class="tick tick--tr" aria-hidden="true"></span>
-      <span class="tick tick--bl" aria-hidden="true"></span>
-      <span class="tick tick--br" aria-hidden="true"></span>
-
-      <div class="content">
-        <Stamp
-          class="card-stamp"
-          lines={["Est · 1997", "Entry · 001"]}
-          accent="green"
-          size="md"
-          rotate={-15}
-        />
-
-        <header class="masthead">
-          <UniverseLogo size={52} accent="yellow" />
-          <div class="masthead-text">
-            <div class="institution">Observable Universe</div>
-            <div class="department">Registry of Emergent Observers</div>
-          </div>
-          <div class="serial">
-            <span class="serial-k">Issue</span>
-            <span class="serial-v">N-0001</span>
-            <span class="serial-sep">·</span>
-            <span class="serial-k">Foil</span>
-            <span class="serial-v">Gravitational</span>
-          </div>
-        </header>
-
-        <div class="card-grid">
-          <figure class="portrait">
-            <img
-              src="/portrait-placeholder.svg"
-              alt="A pixelated portrait of Vinith."
-            />
-            <figcaption class="portrait-caption">
-              <span class="dot"></span>
-              Homo Sapien
-            </figcaption>
-          </figure>
-
-          <dl class="spec">
-            <div class="spec-row">
-              <dt>Designation</dt>
-              <dd>Vinith</dd>
-            </div>
-            <div class="spec-row">
-              <dt>Passion</dt>
-              <dd>Builder</dd>
-            </div>
-            <div class="spec-row">
-              <dt>Currently</dt>
-              <dd>[Svelte + Astro] & [Flutter + Dart]</dd>
-            </div>
-            <div class="spec-row">
-              <dt>Reading</dt>
-              <dd><em>The Power of Now</em> — Eckhart Tolle</dd>
-            </div>
-          </dl>
+      <header class="masthead">
+        <UniverseLogo size={52} accent="yellow" />
+        <div class="masthead-text">
+          <div class="institution">Observable Universe</div>
+          <div class="department">Registry of Emergent Observers</div>
         </div>
+        <Serial
+          class="masthead-serial"
+          items={[
+            { k: "Issue", v: "N-0001" },
+            { k: "Foil", v: "Gravitational" },
+          ]}
+        />
+      </header>
 
-        <p class="flavor">
-          Stray thoughts that didn't fit anywhere else. I'm drawn to automation,
-          unique creative expression, and a coffee a little too strong. Trying to
-          build more, break less. Lets see where this takes us.
-        </p>
+      <div class="card-grid">
+        <figure class="portrait">
+          <img
+            src="/portrait-placeholder.svg"
+            alt="A pixelated portrait of Vinith."
+          />
+          <figcaption class="portrait-caption">
+            <span class="dot"></span>
+            Homo Sapien
+          </figcaption>
+        </figure>
 
-        <footer class="signoff">
-          <div class="signoff-group">
-            <span class="signoff-label">Frequency</span>
-            <a href="/blog" class="signoff-value">/writing</a>
-          </div>
-          <div class="signoff-group">
-            <span class="signoff-label">Broadcast</span>
-            <a href="/tweets" class="signoff-value">/notes</a>
-          </div>
-          <div class="signoff-group">
-            <span class="signoff-label">Transmit</span>
-            <!-- todo: how to obfuscate email from scrapers -->
-            <a href="mailto:hello@example.com" class="signoff-value">say hi</a>
-          </div>
-          <div class="signoff-group">
-            <span class="signoff-label">Coordinates</span>
-            <span class="signoff-value">Seattle, WA</span>
-          </div>
-        </footer>
+        <SpecList>
+          <SpecRow label="Designation">Vinith</SpecRow>
+          <SpecRow label="Passion">Builder</SpecRow>
+          <SpecRow label="Currently">[Svelte + Astro] & [Flutter + Dart]</SpecRow>
+          <SpecRow label="Reading">
+            <em>The Power of Now</em> — Eckhart Tolle
+          </SpecRow>
+        </SpecList>
       </div>
-    </article>
+
+      <p class="flavor">
+        Stray thoughts that didn't fit anywhere else. I'm drawn to automation,
+        unique creative expression, and a coffee a little too strong. Trying to
+        build more, break less. Lets see where this takes us.
+      </p>
+
+      <footer class="signoff">
+        <div class="signoff-group">
+          <span class="signoff-label">Frequency</span>
+          <a href="/blog" class="signoff-value">/writing</a>
+        </div>
+        <div class="signoff-group">
+          <span class="signoff-label">Broadcast</span>
+          <a href="/tweets" class="signoff-value">/notes</a>
+        </div>
+        <div class="signoff-group">
+          <span class="signoff-label">Transmit</span>
+          <!-- todo: how to obfuscate email from scrapers -->
+          <a href="mailto:hello@example.com" class="signoff-value">say hi</a>
+        </div>
+        <div class="signoff-group">
+          <span class="signoff-label">Coordinates</span>
+          <span class="signoff-value">Seattle, WA</span>
+        </div>
+      </footer>
+    </FoilCard>
   </section>
 </Layout>
-
-<script>
-  // Pointer-tracked holographic glint. Sets CSS custom properties on the card;
-  // all visual work happens in CSS. ~25 lines of JS for the whole effect.
-  const card = document.querySelector<HTMLElement>(".card-futuristic");
-  if (card) {
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let raf = 0;
-    let rect: DOMRect | null = null;
-
-    const recompute = () => { rect = card.getBoundingClientRect(); };
-    recompute();
-    window.addEventListener("resize", recompute);
-    window.addEventListener("scroll", recompute, { passive: true });
-
-    const onMove = (e: PointerEvent) => {
-      if (!rect) return;
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => {
-        const x = e.clientX - rect!.left;
-        const y = e.clientY - rect!.top;
-        const px = Math.max(0, Math.min(100, (x / rect!.width) * 100));
-        const py = Math.max(0, Math.min(100, (y / rect!.height) * 100));
-        card.style.setProperty("--mx", `${px}%`);
-        card.style.setProperty("--my", `${py}%`);
-        card.style.setProperty("--active", "1");
-        if (!reduce) {
-          const rx = (0.5 - y / rect!.height) * 8;  // tilt away from cursor
-          const ry = (x / rect!.width - 0.5) * 10;
-          card.style.setProperty("--rx", `${rx}deg`);
-          card.style.setProperty("--ry", `${ry}deg`);
-        }
-      });
-    };
-
-    const onLeave = () => {
-      card.style.setProperty("--active", "0");
-      card.style.setProperty("--rx", "0deg");
-      card.style.setProperty("--ry", "0deg");
-    };
-
-    card.addEventListener("pointerenter", recompute);
-    card.addEventListener("pointermove", onMove);
-    card.addEventListener("pointerleave", onLeave);
-  }
-</script>
 
 <style>
   .about-page {
@@ -166,185 +93,13 @@ import UniverseLogo from "../components/UniverseLogo.astro";
     align-items: center;
     justify-content: center;
     padding: 48px 0 32px;
-    perspective: 1600px; /* depth context for the card tilt */
+    /* Depth context for the FoilCard's cursor-driven tilt. */
+    perspective: 1600px;
   }
 
-  /* ================================================================
-     THE CARD
-     A paper document pressed on holographic foil stock. The outer
-     frame is still our chunky Warm-Arcade-Paper card; the surface
-     underneath the content is where the black-hole glint lives.
-     ================================================================ */
-  .card-futuristic {
-    --mx: 50%;
-    --my: 50%;
-    --active: 0;
-    --rx: 0deg;
-    --ry: 0deg;
-
-    position: relative;
-    width: 100%;
-    max-width: 880px;
-    background: var(--bg-card);
-    border: 2px solid var(--rule);
-    box-shadow:
-      8px 8px 0 var(--rule),
-      0 30px 60px -30px rgba(0, 0, 0, 0.35);
-    padding: 0;
-    overflow: hidden;
-    isolation: isolate; /* keep mix-blend scoped to the card */
-    transform:
-      rotateX(var(--rx))
-      rotateY(var(--ry));
-    transform-style: preserve-3d;
-    transition:
-      transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
-      box-shadow 0.4s ease;
-    will-change: transform;
-  }
-  .card-futuristic:hover {
-    box-shadow:
-      10px 10px 0 var(--rule),
-      0 40px 80px -30px rgba(0, 0, 0, 0.55);
-  }
-
-  /* ----------------------------------------------------------------
-     LAYERS
-     Each is absolute, full-bleed, pointer-events:none. Stacking is
-     managed by z-index. The content layer sits at z-index: 2 so it
-     reads as "printed on top" of all the foil behavior.
-     ---------------------------------------------------------------- */
-  .foil,
-  .holo,
-  .horizon,
-  .gloss {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-  }
-
-  /* Static foil substrate — visible even without hover. A 115°
-     hairline grain suggests the foil's grain before light hits it. */
-  .foil {
-    z-index: 0;
-    opacity: 0.55;
-    background:
-      repeating-linear-gradient(
-        115deg,
-        transparent 0px,
-        transparent 2px,
-        var(--rule-xsoft) 2px,
-        var(--rule-xsoft) 3px
-      ),
-      repeating-linear-gradient(
-        25deg,
-        transparent 0px,
-        transparent 7px,
-        var(--rule-xsoft) 7px,
-        var(--rule-xsoft) 8px
-      );
-    mix-blend-mode: multiply;
-  }
-
-  /* The accretion-disk glint. Conic sweep of the arcade palette,
-     rotated by the cursor's X%, masked to a soft ring around the
-     cursor. Shows only on hover via --active. */
-  .holo {
-    z-index: 1;
-    opacity: calc(var(--active) * 0.9);
-    transition: opacity 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
-    mix-blend-mode: screen;
-    background:
-      conic-gradient(
-        from calc(var(--mx) * 3.6deg) at var(--mx) var(--my),
-        var(--red)    0deg,
-        var(--yellow) 72deg,
-        var(--green)  144deg,
-        var(--blue)   216deg,
-        var(--red)    288deg,
-        var(--red)    360deg
-      );
-    -webkit-mask:
-      radial-gradient(
-        circle at var(--mx) var(--my),
-        rgba(0, 0, 0, 0) 4%,
-        rgba(0, 0, 0, 1) 18%,
-        rgba(0, 0, 0, 0.55) 40%,
-        rgba(0, 0, 0, 0) 70%
-      );
-            mask:
-      radial-gradient(
-        circle at var(--mx) var(--my),
-        rgba(0, 0, 0, 0) 4%,
-        rgba(0, 0, 0, 1) 18%,
-        rgba(0, 0, 0, 0.55) 40%,
-        rgba(0, 0, 0, 0) 70%
-      );
-  }
-
-  /* Event horizon: the dark heart at the cursor. Multiply so it
-     darkens whatever is underneath — which is the hologram and the
-     foil. Reads as a hole that the rainbow is bending around. */
-  .horizon {
-    z-index: 2;
-    opacity: calc(var(--active) * 1);
-    transition: opacity 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
-    mix-blend-mode: multiply;
-    background:
-      radial-gradient(
-        circle at var(--mx) var(--my),
-        rgba(0, 0, 0, 0.92) 0%,
-        rgba(0, 0, 0, 0.65) 3.5%,
-        rgba(0, 0, 0, 0.25) 8%,
-        transparent 18%
-      );
-  }
-
-  /* Specular highlight. Softer than the horizon, warmer than white.
-     Sits above the glint to feel like reflected light. */
-  .gloss {
-    z-index: 3;
-    opacity: calc(var(--active) * 1);
-    transition: opacity 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
-    mix-blend-mode: overlay;
-    background:
-      radial-gradient(
-        ellipse 55% 65% at var(--mx) var(--my),
-        rgba(255, 245, 220, 0.38) 0%,
-        rgba(255, 245, 220, 0) 45%
-      );
-  }
-
-  /* ----------------------------------------------------------------
-     CORNER VIEWFINDER TICKS
-     Small L-brackets at each corner. Pure borders on a square.
-     They sit below the content but above the horizon, so the
-     hologram slides past them but they never get eaten by ink.
-     ---------------------------------------------------------------- */
-  .tick {
-    position: absolute;
-    width: 14px;
-    height: 14px;
-    z-index: 4;
-    pointer-events: none;
-  }
-  .tick--tl { top: 14px;    left: 14px;    border-top: 2px solid var(--rule); border-left: 2px solid var(--rule); }
-  .tick--tr { top: 14px;    right: 14px;   border-top: 2px solid var(--rule); border-right: 2px solid var(--rule); }
-  .tick--bl { bottom: 14px; left: 14px;    border-bottom: 2px solid var(--rule); border-left: 2px solid var(--rule); }
-  .tick--br { bottom: 14px; right: 14px;   border-bottom: 2px solid var(--rule); border-right: 2px solid var(--rule); }
-
-  /* ----------------------------------------------------------------
-     CONTENT — "printed on top"
-     z-index above all foil/hologram layers. Everything inside uses
-     solid surface tokens so it reads as ink, not as a floating panel.
-     ---------------------------------------------------------------- */
-  .content {
-    position: relative;
-    z-index: 5;
-    padding: 44px 44px 32px;
-  }
-
-  .card-stamp {
+  /* Stamp breaks the grid in the top-right of the card. Solid bg matches
+     the card so the foil layers don't bleed through. */
+  :global(.card-stamp) {
     position: absolute;
     top: -18px;
     right: 36px;
@@ -352,12 +107,7 @@ import UniverseLogo from "../components/UniverseLogo.astro";
     background: var(--bg-card);
   }
 
-  /* ----------------------------------------------------------------
-     MASTHEAD with serial strip
-     The crest + institution on the left; a monospace serial line on
-     the right. The serial is the "futuristic document" tell — tiny,
-     tracked, pixel-label — without being sci-fi cosplay.
-     ---------------------------------------------------------------- */
+  /* Masthead — crest + institution on the left, Serial on the right. */
   .masthead {
     display: grid;
     grid-template-columns: auto 1fr auto;
@@ -391,26 +141,6 @@ import UniverseLogo from "../components/UniverseLogo.astro";
     text-transform: uppercase;
   }
 
-  .serial {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 6px 10px;
-    background: var(--bg-inset);
-    border: 1px solid var(--rule-soft);
-    font-family: var(--font-pixel);
-    font-size: 9px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--ink);
-  }
-  .serial-k { color: var(--ink-muted); }
-  .serial-v { color: var(--ink); }
-  .serial-sep { color: var(--ink-muted); opacity: 0.6; }
-
-  /* ----------------------------------------------------------------
-     CARD GRID — portrait + spec, same proportions as before
-     ---------------------------------------------------------------- */
   .card-grid {
     display: grid;
     grid-template-columns: minmax(140px, 180px) 1fr;
@@ -453,55 +183,9 @@ import UniverseLogo from "../components/UniverseLogo.astro";
     background: var(--signal);
   }
 
-  .spec {
-    margin: 0;
-    display: grid;
-    gap: 0;
-  }
-  .spec-row {
-    display: grid;
-    grid-template-columns: 90px 1fr;
-    align-items: baseline;
-    gap: 20px;
-    padding: 14px 0;
-    border-top: 1px solid var(--rule-soft);
-  }
-  .spec-row:first-child {
-    border-top: none;
-    padding-top: 0;
-  }
-  .spec-row:last-child {
-    padding-bottom: 0;
-  }
-  .spec dt {
-    font-family: var(--font-pixel);
-    font-size: 10px;
-    color: var(--ink-muted);
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-  }
-  .spec dd {
-    margin: 0;
-    font-family: var(--font-serif);
-    font-variation-settings:
-      "opsz" 20,
-      "SOFT" 60,
-      "wght" 500;
-    font-size: 18px;
-    color: var(--ink);
-    line-height: 1.35;
-  }
-  .spec dd em {
-    font-style: italic;
-    color: var(--em);
-  }
-
-  /* ----------------------------------------------------------------
-     FLAVOR PARAGRAPH — the voice
-     ---------------------------------------------------------------- */
   .flavor {
     margin: 32px 0 0;
-    padding: 28px 0 28px;
+    padding: 28px 0;
     border-top: 1px solid var(--rule-soft);
     border-bottom: 1px solid var(--rule-soft);
     font-family: var(--font-serif);
@@ -515,9 +199,6 @@ import UniverseLogo from "../components/UniverseLogo.astro";
     max-width: 58ch;
   }
 
-  /* ----------------------------------------------------------------
-     SIGNATURE ROW
-     ---------------------------------------------------------------- */
   .signoff {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -557,69 +238,33 @@ import UniverseLogo from "../components/UniverseLogo.astro";
     border-bottom-color: currentColor;
   }
 
-  /* ----------------------------------------------------------------
-     THEME-SPECIFIC TUNING
-     Dark mode's dusk paper swallows more color — push the hologram
-     harder. Light mode's cream burns out faster — ease it off.
-     This is the only place the card knows about themes; the tuning
-     lives on a wrapper selector so the component markup is theme-
-     agnostic.
-     ---------------------------------------------------------------- */
-  :global(:root[data-theme="dark"]) .holo {
-    opacity: calc(var(--active) * 1);
-    mix-blend-mode: color-dodge;
-  }
-  :global(:root[data-theme="dark"]) .gloss {
-    mix-blend-mode: soft-light;
-  }
-  :global(:root[data-theme="light"]) .holo {
-    opacity: calc(var(--active) * 0.75);
-  }
-
-  /* ----------------------------------------------------------------
-     REDUCED MOTION
-     Keep the hologram (it's hover feedback, not decoration).
-     Drop the tilt — that's the motion that could trigger vestibular
-     symptoms.
-     ---------------------------------------------------------------- */
-  @media (prefers-reduced-motion: reduce) {
-    .card-futuristic {
-      transition: none;
-      transform: none !important;
-    }
-  }
-
-  /* ----------------------------------------------------------------
-     RESPONSIVE
-     Below 720px the portrait stacks above the spec panel. The
-     serial strip drops to a second row so the masthead doesn't
-     over-compress.
-     ---------------------------------------------------------------- */
   @media (max-width: 860px) {
-    .content { padding: 36px 28px 26px; }
     .masthead {
       grid-template-columns: auto 1fr;
       row-gap: 12px;
     }
-    .serial {
+    :global(.masthead-serial) {
       grid-column: 1 / -1;
       justify-self: start;
     }
   }
   @media (max-width: 720px) {
-    .content { padding: 30px 22px 22px; }
     .card-grid {
       grid-template-columns: 1fr;
       gap: 24px;
     }
-    .portrait { max-width: 180px; }
+    .portrait {
+      max-width: 180px;
+    }
     .masthead {
       gap: 12px;
       padding-bottom: 16px;
       margin-bottom: 22px;
     }
-    .institution { font-size: 18px; }
-    .card-stamp {
+    .institution {
+      font-size: 18px;
+    }
+    :global(.card-stamp) {
       right: 20px;
       top: -14px;
     }
@@ -627,10 +272,5 @@ import UniverseLogo from "../components/UniverseLogo.astro";
       grid-template-columns: 1fr 1fr;
       gap: 18px;
     }
-    .tick { width: 10px; height: 10px; }
-    .tick--tl, .tick--tr { top: 10px; }
-    .tick--bl, .tick--br { bottom: 10px; }
-    .tick--tl, .tick--bl { left: 10px; }
-    .tick--tr, .tick--br { right: 10px; }
   }
 </style>

@@ -1,0 +1,332 @@
+---
+/*
+  FoilCard - a document pressed on holographic foil stock.
+
+  The shell handles everything pointer-reactive:
+    .foil     static diagonal hairline grain (paper stock, always visible)
+    .holo     iridescent conic gradient, cursor-masked, screen blend
+    .horizon  dark event-horizon radial at cursor, multiply blend
+    .gloss    specular cursor highlight, overlay blend
+
+  A small inline script tracks the pointer and drives CSS custom
+  properties (--mx, --my, --active, --rx, --ry). All visual work is
+  CSS; the script is attached to every .foil-card on the page so
+  multiple instances coexist.
+
+  Slots:
+    - default: content "printed" on top of the foil
+    - corner:  absolutely-positioned decoration at the top-right
+               (stamps, seals, ribbons)
+
+  Props:
+    - ticks       render corner viewfinder L-brackets (default true)
+    - tilt        enable pointer-driven 3D rotation (default true)
+    - maxWidth    card max-width, number (px) or CSS value
+    - class       forwarded to the outer article
+*/
+
+interface Props {
+  ticks?: boolean;
+  tilt?: boolean;
+  maxWidth?: number | string;
+  class?: string;
+}
+
+const {
+  ticks = true,
+  tilt = true,
+  maxWidth = 880,
+  class: className = "",
+} = Astro.props;
+
+const styleMaxWidth =
+  typeof maxWidth === "number" ? `${maxWidth}px` : maxWidth;
+---
+
+<article
+  class:list={["foil-card", className]}
+  data-foil-card
+  data-tilt={tilt ? "" : undefined}
+  style={`--foil-max-width: ${styleMaxWidth};`}
+>
+  <span class="foil" aria-hidden="true"></span>
+  <span class="holo" aria-hidden="true"></span>
+  <span class="horizon" aria-hidden="true"></span>
+  <span class="gloss" aria-hidden="true"></span>
+
+  {
+    ticks && (
+      <>
+        <span class="tick tick--tl" aria-hidden="true" />
+        <span class="tick tick--tr" aria-hidden="true" />
+        <span class="tick tick--bl" aria-hidden="true" />
+        <span class="tick tick--br" aria-hidden="true" />
+      </>
+    )
+  }
+
+  <div class="foil-content">
+    <slot name="corner" />
+    <slot />
+  </div>
+</article>
+
+<script>
+  // Pointer-tracked foil glint. One handler per .foil-card element on the
+  // page so multiple cards can coexist. The rect is recomputed on enter
+  // / resize / scroll to stay accurate during layout shifts.
+  const cards = document.querySelectorAll<HTMLElement>("[data-foil-card]");
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  cards.forEach((card) => {
+    let raf = 0;
+    let rect: DOMRect | null = null;
+    const tilt = card.hasAttribute("data-tilt");
+
+    const recompute = () => {
+      rect = card.getBoundingClientRect();
+    };
+    recompute();
+    window.addEventListener("resize", recompute);
+    window.addEventListener("scroll", recompute, { passive: true });
+
+    const onMove = (e: PointerEvent) => {
+      if (!rect) return;
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const x = e.clientX - rect!.left;
+        const y = e.clientY - rect!.top;
+        const px = Math.max(0, Math.min(100, (x / rect!.width) * 100));
+        const py = Math.max(0, Math.min(100, (y / rect!.height) * 100));
+        card.style.setProperty("--mx", `${px}%`);
+        card.style.setProperty("--my", `${py}%`);
+        card.style.setProperty("--active", "1");
+        if (tilt && !reduce) {
+          const rx = (0.5 - y / rect!.height) * 8;
+          const ry = (x / rect!.width - 0.5) * 10;
+          card.style.setProperty("--rx", `${rx}deg`);
+          card.style.setProperty("--ry", `${ry}deg`);
+        }
+      });
+    };
+
+    const onLeave = () => {
+      card.style.setProperty("--active", "0");
+      card.style.setProperty("--rx", "0deg");
+      card.style.setProperty("--ry", "0deg");
+    };
+
+    card.addEventListener("pointerenter", recompute);
+    card.addEventListener("pointermove", onMove);
+    card.addEventListener("pointerleave", onLeave);
+  });
+</script>
+
+<style>
+  .foil-card {
+    --mx: 50%;
+    --my: 50%;
+    --active: 0;
+    --rx: 0deg;
+    --ry: 0deg;
+
+    position: relative;
+    width: 100%;
+    max-width: var(--foil-max-width);
+    background: var(--bg-card);
+    border: 2px solid var(--rule);
+    box-shadow:
+      8px 8px 0 var(--rule),
+      0 30px 60px -30px rgba(0, 0, 0, 0.35);
+    padding: 0;
+    overflow: hidden;
+    isolation: isolate;
+    transform: rotateX(var(--rx)) rotateY(var(--ry));
+    transform-style: preserve-3d;
+    transition:
+      transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 0.4s ease;
+    will-change: transform;
+  }
+  .foil-card:hover {
+    box-shadow:
+      10px 10px 0 var(--rule),
+      0 40px 80px -30px rgba(0, 0, 0, 0.55);
+  }
+
+  .foil,
+  .holo,
+  .horizon,
+  .gloss {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .foil {
+    z-index: 0;
+    opacity: 0.55;
+    background:
+      repeating-linear-gradient(
+        115deg,
+        transparent 0px,
+        transparent 2px,
+        var(--rule-xsoft) 2px,
+        var(--rule-xsoft) 3px
+      ),
+      repeating-linear-gradient(
+        25deg,
+        transparent 0px,
+        transparent 7px,
+        var(--rule-xsoft) 7px,
+        var(--rule-xsoft) 8px
+      );
+    mix-blend-mode: multiply;
+  }
+
+  .holo {
+    z-index: 1;
+    opacity: calc(var(--active) * 0.9);
+    transition: opacity 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+    mix-blend-mode: screen;
+    background: conic-gradient(
+      from calc(var(--mx) * 3.6deg) at var(--mx) var(--my),
+      var(--red) 0deg,
+      var(--yellow) 72deg,
+      var(--green) 144deg,
+      var(--blue) 216deg,
+      var(--red) 288deg,
+      var(--red) 360deg
+    );
+    -webkit-mask: radial-gradient(
+      circle at var(--mx) var(--my),
+      rgba(0, 0, 0, 0) 4%,
+      rgba(0, 0, 0, 1) 18%,
+      rgba(0, 0, 0, 0.55) 40%,
+      rgba(0, 0, 0, 0) 70%
+    );
+    mask: radial-gradient(
+      circle at var(--mx) var(--my),
+      rgba(0, 0, 0, 0) 4%,
+      rgba(0, 0, 0, 1) 18%,
+      rgba(0, 0, 0, 0.55) 40%,
+      rgba(0, 0, 0, 0) 70%
+    );
+  }
+
+  .horizon {
+    z-index: 2;
+    opacity: calc(var(--active) * 1);
+    transition: opacity 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+    mix-blend-mode: multiply;
+    background: radial-gradient(
+      circle at var(--mx) var(--my),
+      rgba(0, 0, 0, 0.92) 0%,
+      rgba(0, 0, 0, 0.65) 3.5%,
+      rgba(0, 0, 0, 0.25) 8%,
+      transparent 18%
+    );
+  }
+
+  .gloss {
+    z-index: 3;
+    opacity: calc(var(--active) * 1);
+    transition: opacity 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+    mix-blend-mode: overlay;
+    background: radial-gradient(
+      ellipse 55% 65% at var(--mx) var(--my),
+      rgba(255, 245, 220, 0.38) 0%,
+      rgba(255, 245, 220, 0) 45%
+    );
+  }
+
+  /* Corner viewfinder ticks sit above foil/hologram but below content. */
+  .tick {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    z-index: 4;
+    pointer-events: none;
+  }
+  .tick--tl {
+    top: 14px;
+    left: 14px;
+    border-top: 2px solid var(--rule);
+    border-left: 2px solid var(--rule);
+  }
+  .tick--tr {
+    top: 14px;
+    right: 14px;
+    border-top: 2px solid var(--rule);
+    border-right: 2px solid var(--rule);
+  }
+  .tick--bl {
+    bottom: 14px;
+    left: 14px;
+    border-bottom: 2px solid var(--rule);
+    border-left: 2px solid var(--rule);
+  }
+  .tick--br {
+    bottom: 14px;
+    right: 14px;
+    border-bottom: 2px solid var(--rule);
+    border-right: 2px solid var(--rule);
+  }
+
+  .foil-content {
+    position: relative;
+    z-index: 5;
+    padding: 44px 44px 32px;
+  }
+
+  /* Theme tuning: dark dusk paper swallows color, push hologram harder.
+     Light cream burns out faster, ease it off. */
+  :global(:root[data-theme="dark"]) .holo {
+    opacity: calc(var(--active) * 1);
+    mix-blend-mode: color-dodge;
+  }
+  :global(:root[data-theme="dark"]) .gloss {
+    mix-blend-mode: soft-light;
+  }
+  :global(:root[data-theme="light"]) .holo {
+    opacity: calc(var(--active) * 0.75);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .foil-card {
+      transition: none;
+      transform: none !important;
+    }
+  }
+
+  @media (max-width: 860px) {
+    .foil-content {
+      padding: 36px 28px 26px;
+    }
+  }
+  @media (max-width: 720px) {
+    .foil-content {
+      padding: 30px 22px 22px;
+    }
+    .tick {
+      width: 10px;
+      height: 10px;
+    }
+    .tick--tl,
+    .tick--tr {
+      top: 10px;
+    }
+    .tick--bl,
+    .tick--br {
+      bottom: 10px;
+    }
+    .tick--tl,
+    .tick--bl {
+      left: 10px;
+    }
+    .tick--tr,
+    .tick--br {
+      right: 10px;
+    }
+  }
+</style>

@@ -1,0 +1,62 @@
+---
+/*
+  Serial - a pixel-label meta strip.
+
+  Pattern: small inset box holding alternating label/value tokens with
+  middle-dot separators between groups. Reads like a serial number on
+  a technical document.
+
+  items: array of { k, v } pairs. Rendered as:
+    <k> <v> · <k> <v> · ...
+*/
+
+interface Item {
+  k: string;
+  v: string;
+}
+
+interface Props {
+  items: Item[];
+  class?: string;
+}
+
+const { items, class: className = "" } = Astro.props;
+---
+
+<div class:list={["serial", className]}>
+  {
+    items.map((item, i) => (
+      <>
+        {i > 0 && <span class="serial-sep">·</span>}
+        <span class="serial-k">{item.k}</span>
+        <span class="serial-v">{item.v}</span>
+      </>
+    ))
+  }
+</div>
+
+<style>
+  .serial {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 10px;
+    background: var(--bg-inset);
+    border: 1px solid var(--rule-soft);
+    font-family: var(--font-pixel);
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+  .serial-k {
+    color: var(--ink-muted);
+  }
+  .serial-v {
+    color: var(--ink);
+  }
+  .serial-sep {
+    color: var(--ink-muted);
+    opacity: 0.6;
+  }
+</style>
