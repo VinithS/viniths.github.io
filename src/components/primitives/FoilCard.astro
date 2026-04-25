@@ -285,9 +285,16 @@ const inlineStyle = stampSrc
   }
 
   .foil-content {
+    /* Expose padding as vars so slotted content (like a fused digital
+       display that bleeds to the card's edges) can negative-margin by
+       the exact right amount without duplicating these media queries. */
+    --foil-pad-x: 44px;
+    --foil-pad-t: 44px;
+    --foil-pad-b: 32px;
+
     position: relative;
     z-index: 5;
-    padding: 44px 44px 32px;
+    padding: var(--foil-pad-t) var(--foil-pad-x) var(--foil-pad-b);
   }
 
   /* Theme tuning: dark dusk paper swallows color, push foil harder.
@@ -319,12 +326,16 @@ const inlineStyle = stampSrc
 
   @media (max-width: 860px) {
     .foil-content {
-      padding: 36px 28px 26px;
+      --foil-pad-x: 28px;
+      --foil-pad-t: 36px;
+      --foil-pad-b: 26px;
     }
   }
   @media (max-width: 720px) {
     .foil-content {
-      padding: 30px 22px 22px;
+      --foil-pad-x: 22px;
+      --foil-pad-t: 30px;
+      --foil-pad-b: 22px;
     }
     .tick {
       width: 10px;

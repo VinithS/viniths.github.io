@@ -1,0 +1,445 @@
+---
+/*
+  DisplayFlipBoard — Solari/split-flap mechanical departure board.
+
+  Each character is a fixed-width <span class="flap"> so random glyphs
+  during the clatter can never widen a cell and push the value onto a
+  second line. The value row uses white-space: nowrap for the same
+  reason — if space were ever tight we'd shrink the font, not wrap.
+
+  `fused` prop collapses the module into the host card: no outer
+  border, no side shadow, no screws — just a 2px top rule that acts as
+  a continuous seam with the card's own border, and horizontal
+  negative margin equal to the FoilCard's padding so the dark panel
+  runs edge-to-edge.
+
+  Email is decoded client-side from an XOR'd hex cipher; the raw
+  address never appears in the served HTML.
+*/
+
+import { encodeContact } from "../../lib/obfuscate";
+
+interface Field {
+  label: string;
+  value: string;
+  href?: string;
+}
+
+interface Props {
+  fields?: Field[];
+  email: string;
+  /* When true, the module removes its own border/shadow/screws and
+     bleeds to the parent's edges so it reads as part of the card
+     itself, joined by a single 2px seam. */
+  fused?: boolean;
+}
+
+const { fields = [], email, fused = false } = Astro.props;
+const emailCipher = encodeContact(email);
+---
+
+<div class:list={["flip-board", fused && "flip-board--fused"]} data-flip-board>
+  <div class="flip-bezel">
+    {
+      !fused && (
+        <>
+          <div class="flip-screw" style="top:8px;left:8px" />
+          <div class="flip-screw" style="top:8px;right:8px" />
+          <div class="flip-screw" style="bottom:8px;left:8px" />
+          <div class="flip-screw" style="bottom:8px;right:8px" />
+        </>
+      )
+    }
+
+    <div class="flip-grid">
+      {
+        fields.map((f) => (
+          <div class="flip-col">
+            <div class="flip-label">{f.label}</div>
+            {f.href ? (
+              <a
+                class="flip-value"
+                href={f.href}
+                data-flip
+                data-text={f.value}
+              >
+                {f.value.split("").map((ch) => (
+                  <span class="flap">{ch === " " ? " " : ch}</span>
+                ))}
+              </a>
+            ) : (
+              <span class="flip-value" data-flip data-text={f.value}>
+                {f.value.split("").map((ch) => (
+                  <span class="flap">{ch === " " ? " " : ch}</span>
+                ))}
+              </span>
+            )}
+          </div>
+        ))
+      }
+
+      <div class="flip-col flip-col--email">
+        <div class="flip-label">Transmit</div>
+        <a
+          class="flip-value flip-value--email"
+          href="#"
+          data-flip
+          data-cfe={emailCipher}
+        >
+          {"[encrypted]".split("").map((ch) => (
+            <span class="flap">{ch}</span>
+          ))}
+        </a>
+      </div>
+    </div>
+
+    <div class="flip-status">
+      <span class="flip-dot"></span>
+      <span class="flip-status-text">LINK · 1200 BAUD · LOCKED</span>
+      <span class="flip-sweep"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+  function decodeCfe(hex: string): string {
+    try {
+      const k = parseInt(hex.substring(0, 2), 16);
+      let out = "";
+      for (let i = 2; i < hex.length; i += 2) {
+        out += String.fromCharCode(parseInt(hex.substring(i, i + 2), 16) ^ k);
+      }
+      return out;
+    } catch (_) {
+      return "";
+    }
+  }
+
+  // Mixed-case alphanumeric + punctuation that actually appears in our
+  // targets. Avoids e.g. uppercase glyphs leaking into lowercase cells
+  // and looking like visual noise.
+  const CHARSET =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789/.@·,-";
+
+  function renderTo(el: HTMLElement, text: string) {
+    el.innerHTML = "";
+    for (const ch of text) {
+      const span = document.createElement("span");
+      span.className = "flap";
+      span.textContent = ch === " " ? " " : ch;
+      el.appendChild(span);
+    }
+  }
+
+  function scrambleSettle(el: HTMLElement, target: string, speed = 38) {
+    renderTo(el, target);
+    const flaps = Array.from(el.querySelectorAll<HTMLElement>(".flap"));
+    const targetChars = target.split("");
+    const starts: number[] = flaps.map((_, i) => i * 4);
+    const durations: number[] = flaps.map((_, i) => 14 + i * 2);
+    let tick = 0;
+
+    flaps.forEach((f) => f.classList.add("flap--flipping"));
+
+    const iv = window.setInterval(() => {
+      let settled = 0;
+      flaps.forEach((flap, i) => {
+        const local = tick - starts[i];
+        if (local < 0) return;
+        if (local >= durations[i]) {
+          flap.textContent =
+            targetChars[i] === " " ? " " : targetChars[i];
+          flap.classList.remove("flap--flipping");
+          settled++;
+          return;
+        }
+        flap.textContent =
+          CHARSET[Math.floor(Math.random() * CHARSET.length)];
+      });
+      tick++;
+      if (settled === flaps.length) {
+        window.clearInterval(iv);
+      }
+    }, speed);
+  }
+
+  const boards = document.querySelectorAll<HTMLElement>("[data-flip-board]");
+
+  boards.forEach((board) => {
+    const cells = board.querySelectorAll<HTMLElement>("[data-flip]");
+
+    cells.forEach((cell) => {
+      const cipher = cell.getAttribute("data-cfe");
+      const target = cipher
+        ? decodeCfe(cipher)
+        : cell.getAttribute("data-text") || cell.textContent || "";
+
+      if (cipher && cell.tagName === "A") {
+        cell.setAttribute("href", "mailto:" + target);
+      }
+
+      cell.addEventListener("pointerenter", () => {
+        scrambleSettle(cell, target);
+      });
+    });
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target
+              .querySelectorAll<HTMLElement>("[data-flip]")
+              .forEach((cell, i) => {
+                const cipher = cell.getAttribute("data-cfe");
+                const target = cipher
+                  ? decodeCfe(cipher)
+                  : cell.getAttribute("data-text") || "";
+                window.setTimeout(() => scrambleSettle(cell, target), i * 140);
+              });
+            io.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.4 },
+    );
+    io.observe(board);
+  });
+</script>
+
+<style>
+  .flip-board {
+    --flip-bg: #1a160f;
+    --flip-ink: #f3e8c8;
+    --flip-ink-dim: rgba(243, 232, 200, 0.55);
+    --flip-tile: #0f0c08;
+    --flip-rule: rgba(243, 232, 200, 0.18);
+    --flip-amber: #f5b712;
+    /* Per-character slot width. Every flap claims exactly this much
+       space regardless of which glyph is currently showing, so random
+       scramble chars never push the row wider. */
+    --flip-slot: 14px;
+
+    margin-top: 32px;
+  }
+
+  .flip-bezel {
+    position: relative;
+    background: var(--flip-bg);
+    border: 2px solid var(--rule);
+    padding: 22px 24px 18px;
+    box-shadow:
+      3px 3px 0 var(--rule),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.6);
+  }
+
+  /* Fused mode — the module becomes the card's bottom strip. Negative
+     horizontal margin pulls the panel out to the card's border, then
+     a 2px top rule (same weight as FoilCard's border) acts as the
+     seam between paper and display. */
+  .flip-board--fused {
+    margin: 32px calc(var(--foil-pad-x, 44px) * -1)
+      calc(var(--foil-pad-b, 32px) * -1);
+  }
+  .flip-board--fused .flip-bezel {
+    border: none;
+    border-top: 2px solid var(--rule);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.6);
+    padding: 22px var(--foil-pad-x, 44px) 18px;
+  }
+
+  .flip-screw {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: radial-gradient(
+      circle at 30% 30%,
+      #6d6353 0%,
+      #2a241c 70%
+    );
+    border-radius: 50%;
+    box-shadow:
+      inset 0 0 0 1px rgba(0, 0, 0, 0.6),
+      0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+  .flip-screw::before {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    background: linear-gradient(
+      45deg,
+      transparent 42%,
+      rgba(0, 0, 0, 0.8) 42%,
+      rgba(0, 0, 0, 0.8) 58%,
+      transparent 58%
+    );
+  }
+
+  .flip-grid {
+    display: grid;
+    /* Columns size themselves to their widest content (locked per
+       character by --flip-slot), so adding or removing fields doesn't
+       require retuning column counts. */
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 22px 28px;
+    padding-bottom: 14px;
+    border-bottom: 1px dashed var(--flip-rule);
+  }
+
+  .flip-col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+  /* Email row can need more width on tiny screens — span the whole grid
+     there so it has room to breathe. */
+  @media (max-width: 520px) {
+    .flip-col--email {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .flip-label {
+    font-family: var(--font-pixel);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--flip-ink-dim);
+  }
+
+  .flip-value {
+    display: inline-flex;
+    gap: 2px;
+    color: var(--flip-ink);
+    text-decoration: none;
+    font-family: var(--font-pixel);
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    line-height: 1;
+    /* Never wrap mid-value — the fixed-width tiles keep the whole
+       string the same width regardless of which char is showing. */
+    white-space: nowrap;
+  }
+  .flip-value.flip-value--email {
+    font-size: 12px;
+  }
+
+  .flap {
+    flex: 0 0 var(--flip-slot);
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    padding: 5px 0 4px;
+    background: var(--flip-tile);
+    color: inherit;
+    border: 1px solid rgba(0, 0, 0, 0.9);
+    box-shadow:
+      inset 0 -1px 0 rgba(0, 0, 0, 0.7),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    background-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      transparent calc(50% - 1px),
+      rgba(0, 0, 0, 0.65) calc(50% - 1px),
+      rgba(0, 0, 0, 0.65) 50%,
+      rgba(255, 255, 255, 0.03) 50%,
+      rgba(255, 255, 255, 0.03) calc(50% + 1px),
+      transparent calc(50% + 1px)
+    );
+    transform-origin: center;
+    transition: color 0.15s ease;
+  }
+  a.flip-value:hover .flap {
+    color: var(--flip-amber);
+  }
+  .flap--flipping {
+    animation: flapFlip 38ms linear;
+  }
+  @keyframes flapFlip {
+    0% {
+      transform: perspective(140px) rotateX(0);
+    }
+    50% {
+      transform: perspective(140px) rotateX(90deg);
+    }
+    50.01% {
+      transform: perspective(140px) rotateX(-90deg);
+    }
+    100% {
+      transform: perspective(140px) rotateX(0);
+    }
+  }
+
+  .flip-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    font-family: var(--font-pixel);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--flip-ink-dim);
+  }
+  .flip-dot {
+    width: 7px;
+    height: 7px;
+    background: var(--flip-amber);
+    box-shadow: 0 0 4px var(--flip-amber);
+    animation: flipPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes flipPulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    45% {
+      opacity: 0.35;
+    }
+  }
+  .flip-sweep {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--flip-rule) 20%,
+      var(--flip-rule) 80%,
+      transparent 100%
+    );
+    position: relative;
+    overflow: hidden;
+  }
+  .flip-sweep::after {
+    content: "";
+    position: absolute;
+    top: -3px;
+    left: -20%;
+    width: 20%;
+    height: 7px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--flip-amber) 50%,
+      transparent 100%
+    );
+    opacity: 0.6;
+    animation: flipSweep 4.2s linear infinite;
+  }
+  @keyframes flipSweep {
+    to {
+      left: 100%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flap,
+    .flip-dot,
+    .flip-sweep::after {
+      animation: none !important;
+    }
+  }
+</style>

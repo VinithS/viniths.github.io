@@ -1,0 +1,398 @@
+---
+/*
+  DisplayDotMatrix — LED dot-matrix strip like an airport FIDS board.
+
+  Each row is rendered as real text in a pixel font, but it's set
+  against a dot grid so it reads as "lit pixels" rather than plain
+  characters. The effect is a CSS-only illusion — a fixed-position
+  radial dot pattern is masked to the text shape via background-clip:
+  text on a pseudo element, while the un-lit dot-grid shows through
+  everywhere else.
+
+  A horizontal scan beam sweeps the whole strip every few seconds; on
+  hover, a single row's glow brightens.
+*/
+
+import { encodeContact } from "../../lib/obfuscate";
+
+interface Field {
+  label: string;
+  value: string;
+  href?: string;
+}
+
+interface Props {
+  fields: Field[];
+  email: string;
+}
+
+const { fields, email } = Astro.props;
+const emailCipher = encodeContact(email);
+---
+
+<div class="dot-board" data-dot-board>
+  <div class="dot-bezel">
+    <div class="dot-head">
+      <div class="dot-title">
+        <span class="dot-chip"></span>
+        <span class="dot-title-text">BROADCAST · 4 CH · LIVE</span>
+      </div>
+      <div class="dot-clock" data-dot-clock>--:--:--</div>
+    </div>
+
+    <div class="dot-panel">
+      <div class="dot-panel-grid" aria-hidden="true"></div>
+      <div class="dot-panel-vignette" aria-hidden="true"></div>
+      <div class="dot-panel-scan" aria-hidden="true"></div>
+
+      <div class="dot-rows">
+        {
+          fields.map((f, i) => (
+            <div class="dot-row" style={`--row-i: ${i}`}>
+              <span class="dot-row-lead">{String(i + 1).padStart(2, "0")}</span>
+              <span class="dot-row-label" data-dot-text>
+                {f.label.toUpperCase()}
+              </span>
+              {f.href ? (
+                <a
+                  class="dot-row-value"
+                  href={f.href}
+                  data-dot-text
+                >
+                  {f.value.toUpperCase()}
+                </a>
+              ) : (
+                <span class="dot-row-value" data-dot-text>
+                  {f.value.toUpperCase()}
+                </span>
+              )}
+            </div>
+          ))
+        }
+
+        <div class="dot-row" style={`--row-i: ${fields.length}`}>
+          <span class="dot-row-lead">
+            {String(fields.length + 1).padStart(2, "0")}
+          </span>
+          <span class="dot-row-label" data-dot-text>TRANSMIT</span>
+          <a
+            class="dot-row-value dot-row-value--email"
+            href="#"
+            data-dot-text
+            data-cfe={emailCipher}
+            data-placeholder="[ CLICK TO DECRYPT ]"
+          >
+            [ CLICK TO DECRYPT ]
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="dot-foot">
+      <span>CH-01 /BLOG</span>
+      <span class="dot-foot-sep">░░</span>
+      <span>CH-02 /PHOTOS</span>
+      <span class="dot-foot-sep">░░</span>
+      <span>CH-03 /NOTES</span>
+      <span class="dot-foot-sep">░░</span>
+      <span>CH-04 /TRANSMIT</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  function decodeCfe(hex: string): string {
+    try {
+      const k = parseInt(hex.substring(0, 2), 16);
+      let out = "";
+      for (let i = 2; i < hex.length; i += 2) {
+        out += String.fromCharCode(parseInt(hex.substring(i, i + 2), 16) ^ k);
+      }
+      return out;
+    } catch (_) {
+      return "";
+    }
+  }
+
+  const boards = document.querySelectorAll<HTMLElement>("[data-dot-board]");
+  boards.forEach((board) => {
+    board.querySelectorAll<HTMLElement>("[data-cfe]").forEach((el) => {
+      const cipher = el.getAttribute("data-cfe")!;
+      let revealed = false;
+
+      const reveal = (e?: Event) => {
+        if (revealed) return;
+        if (e) e.preventDefault();
+        revealed = true;
+        const plain = decodeCfe(cipher);
+        // Reveal char-by-char for a decrypt feel
+        el.textContent = "";
+        let i = 0;
+        const iv = window.setInterval(() => {
+          if (i >= plain.length) {
+            window.clearInterval(iv);
+            if (el.tagName === "A") {
+              (el as HTMLAnchorElement).href = "mailto:" + plain;
+            }
+            return;
+          }
+          el.textContent = plain.substring(0, i + 1).toUpperCase();
+          i++;
+        }, 32);
+      };
+
+      el.addEventListener("pointerenter", reveal);
+      el.addEventListener("click", (e) => {
+        if (!revealed) {
+          reveal(e);
+        }
+      });
+    });
+
+    // Clock ticker in the header
+    const clock = board.querySelector<HTMLElement>("[data-dot-clock]");
+    if (clock) {
+      const tick = () => {
+        const d = new Date();
+        const hh = String(d.getHours()).padStart(2, "0");
+        const mm = String(d.getMinutes()).padStart(2, "0");
+        const ss = String(d.getSeconds()).padStart(2, "0");
+        clock.textContent = `${hh}:${mm}:${ss}`;
+      };
+      tick();
+      window.setInterval(tick, 1000);
+    }
+  });
+</script>
+
+<style>
+  .dot-board {
+    --dot-bg: #0b0905;
+    --dot-panel: #0a0906;
+    --dot-amber: #ff5e1a;
+    --dot-amber-dim: rgba(255, 94, 26, 0.18);
+    --dot-ember: rgba(255, 94, 26, 0.06);
+    --dot-size: 3px;
+    --dot-gap: 4px;
+
+    margin-top: 32px;
+  }
+
+  .dot-bezel {
+    position: relative;
+    background: var(--dot-bg);
+    border: 2px solid var(--rule);
+    box-shadow: 3px 3px 0 var(--rule);
+    padding: 12px 14px 14px;
+  }
+
+  .dot-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 10px;
+    font-family: var(--font-pixel);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: var(--dot-amber);
+    text-shadow: 0 0 3px rgba(255, 94, 26, 0.6);
+  }
+  .dot-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dot-chip {
+    width: 8px;
+    height: 8px;
+    background: var(--dot-amber);
+    box-shadow: 0 0 6px var(--dot-amber);
+    animation: dotBlink 1s steps(2, end) infinite;
+  }
+  @keyframes dotBlink {
+    50% { opacity: 0.2; }
+  }
+
+  .dot-clock {
+    color: var(--dot-amber);
+    opacity: 0.7;
+  }
+
+  /* The actual LED panel */
+  .dot-panel {
+    position: relative;
+    background: var(--dot-panel);
+    padding: 14px 14px 14px 14px;
+    border: 1px solid rgba(0, 0, 0, 0.9);
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 94, 26, 0.06),
+      inset 0 0 30px rgba(0, 0, 0, 0.9);
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  /* Off-state dot grid: every cell lit very dimly so you can see the
+     "unlit LEDs" beneath the text */
+  .dot-panel-grid {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image: radial-gradient(
+      circle at center,
+      var(--dot-ember) 0 1px,
+      transparent 1.5px
+    );
+    background-size: var(--dot-gap) var(--dot-gap);
+    background-position: 0 0;
+  }
+
+  /* Softened edges so the panel reads as curved glass */
+  .dot-panel-vignette {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+    background: radial-gradient(
+      ellipse 110% 90% at 50% 50%,
+      transparent 60%,
+      rgba(0, 0, 0, 0.75) 100%
+    );
+    mix-blend-mode: multiply;
+  }
+
+  /* The slow-moving scan beam */
+  .dot-panel-scan {
+    position: absolute;
+    inset: -10% 0;
+    z-index: 3;
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(255, 94, 26, 0.14) 48%,
+      rgba(255, 165, 80, 0.26) 50%,
+      rgba(255, 94, 26, 0.14) 52%,
+      transparent 100%
+    );
+    mix-blend-mode: screen;
+    animation: dotScan 7s linear infinite;
+  }
+  @keyframes dotScan {
+    from { transform: translateY(-60%); }
+    to   { transform: translateY(60%); }
+  }
+
+  .dot-rows {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: 6px;
+  }
+
+  .dot-row {
+    display: grid;
+    grid-template-columns: 26px 110px 1fr;
+    gap: 16px;
+    align-items: baseline;
+    font-family: var(--font-pixel);
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    color: var(--dot-amber);
+    /* Text itself acts as the lit-pixel layer — via bright glow */
+    text-shadow:
+      0 0 1px rgba(255, 94, 26, 0.9),
+      0 0 4px rgba(255, 94, 26, 0.6),
+      0 0 10px rgba(255, 94, 26, 0.35);
+    opacity: 0;
+    transform: translateY(3px);
+    animation: dotBoot 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    animation-delay: calc(var(--row-i) * 120ms + 200ms);
+    transition: color 0.15s ease;
+  }
+  @keyframes dotBoot {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @media (max-width: 640px) {
+    .dot-row {
+      grid-template-columns: 22px 1fr;
+      font-size: 11px;
+    }
+    .dot-row .dot-row-value {
+      grid-column: 1 / -1;
+      padding-left: 38px;
+    }
+  }
+
+  .dot-row-lead {
+    opacity: 0.45;
+    letter-spacing: 0.15em;
+  }
+  .dot-row-label {
+    opacity: 0.55;
+    letter-spacing: 0.2em;
+    font-size: 11px;
+  }
+  .dot-row-value {
+    color: var(--dot-amber);
+    text-decoration: none;
+    letter-spacing: 0.1em;
+  }
+
+  a.dot-row-value {
+    position: relative;
+    cursor: pointer;
+  }
+  a.dot-row-value::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -3px;
+    height: 1px;
+    background: currentColor;
+    opacity: 0;
+    transform: scaleX(0.4);
+    transform-origin: left;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  a.dot-row-value:hover::after {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  a.dot-row-value:hover {
+    color: #ffb380;
+    text-shadow:
+      0 0 2px rgba(255, 165, 80, 1),
+      0 0 8px rgba(255, 94, 26, 0.8),
+      0 0 14px rgba(255, 94, 26, 0.5);
+  }
+
+  .dot-foot {
+    display: flex;
+    gap: 8px;
+    padding-top: 10px;
+    font-family: var(--font-pixel);
+    font-size: 8px;
+    letter-spacing: 0.2em;
+    color: rgba(255, 94, 26, 0.5);
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .dot-foot-sep { opacity: 0.35; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dot-chip,
+    .dot-panel-scan,
+    .dot-row {
+      animation: none !important;
+    }
+    .dot-row {
+      opacity: 1;
+      transform: none;
+    }
+  }
+</style>

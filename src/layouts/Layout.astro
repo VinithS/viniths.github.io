@@ -38,6 +38,27 @@ const showSandbox = import.meta.env.DEV;
     </script>
   </head>
   <body>
+    <svg class="svg-defs" aria-hidden="true" width="0" height="0" focusable="false">
+      <defs>
+        <!-- Shared rubber-stamp ink texture. Referenced by components as
+             `filter: url(#rubber-ink)`. Jitters edges (displacement),
+             erodes speckly "skipped ink" patches, then adds a hair of
+             bleed. Lives in defs so every stamp on the page shares one
+             filter, not one per instance. -->
+        <filter id="rubber-ink" x="-5%" y="-5%" width="110%" height="110%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="2" seed="3" result="wobble"/>
+          <feDisplacementMap in="SourceGraphic" in2="wobble" scale="1.4" result="wobbled"/>
+          <feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="2" seed="7" result="inkNoise"/>
+          <!-- Hard-threshold the noise's red channel into the alpha
+               channel so `composite in` below erases any source pixel
+               sitting under a "dry" patch of noise. -->
+          <feColorMatrix in="inkNoise" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  3 0 0 0 -1" result="inkMask"/>
+          <feComposite in="wobbled" in2="inkMask" operator="in" result="speckled"/>
+          <feGaussianBlur in="speckled" stdDeviation="0.35"/>
+        </filter>
+      </defs>
+    </svg>
+
     <nav class="nav">
       <div class="nav-inner">
         <a href="/" class="brand">
@@ -45,7 +66,7 @@ const showSandbox = import.meta.env.DEV;
           Vinith
         </a>
         <ul class="nav-links">
-          <li><a href="/blog">Writing</a></li>
+          <li><a href="/blog">Blog</a></li>
           <li><a href="/photos">Photos</a></li>
           <li><a href="/tweets">Notes</a></li>
           <li><a href="/about">About</a></li>
@@ -112,6 +133,16 @@ const showSandbox = import.meta.env.DEV;
 </html>
 
 <style>
+  /* Hidden SVG holds the shared rubber-ink filter. It must be in the
+     DOM (not display:none) in all browsers for filter: url(#id) to
+     work — size 0 keeps it out of layout. */
+  .svg-defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }
+
   .nav {
     position: sticky;
     top: 0;

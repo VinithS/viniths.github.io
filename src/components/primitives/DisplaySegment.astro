@@ -1,0 +1,514 @@
+---
+/*
+  DisplaySegment — 16-segment alphanumeric LCD with amber phosphor.
+
+  Each character is rendered as a group of 16 <polygon> segments in an
+  SVG. A font table maps A-Z / 0-9 / punctuation to the set of segments
+  to light. Unlit segments stay visible as "ghost" outlines so the
+  display reads like a real off-state LCD with bleed-through.
+
+  Ambient flicker lives in CSS (filter + opacity jitter). Boot-up
+  animation cascades letters left-to-right on reveal.
+*/
+
+import { encodeContact } from "../../lib/obfuscate";
+
+interface Field {
+  label: string;
+  value: string;
+  href?: string;
+}
+
+interface Props {
+  fields: Field[];
+  email: string;
+}
+
+const { fields, email } = Astro.props;
+const emailCipher = encodeContact(email);
+
+// All fields flow into a single ticker-style marquee. Pad values so the
+// label/value width is predictable across rows.
+const rows = [
+  ...fields.map((f) => ({
+    label: f.label.toUpperCase(),
+    value: f.value.toUpperCase(),
+    href: f.href,
+    cipher: null as string | null,
+  })),
+  {
+    label: "TRANSMIT",
+    value: "[ENCRYPTED]",
+    href: "#",
+    cipher: emailCipher,
+  },
+];
+
+// Segment definitions for a 16-segment character cell, drawn on a
+// 10x16 grid with a single center column. Each segment is a small
+// parallelogram-ish polygon — looks like a real Futaba VFD module.
+// Keys: a1,a2 (top), b (upper right), c (lower right), d1,d2 (bottom),
+// e (lower left), f (upper left), g1,g2 (middle horizontal),
+// h,i,j,k,l,m (diagonals + center verticals).
+const SEG = {
+  a1: "1.4,0 4.6,0 4,1 2,1",
+  a2: "5.4,0 8.6,0 8,1 6,1",
+  b: "9,0.8 8,2 8,7 9,7.5",
+  c: "9,8.5 8,9 8,14 9,15.2",
+  d1: "2,15 4,15 4.6,16 1.4,16",
+  d2: "6,15 8,15 8.6,16 5.4,16",
+  e: "1,8.5 2,9 2,14 1,15.2",
+  f: "1,0.8 2,2 2,7 1,7.5",
+  g1: "2,7.5 4,7.5 4.5,8 4,8.5 2,8.5 1.5,8",
+  g2: "6,7.5 8,7.5 8.5,8 8,8.5 6,8.5 5.5,8",
+  h: "2.2,1.5 3.8,6.8 3.8,7 2,7 2,3",
+  i: "4.5,1 5.5,1 5.5,7 4.5,7",
+  j: "7.8,1.5 8,3 8,7 6.2,7 6.2,6.8",
+  k: "2,9 3.8,9 3.8,9.2 2.2,14.5 2,13",
+  l: "4.5,9 5.5,9 5.5,15 4.5,15",
+  m: "6.2,9 8,9 8,13 7.8,14.5 6.2,9.2",
+} as const;
+
+type SegKey = keyof typeof SEG;
+const ORDER: SegKey[] = [
+  "a1",
+  "a2",
+  "b",
+  "c",
+  "d1",
+  "d2",
+  "e",
+  "f",
+  "g1",
+  "g2",
+  "h",
+  "i",
+  "j",
+  "k",
+  "l",
+  "m",
+];
+
+// Minimal alphanumeric font table. Only chars we actually display.
+const FONT: Record<string, SegKey[]> = {
+  A: ["a1", "a2", "b", "c", "e", "f", "g1", "g2"],
+  B: ["a1", "a2", "b", "c", "d1", "d2", "g2", "i", "l"],
+  C: ["a1", "a2", "d1", "d2", "e", "f"],
+  D: ["a1", "a2", "b", "c", "d1", "d2", "i", "l"],
+  E: ["a1", "a2", "d1", "d2", "e", "f", "g1", "g2"],
+  F: ["a1", "a2", "e", "f", "g1", "g2"],
+  G: ["a1", "a2", "c", "d1", "d2", "e", "f", "g2"],
+  H: ["b", "c", "e", "f", "g1", "g2"],
+  I: ["a1", "a2", "d1", "d2", "i", "l"],
+  J: ["b", "c", "d1", "d2", "e"],
+  K: ["e", "f", "g1", "j", "k"],
+  L: ["d1", "d2", "e", "f"],
+  M: ["b", "c", "e", "f", "h", "j"],
+  N: ["b", "c", "e", "f", "h", "m"],
+  O: ["a1", "a2", "b", "c", "d1", "d2", "e", "f"],
+  P: ["a1", "a2", "b", "e", "f", "g1", "g2"],
+  Q: ["a1", "a2", "b", "c", "d1", "d2", "e", "f", "m"],
+  R: ["a1", "a2", "b", "e", "f", "g1", "g2", "m"],
+  S: ["a1", "a2", "c", "d1", "d2", "f", "g1", "g2"],
+  T: ["a1", "a2", "i", "l"],
+  U: ["b", "c", "d1", "d2", "e", "f"],
+  V: ["e", "f", "j", "k"],
+  W: ["b", "c", "e", "f", "k", "m"],
+  X: ["h", "j", "k", "m"],
+  Y: ["h", "j", "l"],
+  Z: ["a1", "a2", "d1", "d2", "j", "k"],
+  "0": ["a1", "a2", "b", "c", "d1", "d2", "e", "f", "j", "k"],
+  "1": ["b", "c", "j"],
+  "2": ["a1", "a2", "b", "d1", "d2", "e", "g1", "g2"],
+  "3": ["a1", "a2", "b", "c", "d1", "d2", "g2"],
+  "4": ["b", "c", "f", "g1", "g2"],
+  "5": ["a1", "a2", "c", "d1", "d2", "f", "g1", "g2"],
+  "6": ["a1", "a2", "c", "d1", "d2", "e", "f", "g1", "g2"],
+  "7": ["a1", "a2", "b", "c"],
+  "8": ["a1", "a2", "b", "c", "d1", "d2", "e", "f", "g1", "g2"],
+  "9": ["a1", "a2", "b", "c", "d1", "d2", "f", "g1", "g2"],
+  "·": ["g1", "g2"],
+  "-": ["g1", "g2"],
+  "_": ["d1", "d2"],
+  "/": ["j", "k"],
+  ".": [],
+  "@": ["a1", "a2", "b", "d1", "d2", "e", "f", "g2", "i"],
+  "[": ["a1", "d1", "e", "f"],
+  "]": ["a2", "b", "c", "d2"],
+  " ": [],
+};
+---
+
+<div class="seg-board" data-seg-board>
+  <div class="seg-bezel">
+    <div class="seg-power">
+      <span class="seg-led"></span>
+      <span class="seg-power-text">PWR</span>
+    </div>
+    <div class="seg-meta">
+      <span class="seg-meta-k">MOD</span>
+      <span class="seg-meta-v">HD-44780</span>
+      <span class="seg-meta-sep">·</span>
+      <span class="seg-meta-k">CH</span>
+      <span class="seg-meta-v">16x5</span>
+    </div>
+
+    <div class="seg-screen" data-seg-screen>
+      <div class="seg-overlay"></div>
+      {
+        rows.map((row, ri) => {
+          const chars = row.value.split("");
+          return (
+            <div
+              class="seg-row"
+              data-seg-row
+              data-cfe={row.cipher || undefined}
+              data-href={row.href}
+              style={`--row-i: ${ri}`}
+            >
+              <div class="seg-row-label">
+                {row.label.split("").map((ch) => (
+                  <svg
+                    viewBox="0 0 10 16"
+                    class="seg-char seg-char--label"
+                    preserveAspectRatio="xMidYMid meet"
+                  >
+                    {ORDER.map((key) => {
+                      const on = (FONT[ch] || []).includes(key);
+                      return (
+                        <polygon
+                          points={SEG[key]}
+                          class={on ? "seg seg--on" : "seg seg--off"}
+                        />
+                      );
+                    })}
+                  </svg>
+                ))}
+              </div>
+              <div class="seg-row-value" data-seg-value>
+                {chars.map((ch) => (
+                  <svg
+                    viewBox="0 0 10 16"
+                    class="seg-char"
+                    preserveAspectRatio="xMidYMid meet"
+                  >
+                    {ORDER.map((key) => {
+                      const on = (FONT[ch] || []).includes(key);
+                      return (
+                        <polygon
+                          points={SEG[key]}
+                          class={on ? "seg seg--on" : "seg seg--off"}
+                        />
+                      );
+                    })}
+                  </svg>
+                ))}
+              </div>
+            </div>
+          );
+        })
+      }
+    </div>
+  </div>
+</div>
+
+<script>
+  function decodeCfe(hex: string): string {
+    try {
+      const k = parseInt(hex.substring(0, 2), 16);
+      let out = "";
+      for (let i = 2; i < hex.length; i += 2) {
+        out += String.fromCharCode(parseInt(hex.substring(i, i + 2), 16) ^ k);
+      }
+      return out;
+    } catch (_) {
+      return "";
+    }
+  }
+
+  const SEG_DEF: Record<string, string> = {
+    a1: "1.4,0 4.6,0 4,1 2,1",
+    a2: "5.4,0 8.6,0 8,1 6,1",
+    b: "9,0.8 8,2 8,7 9,7.5",
+    c: "9,8.5 8,9 8,14 9,15.2",
+    d1: "2,15 4,15 4.6,16 1.4,16",
+    d2: "6,15 8,15 8.6,16 5.4,16",
+    e: "1,8.5 2,9 2,14 1,15.2",
+    f: "1,0.8 2,2 2,7 1,7.5",
+    g1: "2,7.5 4,7.5 4.5,8 4,8.5 2,8.5 1.5,8",
+    g2: "6,7.5 8,7.5 8.5,8 8,8.5 6,8.5 5.5,8",
+    h: "2.2,1.5 3.8,6.8 3.8,7 2,7 2,3",
+    i: "4.5,1 5.5,1 5.5,7 4.5,7",
+    j: "7.8,1.5 8,3 8,7 6.2,7 6.2,6.8",
+    k: "2,9 3.8,9 3.8,9.2 2.2,14.5 2,13",
+    l: "4.5,9 5.5,9 5.5,15 4.5,15",
+    m: "6.2,9 8,9 8,13 7.8,14.5 6.2,9.2",
+  };
+  const ORDER = Object.keys(SEG_DEF);
+  const FONT: Record<string, string[]> = {
+    A: ["a1", "a2", "b", "c", "e", "f", "g1", "g2"],
+    B: ["a1", "a2", "b", "c", "d1", "d2", "g2", "i", "l"],
+    C: ["a1", "a2", "d1", "d2", "e", "f"],
+    D: ["a1", "a2", "b", "c", "d1", "d2", "i", "l"],
+    E: ["a1", "a2", "d1", "d2", "e", "f", "g1", "g2"],
+    F: ["a1", "a2", "e", "f", "g1", "g2"],
+    G: ["a1", "a2", "c", "d1", "d2", "e", "f", "g2"],
+    H: ["b", "c", "e", "f", "g1", "g2"],
+    I: ["a1", "a2", "d1", "d2", "i", "l"],
+    J: ["b", "c", "d1", "d2", "e"],
+    K: ["e", "f", "g1", "j", "k"],
+    L: ["d1", "d2", "e", "f"],
+    M: ["b", "c", "e", "f", "h", "j"],
+    N: ["b", "c", "e", "f", "h", "m"],
+    O: ["a1", "a2", "b", "c", "d1", "d2", "e", "f"],
+    P: ["a1", "a2", "b", "e", "f", "g1", "g2"],
+    Q: ["a1", "a2", "b", "c", "d1", "d2", "e", "f", "m"],
+    R: ["a1", "a2", "b", "e", "f", "g1", "g2", "m"],
+    S: ["a1", "a2", "c", "d1", "d2", "f", "g1", "g2"],
+    T: ["a1", "a2", "i", "l"],
+    U: ["b", "c", "d1", "d2", "e", "f"],
+    V: ["e", "f", "j", "k"],
+    W: ["b", "c", "e", "f", "k", "m"],
+    X: ["h", "j", "k", "m"],
+    Y: ["h", "j", "l"],
+    Z: ["a1", "a2", "d1", "d2", "j", "k"],
+    "0": ["a1", "a2", "b", "c", "d1", "d2", "e", "f", "j", "k"],
+    "1": ["b", "c", "j"],
+    "2": ["a1", "a2", "b", "d1", "d2", "e", "g1", "g2"],
+    "3": ["a1", "a2", "b", "c", "d1", "d2", "g2"],
+    "4": ["b", "c", "f", "g1", "g2"],
+    "5": ["a1", "a2", "c", "d1", "d2", "f", "g1", "g2"],
+    "6": ["a1", "a2", "c", "d1", "d2", "e", "f", "g1", "g2"],
+    "7": ["a1", "a2", "b", "c"],
+    "8": ["a1", "a2", "b", "c", "d1", "d2", "e", "f", "g1", "g2"],
+    "9": ["a1", "a2", "b", "c", "d1", "d2", "f", "g1", "g2"],
+    "·": ["g1", "g2"],
+    "-": ["g1", "g2"],
+    _: ["d1", "d2"],
+    "/": ["j", "k"],
+    ".": [],
+    "@": ["a1", "a2", "b", "d1", "d2", "e", "f", "g2", "i"],
+    "[": ["a1", "d1", "e", "f"],
+    "]": ["a2", "b", "c", "d2"],
+    " ": [],
+  };
+
+  function buildChar(ch: string): string {
+    const on = FONT[ch] || [];
+    return ORDER.map(
+      (k) =>
+        `<polygon points="${SEG_DEF[k]}" class="seg seg--${on.includes(k) ? "on" : "off"}"/>`,
+    ).join("");
+  }
+
+  function renderValue(el: HTMLElement, text: string) {
+    const chars = text.toUpperCase().split("");
+    const svgs = chars
+      .map(
+        (ch) =>
+          `<svg viewBox="0 0 10 16" class="seg-char" preserveAspectRatio="xMidYMid meet">${buildChar(ch)}</svg>`,
+      )
+      .join("");
+    el.innerHTML = svgs;
+  }
+
+  const boards = document.querySelectorAll<HTMLElement>("[data-seg-board]");
+  boards.forEach((board) => {
+    board.querySelectorAll<HTMLElement>("[data-seg-row]").forEach((row) => {
+      const cipher = row.getAttribute("data-cfe");
+      if (!cipher) return;
+      const decoded = decodeCfe(cipher);
+
+      // Replace the [ENCRYPTED] placeholder with the real address once
+      // the page has mounted.
+      const valueHost = row.querySelector<HTMLElement>("[data-seg-value]");
+      if (valueHost) {
+        // small delay so the decrypt feels like a handshake
+        window.setTimeout(() => {
+          valueHost.classList.add("seg-row-value--booting");
+          renderValue(valueHost, decoded);
+          window.setTimeout(
+            () => valueHost.classList.remove("seg-row-value--booting"),
+            900,
+          );
+        }, 600);
+      }
+
+      // Wrap the row in an anchor-like click handler for mailto.
+      row.style.cursor = "pointer";
+      row.addEventListener("click", () => {
+        window.location.href = "mailto:" + decoded;
+      });
+    });
+  });
+</script>
+
+<style>
+  .seg-board {
+    --seg-bg: #120e08;
+    --seg-screen: #0a0804;
+    --seg-amber: #ffb13b;
+    --seg-amber-dim: rgba(255, 177, 59, 0.12);
+    --seg-off: rgba(255, 177, 59, 0.06);
+    --seg-glow: 0 0 3px rgba(255, 177, 59, 0.9),
+      0 0 8px rgba(255, 177, 59, 0.45);
+
+    margin-top: 32px;
+  }
+
+  .seg-bezel {
+    position: relative;
+    background: linear-gradient(180deg, #1c1710 0%, #0d0a06 100%);
+    border: 2px solid var(--rule);
+    padding: 14px 18px 18px;
+    box-shadow:
+      3px 3px 0 var(--rule),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.8);
+  }
+
+  .seg-power {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-pixel);
+    font-size: 8px;
+    letter-spacing: 0.2em;
+    color: rgba(255, 177, 59, 0.55);
+    margin-bottom: 8px;
+  }
+  .seg-led {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--seg-amber);
+    box-shadow: 0 0 4px var(--seg-amber), inset 0 1px 2px rgba(0, 0, 0, 0.4);
+    animation: segPwr 3.2s ease-in-out infinite;
+  }
+  @keyframes segPwr {
+    0%, 92%, 100% { opacity: 1; }
+    94%, 96% { opacity: 0.3; }
+  }
+
+  .seg-meta {
+    position: absolute;
+    top: 14px;
+    right: 18px;
+    font-family: var(--font-pixel);
+    font-size: 8px;
+    letter-spacing: 0.18em;
+    color: rgba(255, 177, 59, 0.35);
+    display: flex;
+    gap: 6px;
+  }
+  .seg-meta-k { color: rgba(255, 177, 59, 0.25); }
+  .seg-meta-sep { opacity: 0.4; }
+
+  .seg-screen {
+    position: relative;
+    background: var(--seg-screen);
+    padding: 14px 16px;
+    border: 1px solid rgba(0, 0, 0, 0.8);
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 177, 59, 0.04),
+      inset 0 0 24px rgba(0, 0, 0, 0.9);
+    overflow: hidden;
+    /* Whole-screen amber phosphor flicker */
+    animation: segFlicker 4.8s infinite;
+  }
+  @keyframes segFlicker {
+    0%, 100% { filter: brightness(1); }
+    17%      { filter: brightness(0.94); }
+    18%      { filter: brightness(1.04); }
+    52%, 54% { filter: brightness(0.88); }
+    53%      { filter: brightness(1.02); }
+    80%      { filter: brightness(0.97); }
+  }
+
+  /* Scanline + glass curvature vignette */
+  .seg-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      repeating-linear-gradient(
+        0deg,
+        transparent 0px,
+        transparent 2px,
+        rgba(0, 0, 0, 0.25) 2px,
+        rgba(0, 0, 0, 0.25) 3px
+      ),
+      radial-gradient(
+        ellipse 120% 80% at 50% 40%,
+        transparent 40%,
+        rgba(0, 0, 0, 0.6) 100%
+      );
+    mix-blend-mode: multiply;
+    z-index: 3;
+  }
+
+  .seg-row {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    align-items: center;
+    gap: 18px;
+    padding: 3px 0;
+    position: relative;
+    z-index: 1;
+    border-bottom: 1px dashed rgba(255, 177, 59, 0.05);
+  }
+  .seg-row:last-child { border-bottom: none; }
+  @media (max-width: 640px) {
+    .seg-row {
+      grid-template-columns: 1fr;
+      gap: 4px;
+    }
+  }
+
+  .seg-row-label,
+  .seg-row-value {
+    display: inline-flex;
+    gap: 2px;
+    align-items: center;
+    min-height: 22px;
+  }
+  .seg-row-label { opacity: 0.55; }
+  .seg-row-value--booting { animation: segBoot 0.9s steps(6, end); }
+  @keyframes segBoot {
+    from { opacity: 0; filter: blur(1.5px); }
+    to { opacity: 1; filter: blur(0); }
+  }
+
+  .seg-char {
+    width: 13px;
+    height: 20px;
+    overflow: visible;
+  }
+  .seg-char--label {
+    width: 9px;
+    height: 14px;
+  }
+
+  .seg--on {
+    fill: var(--seg-amber);
+    filter: drop-shadow(0 0 1.4px rgba(255, 177, 59, 0.9))
+      drop-shadow(0 0 3.5px rgba(255, 177, 59, 0.5));
+  }
+  .seg--off {
+    fill: var(--seg-off);
+  }
+
+  .seg-row:hover .seg--on {
+    fill: #ffd89a;
+    filter: drop-shadow(0 0 2px rgba(255, 216, 154, 1))
+      drop-shadow(0 0 5px rgba(255, 177, 59, 0.7));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .seg-screen,
+    .seg-led,
+    .seg-row-value--booting {
+      animation: none !important;
+    }
+  }
+</style>

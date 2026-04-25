@@ -1,0 +1,430 @@
+---
+/*
+  /blog/display-prototypes - "Digital display prototypes" post.
+
+  Four takes on a thin futuristic display I was building for the About
+  card footer. Each prototype is a simple card with just the display
+  itself - no ID card chrome - so the mechanics read clearly.
+
+  This is an interactive .astro post that lives outside the content
+  collection; it's featured on /blog alongside the markdown entries.
+*/
+
+import Layout from "../../layouts/Layout.astro";
+
+import DisplayFlipBoard from "../../components/primitives/DisplayFlipBoard.astro";
+import DisplaySegment from "../../components/primitives/DisplaySegment.astro";
+import DisplayDotMatrix from "../../components/primitives/DisplayDotMatrix.astro";
+import DisplayTerminal from "../../components/primitives/DisplayTerminal.astro";
+
+const POST_DATE = new Date("2026-04-25");
+const POST_DATE_LABEL = POST_DATE.toLocaleDateString("en-US", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+});
+
+const FIELDS = [
+  { label: "Frequency", value: "/blog", href: "/blog" },
+  { label: "Broadcast", value: "/notes", href: "/tweets" },
+  { label: "Album", value: "/photos", href: "/photos" },
+  { label: "Coords", value: "Seattle, WA" },
+];
+
+const EMAIL = "hello@vinith.dev";
+
+const prototypes = [
+  {
+    id: "flip",
+    number: "01",
+    title: "Solari Flip-Board",
+    blurb:
+      "Mechanical split-flap tiles - the kind you still see in old train stations and a few holdout airport boards. On reveal each value scrambles through random glyphs before settling. Hover any field to re-run the clatter. The horizontal hinge line is a background-image trick, not an overlay, so it stays crisp at any zoom.",
+  },
+  {
+    id: "seg",
+    number: "02",
+    title: "16-Segment VFD",
+    blurb:
+      "Vacuum fluorescent display. Every character is 16 SVG polygons; unlit segments stay faintly visible as ghost pixels so you read the unlit grid, not blank space. Amber phosphor flicker, scanlines, soft vignette. The TRANSMIT row shows [ENCRYPTED] until decryption handshakes in ~600ms after mount.",
+  },
+  {
+    id: "dot",
+    number: "03",
+    title: "LED Dot-Matrix",
+    blurb:
+      "Airport-FIDS strip - row numbers, a blinking status LED, a live clock, a slow vertical scan beam. Rows boot in with a staggered fade. The email row shows \"[ CLICK TO DECRYPT ]\"; click or hover and the real address streams in character-by-character, then the anchor's mailto: materialises.",
+  },
+  {
+    id: "term",
+    number: "04",
+    title: "CRT Terminal",
+    blurb:
+      "Amber-on-black console window with a chrome bar, scanlines, and a rare sync-roll that hints at a failing CRT. Lines type in sequentially with a persistent blinking caret. The email is a row of ░ blocks until you hover - then it runs a glyph-scramble decrypt for a PGP-handshake feel. I expect to use this for something else in the future maybe.",
+  },
+];
+---
+
+<Layout title="Digital display prototypes - Vinith">
+  <article class="post">
+    <a href="/blog" class="back">&larr; BACK</a>
+
+    <header class="post-head">
+      <div class="post-kicker">
+        <span class="post-kicker-tag">Interactive</span>
+        <span class="post-kicker-dot">·</span>
+        <span>Four prototypes</span>
+      </div>
+      <h1 class="post-title">
+        Digital display <em>prototypes</em>
+      </h1>
+      <div class="post-meta">
+        <span class="post-date">{POST_DATE_LABEL}</span>
+        <span class="tag-pixel">design</span>
+        <span class="tag-pixel">css</span>
+        <span class="tag-pixel">astro</span>
+      </div>
+    </header>
+
+    <div class="post-lede">
+      <p>
+        I have been building my <a href="/about"><code>about</code></a> over the last week, and I wanted it to be slightly "futuristic" so for the links at the bottom of the card, I wanted kinf of a digital display. It had to be a thin narrow strip that flickers to show the card is powered on. I wanted to explore few options that would also fit the retro theme going on, so before committing to one direction I wanted to try several; so I built four, each with its own mechanical idiom.
+      </p>
+      <p>
+        Every prototype also needs to show my email without getting harvested the second I push this site live. The address is XOR-encoded at build time, stored as a hex string in a <code>data-cfe</code> attribute, and decoded client-side on interaction. The literal <code>user@host</code> never appears in the rendered HTML.
+      </p>
+    </div>
+
+    <nav class="post-nav" aria-label="Prototype index">
+      {
+        prototypes.map((p) => (
+          <a href={`#${p.id}`} class="post-nav-item">
+            <span class="post-nav-num">{p.number}</span>
+            <span class="post-nav-title">{p.title}</span>
+          </a>
+        ))
+      }
+    </nav>
+
+    {
+      prototypes.map((p) => (
+        <section class="proto" id={p.id}>
+          <header class="proto-head">
+            <div class="proto-num">{p.number}</div>
+            <h2 class="proto-title">{p.title}</h2>
+          </header>
+          <p class="proto-blurb">{p.blurb}</p>
+
+          <div class="proto-card">
+            <div class="proto-card-tab">
+              <span class="proto-card-tab-dot" />
+              Prototype · {p.number}
+            </div>
+            <div class="proto-card-stage">
+              {p.id === "flip" && (
+                <DisplayFlipBoard fields={FIELDS} email={EMAIL} />
+              )}
+              {p.id === "seg" && (
+                <DisplaySegment fields={FIELDS} email={EMAIL} />
+              )}
+              {p.id === "dot" && (
+                <DisplayDotMatrix fields={FIELDS} email={EMAIL} />
+              )}
+              {p.id === "term" && (
+                <DisplayTerminal fields={FIELDS} email={EMAIL} />
+              )}
+            </div>
+          </div>
+        </section>
+      ))
+    }
+
+    <footer class="post-foot">
+      <a href="/blog" class="post-foot-back">&larr; More writing</a>
+    </footer>
+  </article>
+</Layout>
+
+<style>
+  .post {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 20px 0 40px;
+  }
+
+  .back {
+    font-family: var(--font-pixel);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--ink-muted);
+    display: inline-block;
+    margin-bottom: 32px;
+  }
+  .back:hover {
+    color: var(--ink);
+  }
+
+  .post-head {
+    margin-bottom: 28px;
+  }
+  .post-kicker {
+    font-family: var(--font-pixel);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .post-kicker-tag {
+    background: var(--yellow);
+    color: var(--on-yellow);
+    padding: 3px 7px 2px;
+    letter-spacing: 0.14em;
+  }
+  .post-kicker-dot {
+    color: var(--ink-muted);
+    opacity: 0.6;
+  }
+  .post-title {
+    font-family: var(--font-serif);
+    font-variation-settings:
+      "opsz" 72,
+      "SOFT" 60,
+      "wght" 500;
+    font-size: clamp(34px, 5vw, 52px);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    margin-bottom: 18px;
+  }
+  .post-title em {
+    font-style: italic;
+    color: var(--em);
+  }
+  .post-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .post-date {
+    font-family: var(--font-pixel);
+    font-size: 11px;
+    color: var(--ink-muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .post-lede {
+    font-family: var(--font-serif);
+    font-variation-settings:
+      "opsz" 18,
+      "SOFT" 70,
+      "wght" 400;
+    font-size: 18px;
+    line-height: 1.7;
+    color: var(--ink-soft);
+    margin: 32px 0 40px;
+  }
+  .post-lede p + p {
+    margin-top: 16px;
+  }
+  .post-lede code {
+    font-family: var(--font-pixel);
+    font-size: 13px;
+    padding: 1px 5px;
+    background: var(--bg-inset);
+    border: 1px solid var(--rule-soft);
+  }
+
+  /* Section index - four pixel tiles, one per prototype */
+  .post-nav {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 48px;
+  }
+  .post-nav-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--rule);
+    color: var(--ink-soft);
+    text-decoration: none;
+    transition:
+      transform 0.08s ease,
+      background 0.15s ease;
+  }
+  .post-nav-item:hover {
+    transform: translateY(-2px);
+    background: var(--bg-raised);
+    color: var(--ink);
+  }
+  .post-nav-num {
+    font-family: var(--font-pixel);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    color: var(--ink-muted);
+  }
+  .post-nav-title {
+    font-family: var(--font-serif);
+    font-variation-settings:
+      "opsz" 14,
+      "SOFT" 60,
+      "wght" 500;
+    font-size: 14px;
+    line-height: 1.15;
+  }
+  @media (max-width: 620px) {
+    .post-nav {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  /* Each prototype section - header, blurb, then a simple card */
+  .proto {
+    margin: 64px 0;
+    scroll-margin-top: 80px;
+  }
+  .proto-head {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+  .proto-num {
+    font-family: var(--font-pixel);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--ink-muted);
+  }
+  .proto-title {
+    font-family: var(--font-serif);
+    font-variation-settings:
+      "opsz" 32,
+      "SOFT" 60,
+      "wght" 500;
+    font-size: 28px;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .proto-blurb {
+    font-family: var(--font-serif);
+    font-variation-settings:
+      "opsz" 18,
+      "SOFT" 70,
+      "wght" 400;
+    font-size: 17px;
+    line-height: 1.65;
+    color: var(--ink-soft);
+    margin-bottom: 24px;
+    max-width: 62ch;
+  }
+
+  /* The simple holder - a .card with a small label tab on top. No
+     skeuomorphic chrome; the display itself supplies all the flavor. */
+  .proto-card {
+    background: var(--bg-card);
+    border: 2px solid var(--rule);
+    box-shadow: 4px 4px 0 var(--rule);
+    padding: 20px 22px 24px;
+  }
+  .proto-card-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px 3px;
+    margin-bottom: 10px;
+    font-family: var(--font-pixel);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    background: var(--bg-inset);
+    border: 1px solid var(--rule-soft);
+  }
+  .proto-card-tab-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--signal);
+  }
+  /* The Display* components carry a `margin-top: 32px` meant for the
+     ID-card context. Reset here since the card is their only wrapper. */
+  .proto-card-stage > :global(*) {
+    margin-top: 0 !important;
+  }
+
+  .post-note {
+    margin: 72px 0 40px;
+    padding: 28px;
+    background: var(--bg-raised);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--em);
+  }
+  .post-note h3 {
+    font-family: var(--font-serif);
+    font-variation-settings:
+      "opsz" 24,
+      "wght" 600;
+    font-size: 20px;
+    margin-bottom: 14px;
+    color: var(--ink);
+  }
+  .post-note ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 10px;
+  }
+  .post-note li {
+    font-family: var(--font-serif);
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    padding-left: 18px;
+    position: relative;
+  }
+  .post-note li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: var(--em);
+    font-family: var(--font-pixel);
+    font-size: 13px;
+  }
+  .post-note strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .post-note code {
+    font-family: var(--font-pixel);
+    font-size: 12px;
+    padding: 1px 5px;
+    background: var(--bg-inset);
+    border: 1px solid var(--rule-soft);
+  }
+
+  .post-foot {
+    padding-top: 32px;
+    border-top: 1px solid var(--rule-soft);
+  }
+  .post-foot-back {
+    font-family: var(--font-pixel);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .post-foot-back:hover {
+    color: var(--ink);
+  }
+</style>

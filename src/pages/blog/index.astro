@@ -5,17 +5,68 @@ import { getCollection } from "astro:content";
 const posts = (await getCollection("blog")).sort(
   (a, b) => b.data.date.getTime() - a.data.date.getTime(),
 );
+
+/*
+  Interactive/non-markdown posts that live as dedicated .astro pages.
+  They're surfaced on /blog as "featured" entries above the collection
+  list so they're discoverable without having to hand-craft markdown
+  wrappers for what are really interactive demos.
+*/
+const featured = [
+  {
+    href: "/blog/display-prototypes",
+    title: "Digital display prototypes",
+    description:
+      "Four takes on a thin futuristic display strip — split-flap, VFD, LED dot-matrix, CRT terminal — plus a scraper-resistant email treatment.",
+    date: new Date("2026-04-25"),
+    tags: ["design", "css", "astro"],
+    kicker: "Interactive",
+  },
+];
 ---
 
-<Layout title="Writing - Vinith">
+<Layout title="Blog - Vinith">
   <section class="band">
     <header class="section-head">
       <div class="section-tag">
         <span class="sq"></span>
-        [ 01 ] &nbsp; Writing
+        [ 01 ] &nbsp; Blog
       </div>
       <h1>Recent posts.</h1>
     </header>
+
+    {
+      featured.length > 0 && (
+        <ul class="featured-list">
+          {featured.map((f) => (
+            <li>
+              <a href={f.href} class="featured-card">
+                <span class="featured-kicker">
+                  <span class="featured-pip" />
+                  {f.kicker}
+                </span>
+                <span class="featured-title">{f.title}</span>
+                <span class="featured-desc">{f.description}</span>
+                <span class="featured-meta">
+                  <span class="featured-date">
+                    {f.date
+                      .toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                      })
+                      .replace(/\//g, "·")}
+                  </span>
+                  {f.tags.map((tag) => (
+                    <span class="tag-pixel">{tag}</span>
+                  ))}
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
 
     <ul class="writing-list">
       {
@@ -87,6 +138,92 @@ const posts = (await getCollection("blog")).sort(
     height: 10px;
     background: var(--blue);
     box-shadow: 0 0 0 2px var(--rule);
+  }
+
+  /* Featured (non-markdown) posts sit above the collection list as a
+     single chunky card per entry. No accents that fight the posts below. */
+  .featured-list {
+    list-style: none;
+    margin: 0 0 36px;
+    padding: 0;
+    display: grid;
+    gap: 16px;
+  }
+  .featured-card {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 22px 24px 20px;
+    background: var(--bg-card);
+    border: 2px solid var(--rule);
+    box-shadow: 4px 4px 0 var(--rule);
+    text-decoration: none;
+    color: var(--ink);
+    transition:
+      transform 0.1s ease,
+      box-shadow 0.1s ease;
+  }
+  .featured-card:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 5px 5px 0 var(--rule);
+  }
+  .featured-card:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0 var(--rule);
+  }
+  .featured-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-pixel);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .featured-pip {
+    width: 8px;
+    height: 8px;
+    background: var(--yellow);
+    box-shadow: 0 0 0 2px var(--rule);
+  }
+  .featured-title {
+    font-family: var(--font-serif);
+    font-variation-settings:
+      "opsz" 32,
+      "SOFT" 60,
+      "wght" 500;
+    font-size: 26px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .featured-card:hover .featured-title {
+    color: var(--link-hover);
+  }
+  .featured-desc {
+    font-family: var(--font-serif);
+    font-variation-settings:
+      "opsz" 16,
+      "SOFT" 70,
+      "wght" 400;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    max-width: 62ch;
+  }
+  .featured-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+  .featured-date {
+    font-family: var(--font-pixel);
+    font-size: 11px;
+    color: var(--ink-muted);
+    letter-spacing: 0.1em;
   }
 
   .writing-list {

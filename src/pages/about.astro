@@ -2,10 +2,14 @@
 import Layout from "../layouts/Layout.astro";
 import FoilCard from "../components/primitives/FoilCard.astro";
 import Stamp from "../components/primitives/Stamp.astro";
+import InkStamp from "../components/primitives/InkStamp.astro";
+import ColorStamp from "../components/primitives/ColorStamp.astro";
+import DateStamp from "../components/primitives/DateStamp.astro";
 import Serial from "../components/primitives/Serial.astro";
 import SpecList from "../components/primitives/SpecList.astro";
 import SpecRow from "../components/primitives/SpecRow.astro";
 import UniverseLogo from "../components/UniverseLogo.astro";
+import DisplayFlipBoard from "../components/primitives/DisplayFlipBoard.astro";
 ---
 
 <Layout title="About - Vinith">
@@ -21,6 +25,42 @@ import UniverseLogo from "../components/UniverseLogo.astro";
         accent="green"
         size="md"
         rotate={-15}
+      />
+
+      <!-- Three rubber stamps scattered across the card. Absolute-
+           positioned; all share the #rubber-ink SVG filter in Layout.astro.
+           Eventually these will be pressable by the visitor and fade
+           after 7s — for now they're static samples to preview texture. -->
+      <InkStamp
+        class="scatter-stamp scatter-stamp--bee"
+        src="/assets/bee.svg"
+        accent="yellow"
+        size={120}
+        rotate={-10}
+        label="A honeybee rubber stamp"
+      />
+      <InkStamp
+        class="scatter-stamp scatter-stamp--coffee"
+        src="/assets/coffee.svg"
+        accent="red"
+        size={88}
+        rotate={8}
+        label="A coffee cup rubber stamp"
+      />
+      <DateStamp
+        class="scatter-stamp scatter-stamp--date"
+        ringText="RECEIVED · OBSERVABLE UNIVERSE · "
+        ringAccent="red"
+        dateAccent="green"
+        size={130}
+        rotate={-6}
+      />
+      <ColorStamp
+        class="scatter-stamp scatter-stamp--galaxy"
+        src="/assets/galaxy.svg"
+        size={110}
+        rotate={12}
+        label="A galaxy rubber stamp"
       />
 
       <header class="masthead">
@@ -66,25 +106,11 @@ import UniverseLogo from "../components/UniverseLogo.astro";
         build more, break less. Lets see where this takes us.
       </p>
 
-      <footer class="signoff">
-        <div class="signoff-group">
-          <span class="signoff-label">Frequency</span>
-          <a href="/blog" class="signoff-value">/writing</a>
-        </div>
-        <div class="signoff-group">
-          <span class="signoff-label">Broadcast</span>
-          <a href="/tweets" class="signoff-value">/notes</a>
-        </div>
-        <div class="signoff-group">
-          <span class="signoff-label">Transmit</span>
-          <!-- todo: how to obfuscate email from scrapers -->
-          <a href="mailto:hello@example.com" class="signoff-value">say hi</a>
-        </div>
-        <div class="signoff-group">
-          <span class="signoff-label">Coordinates</span>
-          <span class="signoff-value">Seattle, WA</span>
-        </div>
-      </footer>
+      <DisplayFlipBoard
+        fused
+        email="hello@vinith.dev"
+        fields={[{ label: "Coordinates", value: "47.62, -122.35" }]}
+      />
     </FoilCard>
   </section>
 </Layout>
@@ -108,6 +134,88 @@ import UniverseLogo from "../components/UniverseLogo.astro";
     right: 36px;
     z-index: 6;
     background: var(--bg-card);
+  }
+
+  /* Scattered rubber stamps — positioned absolutely inside .foil-content
+     so they sit above the foil/holo layers but don't reflow content.
+     Mix-blend-mode: multiply fuses the ink into the paper. */
+  :global(.scatter-stamp) {
+    position: absolute;
+    z-index: 7;
+    mix-blend-mode: multiply;
+    opacity: 0.88;
+  }
+  :global(:root[data-theme="dark"]) :global(.scatter-stamp) {
+    /* Dusk paper absorbs multiply into black — use screen to let the
+       ink glow against the warm dark. */
+    mix-blend-mode: screen;
+    opacity: 0.92;
+  }
+
+  :global(.scatter-stamp--bee) {
+    top: 6%;
+    right: 14%;
+  }
+  :global(.scatter-stamp--coffee) {
+    bottom: 18%;
+    left: -10px;
+  }
+  :global(.scatter-stamp--date) {
+    bottom: 6%;
+    right: 6%;
+  }
+  :global(.scatter-stamp--galaxy) {
+    /* Top-left, tucked between masthead and portrait. The galaxy SVG
+       carries its own palette (yellow burst + pastel stars), so we opt
+       out of mix-blend-mode — multiply would mute the light pastels
+       and screen would blow them out. */
+    top: 34%;
+    left: -24px;
+    mix-blend-mode: normal;
+    opacity: 0.95;
+  }
+  :global(:root[data-theme="dark"]) :global(.scatter-stamp--galaxy) {
+    mix-blend-mode: normal;
+    opacity: 0.95;
+  }
+
+  @media (max-width: 860px) {
+    :global(.scatter-stamp--bee) {
+      top: 4%;
+      right: 4%;
+    }
+    :global(.scatter-stamp--galaxy) {
+      top: 30%;
+      left: -16px;
+    }
+  }
+  @media (max-width: 720px) {
+    /* On narrow screens the card is tight — shrink and tuck stamps so
+       they don't cover the portrait or spec list. */
+    :global(.scatter-stamp--bee) {
+      width: 80px !important;
+      height: 80px !important;
+      top: 2%;
+      right: 2%;
+    }
+    :global(.scatter-stamp--coffee) {
+      width: 64px !important;
+      height: 64px !important;
+      bottom: 2%;
+      left: 4%;
+    }
+    :global(.scatter-stamp--date) {
+      width: 90px !important;
+      height: 90px !important;
+      bottom: 2%;
+      right: 4%;
+    }
+    :global(.scatter-stamp--galaxy) {
+      width: 70px !important;
+      height: 70px !important;
+      top: 32%;
+      left: -8px;
+    }
   }
 
   /* Masthead — crest + institution on the left, Serial on the right. */
@@ -202,45 +310,6 @@ import UniverseLogo from "../components/UniverseLogo.astro";
     max-width: 58ch;
   }
 
-  .signoff {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 24px;
-    margin-top: 24px;
-  }
-  .signoff-group {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .signoff-label {
-    font-family: var(--font-pixel);
-    font-size: 9px;
-    color: var(--ink-muted);
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-  }
-  .signoff-value {
-    font-family: var(--font-serif);
-    font-variation-settings:
-      "opsz" 18,
-      "wght" 500;
-    font-size: 16px;
-    color: var(--ink);
-    text-decoration: none;
-    transition: color 0.15s ease;
-  }
-  a.signoff-value {
-    border-bottom: 1px solid var(--rule-soft);
-    padding-bottom: 2px;
-    display: inline-block;
-    width: max-content;
-  }
-  a.signoff-value:hover {
-    color: var(--link-hover);
-    border-bottom-color: currentColor;
-  }
-
   @media (max-width: 860px) {
     .masthead {
       grid-template-columns: auto 1fr;
@@ -270,10 +339,6 @@ import UniverseLogo from "../components/UniverseLogo.astro";
     :global(.card-stamp) {
       right: 20px;
       top: -14px;
-    }
-    .signoff {
-      grid-template-columns: 1fr 1fr;
-      gap: 18px;
     }
   }
 </style>

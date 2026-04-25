@@ -1,0 +1,64 @@
+---
+/*
+  ColorStamp - a rubber-stamped icon that preserves the source SVG's
+  own colors (unlike InkStamp, which flattens the SVG to a single ink).
+  Use this when the SVG already has the palette you want — stained-
+  glass style line art, multicolor doodles, etc.
+
+  Mechanism: an <img> of the SVG is wrapped in a span and passed
+  through the shared #rubber-ink filter for jitter/erosion. A second
+  drop-shadow in the filter chain adds the ink-bleed halo.
+
+  Props:
+    - src      URL of the source SVG
+    - size     px size of the stamp
+    - rotate   degrees of rotation
+    - label    accessible text
+    - class    forwarded to the wrapper
+*/
+
+interface Props {
+  src: string;
+  size?: number;
+  rotate?: number;
+  label?: string;
+  class?: string;
+}
+
+const {
+  src,
+  size = 120,
+  rotate = 0,
+  label,
+  class: className = "",
+} = Astro.props;
+---
+
+<span
+  class:list={["color-stamp", className]}
+  style={`--color-stamp-size: ${size}px; --color-stamp-rotate: ${rotate}deg;`}
+  aria-hidden={label ? undefined : "true"}
+>
+  <img src={src} alt={label ?? ""} width={size} height={size} draggable="false" />
+</span>
+
+<style>
+  .color-stamp {
+    display: inline-block;
+    width: var(--color-stamp-size);
+    height: var(--color-stamp-size);
+    transform: rotate(var(--color-stamp-rotate));
+    transform-origin: center;
+    /* Rubber-ink texture + bleed halo. Drop-shadow here uses a neutral
+       ink tint that reads on both themes. */
+    filter: url(#rubber-ink) drop-shadow(0 0 0.8px rgba(28, 24, 20, 0.35));
+    user-select: none;
+    pointer-events: none;
+  }
+  .color-stamp img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+</style>
