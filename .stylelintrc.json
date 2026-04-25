@@ -1,0 +1,32 @@
+{
+  "extends": ["stylelint-config-standard"],
+  "rules": {
+    "selector-class-pattern": null,
+    "custom-property-pattern": null,
+    "no-descending-specificity": null,
+    "declaration-block-no-redundant-longhand-properties": null,
+    "alpha-value-notation": null,
+    "color-function-notation": null,
+    "color-function-alias-notation": null,
+    "value-keyword-case": null,
+    "rule-empty-line-before": null,
+    "at-rule-empty-line-before": null,
+    "media-feature-range-notation": null,
+    "length-zero-no-unit": null,
+    "shorthand-property-no-redundant-values": null,
+    "declaration-block-single-line-max-declarations": null,
+    "custom-property-empty-line-before": null,
+    "comment-empty-line-before": null,
+    "property-no-vendor-prefix": null,
+    "selector-pseudo-class-no-unknown": [
+      true,
+      { "ignorePseudoClasses": ["global"] }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["**/*.astro", "**/*.svelte"],
+      "customSyntax": "postcss-html"
+    }
+  ]
+}

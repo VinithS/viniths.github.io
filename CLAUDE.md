@@ -19,7 +19,7 @@ No lint or test commands are configured.
 
 - **Astro v6** — Static site generator with file-based routing and zero-JS-by-default
 - **Svelte v5** — Integrated via `@astrojs/svelte` for interactive islands. Uses runes syntax (`$props()`, `$state()`) — not legacy reactive declarations.
-- **Vanilla CSS** — Dark theme via CSS custom properties (no Tailwind or CSS framework)
+- **CSS** — Dark theme via CSS custom properties
 - **TypeScript** — Strict mode (`astro/tsconfigs/strict`)
 - **Node >= 22.12.0**
 

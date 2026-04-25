@@ -43,6 +43,11 @@ const {
     line-height: 1.1;
     transform: rotate(var(--stamp-rotate));
     user-select: none;
+    /* Inky bleed: soft color shadow sells the "pressed onto paper" look
+       without requiring an SVG filter per stamp. */
+    text-shadow:
+      0 0 0.4px var(--stamp-color),
+      0 0 1px color-mix(in oklab, var(--stamp-color) 35%, transparent);
   }
 
   .stamp--red {

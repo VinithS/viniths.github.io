@@ -1,0 +1,109 @@
+---
+/*
+  Card - paper/stock surface primitive.
+
+  Variants:
+    - "flat" (default): hard offset-block shadow, matches the arcade aesthetic.
+    - "raised": skeuomorphic stack — soft layered shadow, inset highlight,
+      subtle gradient so the card reads as a lifted, lit surface.
+
+  Slots:
+    - default: card body content
+    - corner: absolutely-positioned element pinned to the top-right corner
+              (stamps, ribbons, badges) without polluting card layout
+*/
+
+interface Props {
+  variant?: "flat" | "raised";
+  grain?: boolean;
+  class?: string;
+  maxWidth?: number | string;
+}
+
+const {
+  variant = "flat",
+  grain = false,
+  class: className = "",
+  maxWidth,
+} = Astro.props;
+
+const styleMaxWidth =
+  typeof maxWidth === "number" ? `${maxWidth}px` : maxWidth;
+---
+
+<article
+  class:list={["card-primitive", `card-primitive--${variant}`, className]}
+  style={styleMaxWidth ? `--card-max-width: ${styleMaxWidth};` : undefined}
+>
+  <slot name="corner" />
+  {grain && <span class="card-grain" aria-hidden="true"></span>}
+  <div class="card-body">
+    <slot />
+  </div>
+</article>
+
+<style>
+  .card-primitive {
+    position: relative;
+    width: 100%;
+    max-width: var(--card-max-width, 860px);
+    background: var(--bg-card);
+    border: 2px solid var(--rule);
+    padding: 36px 36px 28px;
+  }
+
+  .card-primitive--flat {
+    box-shadow: 6px 6px 0 var(--rule);
+  }
+
+  /*
+    Skeuomorphic stack:
+      1. inset top highlight — simulates the lit top edge of the paper stock
+      2. inset bottom shadow — the card's own thickness casting into itself
+      3. tight drop shadow — contact shadow (close to the surface)
+      4. wide drop shadow — ambient, the card floating above the wall
+    Background gets a soft radial lift from top-left so the surface catches light.
+  */
+  .card-primitive--raised {
+    background:
+      radial-gradient(
+        120% 80% at 15% 0%,
+        color-mix(in oklab, var(--bg-card) 80%, var(--bg-raised) 20%),
+        var(--bg-card) 60%
+      );
+    box-shadow:
+      inset 0 1px 0 color-mix(in oklab, var(--ink) 8%, transparent),
+      inset 0 -1px 0 color-mix(in oklab, var(--rule) 35%, transparent),
+      0 2px 4px rgba(0, 0, 0, 0.18),
+      0 12px 28px rgba(0, 0, 0, 0.22),
+      0 30px 60px rgba(0, 0, 0, 0.18);
+  }
+
+  /*
+    Paper grain overlay — SVG fractal noise baked into a data URL.
+    Sits above the card background but below content. Non-interactive.
+  */
+  .card-grain {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.35;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.1  0 0 0 0 0.08  0 0 0 0 0.06  0 0 0 0.55 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+  :global([data-theme="dark"]) .card-grain {
+    mix-blend-mode: screen;
+    opacity: 0.18;
+  }
+
+  .card-body {
+    position: relative;
+    z-index: 1;
+  }
+
+  @media (max-width: 720px) {
+    .card-primitive {
+      padding: 28px 22px 22px;
+    }
+  }
+</style>

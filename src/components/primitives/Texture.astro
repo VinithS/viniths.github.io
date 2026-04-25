@@ -1,0 +1,52 @@
+---
+/*
+  Texture - reusable SVG noise overlay.
+
+  Use as an absolutely-positioned layer inside any container. Different
+  "kind" values tune baseFrequency / octaves / color matrix to produce
+  distinct material looks (paper fibres, rough grain, faint dust).
+
+  The overlay is pointer-events: none and aria-hidden.
+*/
+
+interface Props {
+  kind?: "paper" | "grain" | "dust";
+  opacity?: number;
+  blend?: string;
+  class?: string;
+}
+
+const {
+  kind = "paper",
+  opacity = 0.3,
+  blend = "multiply",
+  class: className = "",
+} = Astro.props;
+
+// feTurbulence tuning per kind. Higher baseFrequency = finer noise.
+const tuning = {
+  paper: { freq: 0.85, octaves: 2, r: 0.1, g: 0.08, b: 0.06, a: 0.55 },
+  grain: { freq: 1.4, octaves: 1, r: 0.08, g: 0.07, b: 0.05, a: 0.65 },
+  dust: { freq: 0.35, octaves: 3, r: 0.12, g: 0.1, b: 0.08, a: 0.35 },
+}[kind];
+
+const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='${tuning.freq}' numOctaves='${tuning.octaves}' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 ${tuning.r}  0 0 0 0 ${tuning.g}  0 0 0 0 ${tuning.b}  0 0 0 ${tuning.a} 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>`;
+const dataUrl = `url("data:image/svg+xml;utf8,${svg}")`;
+---
+
+<span
+  class:list={["texture", className]}
+  style={`--t-opacity: ${opacity}; --t-blend: ${blend}; --t-image: ${dataUrl};`}
+  aria-hidden="true"
+></span>
+
+<style>
+  .texture {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: var(--t-opacity);
+    mix-blend-mode: var(--t-blend);
+    background-image: var(--t-image);
+  }
+</style>

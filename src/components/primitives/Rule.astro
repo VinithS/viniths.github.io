@@ -1,0 +1,37 @@
+---
+/*
+  Rule - horizontal divider in the project's voice.
+
+  Variants:
+    - "soft": --rule-soft, the default thin document rule
+    - "strong": --rule, for heavier section breaks
+    - "dotted": dotted line in --rule-soft, for playful separation
+*/
+
+interface Props {
+  variant?: "soft" | "strong" | "dotted";
+  class?: string;
+}
+
+const { variant = "soft", class: className = "" } = Astro.props;
+---
+
+<hr class:list={["rule", `rule--${variant}`, className]} />
+
+<style>
+  .rule {
+    border: none;
+    width: 100%;
+    margin: 0;
+    height: 0;
+  }
+  .rule--soft {
+    border-top: 1px solid var(--rule-soft);
+  }
+  .rule--strong {
+    border-top: 2px solid var(--rule);
+  }
+  .rule--dotted {
+    border-top: 1px dotted var(--rule-soft);
+  }
+</style>
