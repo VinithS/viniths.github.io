@@ -163,8 +163,8 @@
      aging are CSS animations so no per-frame JS is needed. */
   .placed {
     position: absolute;
-    width: 90px;
-    height: 90px;
+    width: 117px;
+    height: 117px;
     display: grid;
     place-items: center;
     transform: translate(-50%, -50%) rotate(var(--rot, 0deg));
@@ -226,8 +226,8 @@
      renders it, so date-stamp preview is circular, not rectangular. */
   .ghost {
     position: absolute;
-    width: 72px;
-    height: 72px;
+    width: 94px;
+    height: 94px;
     transform: translate(-50%, -50%) rotate(-6deg);
     display: grid;
     place-items: center;
