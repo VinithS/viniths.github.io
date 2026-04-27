@@ -1,0 +1,93 @@
+---
+/*
+  PassportField — one label/value pair in the biographical grid.
+
+  Label renders in the pixel face, tiny, tracked, uppercase — matching
+  real passport data-field labels. Value renders in Fraunces at a
+  weight that reads as "filled-in by typewriter on paper". The slot
+  lets each row hold richer content (em, small, etc.) without a
+  separate variant.
+
+  Props:
+    - label        visible pixel label
+    - mono         render the value in mono (for catalogue nos, dates)
+*/
+
+interface Props {
+  label: string;
+  mono?: boolean;
+  class?: string;
+}
+
+const { label, mono = false, class: className = "" } = Astro.props;
+---
+
+<div
+  class:list={[
+    "pfield",
+    mono && "pfield--mono",
+    className,
+  ]}
+>
+  <dt class="pfield-label">{label}</dt>
+  <dd class="pfield-value"><slot /></dd>
+</div>
+
+<style>
+  .pfield {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .pfield-label {
+    font-family: var(--font-pixel);
+    font-size: 9px;
+    color: var(--ink-muted);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  .pfield-value {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-variation-settings:
+      "opsz" 20,
+      "SOFT" 40,
+      "wght" 500;
+    font-size: 17px;
+    color: var(--ink);
+    line-height: 1.3;
+    /* Don't let long values hyphenate passport-style data — truncate
+       at grid cell rather than break a geographic coordinate in half. */
+    overflow-wrap: anywhere;
+  }
+
+  /* `mono` fields are deliberately "out of place" — passport dates
+     on a real document are typewriter-stamped over the printed
+     biographical fields, a different tool leaving a different mark.
+     Here that translates to a bolder mono with loose tracking, an
+     emphasis color, and a stamp-ink texture so they read as
+     struck-in dates, not typeset data. */
+  .pfield--mono .pfield-value {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-variation-settings: "wght" 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--em);
+    align-self: flex-start;
+    /* Re-use the global rubber-ink filter defined in Layout.astro.
+       Free effect — the filter is already rasterized for the page's
+       stamps, so appending this field to its user list is cheap. */
+    filter: url(#rubber-ink-solid);
+    text-shadow: 0 0 0.4px var(--em);
+  }
+
+  .pfield-value :global(em) {
+    font-style: italic;
+    color: var(--em);
+  }
+</style>

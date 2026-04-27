@@ -1,0 +1,267 @@
+---
+/*
+  MastheadFrame — shared typographic wrapper for the six about-card
+  title prototypes. Renders the same tri-column pattern used by the
+  current about card (crest | text | serial) but exposes size / kerning
+  / weight as data attributes so each prototype can dial its own
+  "register" without forking the layout.
+
+  Variants are defined purely in CSS; the page just picks a variant key.
+*/
+
+interface SerialItem {
+  k: string;
+  v: string;
+}
+
+interface Props {
+  variant:
+    | "registry"
+    | "bureau"
+    | "survey"
+    | "panoptic"
+    | "commission"
+    | "helio";
+  institution: string;
+  department?: string;
+  /* Tiny all-caps eyebrow above the institution — optional. */
+  kicker?: string;
+  /* Italic serif tagline under the institution — optional. */
+  tagline?: string;
+  serial?: SerialItem[];
+  /* Thin rule under the whole masthead. Default true — matches the
+     live about card. */
+  rule?: boolean;
+}
+
+const {
+  variant,
+  institution,
+  department,
+  kicker,
+  tagline,
+  serial,
+  rule = true,
+} = Astro.props;
+---
+
+<header
+  class:list={["masthead", `masthead--${variant}`, rule && "masthead--ruled"]}
+>
+  <div class="crest-slot">
+    <slot name="crest" />
+  </div>
+
+  <div class="text">
+    {kicker && <div class="kicker">{kicker}</div>}
+    <div class="institution">{institution}</div>
+    {department && <div class="department">{department}</div>}
+    {tagline && (
+      <div class="tagline">
+        <em>{tagline}</em>
+      </div>
+    )}
+  </div>
+
+  {
+    serial && serial.length > 0 && (
+      <div class="serial">
+        {serial.map((s, i) => (
+          <>
+            {i > 0 && <span class="serial-sep">·</span>}
+            <span class="serial-k">{s.k}</span>
+            <span class="serial-v">{s.v}</span>
+          </>
+        ))}
+      </div>
+    )
+  }
+</header>
+
+<style>
+  .masthead {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 18px;
+    padding-bottom: 20px;
+    margin-bottom: 28px;
+  }
+  .masthead--ruled {
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .crest-slot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .kicker {
+    font-family: var(--font-pixel);
+    font-size: 9px;
+    color: var(--ink-muted);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .institution {
+    font-family: var(--font-serif);
+    color: var(--ink);
+    line-height: 1.02;
+  }
+  .department {
+    font-family: var(--font-pixel);
+    font-size: 10px;
+    color: var(--ink-muted);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .tagline {
+    margin-top: 4px;
+    font-family: var(--font-serif);
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.2;
+  }
+  .tagline :global(em) {
+    font-style: italic;
+    color: var(--em);
+    font-variation-settings: "opsz" 18, "SOFT" 80, "wght" 400;
+  }
+
+  .serial {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 10px;
+    background: var(--bg-inset);
+    border: 1px solid var(--rule-soft);
+    font-family: var(--font-pixel);
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .serial-k {
+    color: var(--ink-muted);
+  }
+  .serial-v {
+    color: var(--ink);
+  }
+  .serial-sep {
+    color: var(--ink-muted);
+    opacity: 0.6;
+  }
+
+  /* --- per-variant tuning --- */
+
+  /* 1. Registry — the baseline, essentially the live card's masthead
+        turned up a hair (tighter leading, slightly deeper serif). */
+  .masthead--registry .institution {
+    font-variation-settings: "opsz" 28, "SOFT" 40, "wght" 600;
+    font-size: 24px;
+    letter-spacing: -0.01em;
+  }
+
+  /* 2. Bureau — stentorian. Slightly smaller but much wider tracking
+        on the institution, so the words read like a carved lintel on a
+        government building. No italic; wide opsz. */
+  .masthead--bureau .institution {
+    font-variation-settings: "opsz" 96, "SOFT" 20, "wght" 500;
+    font-size: 22px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  .masthead--bureau .department {
+    letter-spacing: 0.22em;
+  }
+
+  /* 3. Survey — editorial / chapel. Larger institution, drops SOFT low
+        for sharper serifs, adds an italic tagline beneath. */
+  .masthead--survey .institution {
+    font-variation-settings: "opsz" 48, "SOFT" 20, "wght" 500;
+    font-size: 30px;
+    letter-spacing: -0.025em;
+  }
+  .masthead--survey .tagline {
+    margin-top: 6px;
+  }
+
+  /* 4. Panoptic — bold wordmark. Institution goes big and italic, with
+        extra-heavy axis. The crest floats inside a subtle inset tile. */
+  .masthead--panoptic .crest-slot {
+    padding: 8px;
+    background: var(--bg-inset);
+    border: 1px solid var(--rule-soft);
+  }
+  .masthead--panoptic .institution {
+    font-variation-settings: "opsz" 72, "SOFT" 0, "wght" 700;
+    font-size: 30px;
+    letter-spacing: -0.03em;
+    font-style: italic;
+  }
+  .masthead--panoptic .department {
+    color: var(--ink);
+    letter-spacing: 0.18em;
+  }
+
+  /* 5. Commission — small-caps treaty-body. Institution smaller, in
+        small caps, heavy tracking. Department becomes a subtitle in
+        serif italic instead of pixel. */
+  .masthead--commission .institution {
+    font-variation-settings: "opsz" 14, "SOFT" 20, "wght" 600;
+    font-size: 16px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .masthead--commission .department {
+    font-family: var(--font-serif);
+    font-variation-settings: "opsz" 20, "SOFT" 80, "wght" 400;
+    font-style: italic;
+    font-size: 17px;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--ink-soft);
+    margin-top: 2px;
+  }
+
+  /* 6. Helio — wordmark-only masthead. Crest is small, text is set in
+        display-size Fraunces with a ligature-friendly SOFT curve. */
+  .masthead--helio .institution {
+    font-variation-settings: "opsz" 120, "SOFT" 100, "wght" 400;
+    font-size: 38px;
+    line-height: 0.9;
+    letter-spacing: -0.035em;
+  }
+  .masthead--helio .department {
+    margin-top: 6px;
+  }
+
+  /* Responsive: collapse serial under text on medium, stack on small. */
+  @media (max-width: 860px) {
+    .masthead {
+      grid-template-columns: auto 1fr;
+      row-gap: 12px;
+    }
+    .serial {
+      grid-column: 1 / -1;
+      justify-self: start;
+    }
+  }
+  @media (max-width: 520px) {
+    .masthead {
+      grid-template-columns: 1fr;
+      justify-items: start;
+    }
+    .crest-slot {
+      justify-content: flex-start;
+    }
+  }
+</style>

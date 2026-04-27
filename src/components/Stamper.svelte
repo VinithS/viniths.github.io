@@ -29,6 +29,8 @@
       fadeMs   — lifespan for non-archive modes (default 7000)
   */
 
+  import DateMark from "./primitives/DateMark.svelte";
+
   let { mode = "press", stamps = [], fadeMs = 7000 } = $props();
 
   // id increments forever so each placed stamp has a stable key even
@@ -97,6 +99,10 @@
         y,
         rot: (Math.random() - 0.5) * 30,
         bornAt: now,
+        // Snapshot date at placement. Without this, the {#each} below
+        // reconstructs `new Date(p.bornAt)` every rAF tick — N allocs
+        // per frame for N placed date-stamps under spam.
+        date: stamp.kind === "date" ? new Date(now) : null,
       },
     ];
     ensureLoop();
@@ -273,22 +279,7 @@
           {:else if p.stamp.kind === "color"}
             <img src={p.stamp.src} alt="" draggable="false" />
           {:else if p.stamp.kind === "date"}
-            <!-- Mini date postmark inline for placed stamps -->
-            <svg viewBox="0 0 100 100" class="placed-date">
-              <defs>
-                <path id="placed-ring-{p.key}" d="M 50 50 m -38, 0 a 38,38 0 1,1 76,0 a 38,38 0 1,1 -76,0"/>
-              </defs>
-              <circle cx="50" cy="50" r="46" fill="none" stroke="var(--red)" stroke-width="1.6"/>
-              <circle cx="50" cy="50" r="43" fill="none" stroke="var(--red)" stroke-width="0.5"/>
-              <text style="fill:var(--red); font-family:var(--font-pixel); font-size:6.2px; letter-spacing:0.22em;">
-                <textPath href="#placed-ring-{p.key}">RECEIVED · OBSERVABLE UNIVERSE · </textPath>
-              </text>
-              <line x1="16" y1="38" x2="84" y2="38" stroke="var(--red)" stroke-width="0.8"/>
-              <line x1="16" y1="62" x2="84" y2="62" stroke="var(--red)" stroke-width="0.8"/>
-              <text x="50" y="46" style="fill:var(--green); font-family:var(--font-pixel); font-size:5px; letter-spacing:0.22em; text-anchor:middle;">{new Date(p.bornAt).toLocaleString("en-US", { month: "short" }).toUpperCase()}</text>
-              <text x="50" y="53" style="fill:var(--green); font-family:var(--font-pixel); font-size:11px; letter-spacing:0.04em; text-anchor:middle;">{String(new Date(p.bornAt).getDate()).padStart(2, "0")}</text>
-              <text x="50" y="60" style="fill:var(--green); font-family:var(--font-pixel); font-size:5px; letter-spacing:0.22em; text-anchor:middle;">{new Date(p.bornAt).getFullYear()}</text>
-            </svg>
+            <DateMark keySuffix={`placed-${p.key}`} date={p.date} />
           {/if}
         </span>
       {/each}
@@ -528,7 +519,7 @@
     mix-blend-mode: screen;
   }
   .placed img,
-  .placed .placed-date {
+  .placed :global(.date-mark) {
     width: 100%;
     height: 100%;
     display: block;

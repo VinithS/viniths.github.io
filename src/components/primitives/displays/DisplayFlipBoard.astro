@@ -1,11 +1,35 @@
 ---
 /*
-  DisplayFlipBoard — Solari/split-flap mechanical departure board.
+  DisplayFlipBoard — two flavors of the same instrument panel.
 
-  Each character is a fixed-width <span class="flap"> so random glyphs
-  during the clatter can never widen a cell and push the value onto a
-  second line. The value row uses white-space: nowrap for the same
-  reason — if space were ever tight we'd shrink the font, not wrap.
+  STANDALONE (blog/display-prototypes): solari split-flap tiles with
+  heavy black cells, hinge-line seam, cream pixel glyphs. This is the
+  "mechanical departure board" showcase the blog post is about.
+
+  FUSED (/about passport): the same structural grid, but stripped of
+  tile chrome and retyped in OCR-mono so the entire dark strip reads
+  as a single telemetry console — MRZ header, coord/email readouts,
+  and a status footer all on one typographic voice. The rotateX flip
+  animation still plays during scramble-settle; without a tile
+  underneath it reads as "decoder settling," which is exactly the
+  right metaphor for the encrypted email reveal.
+
+  Stack order inside the bezel (top → bottom):
+
+     1. .flip-mrz    — OCR Machine-Readable Zone lines (only when
+                       the `mrz` prop is passed). Header rule sweeps
+                       right→left.
+     2. .flip-grid   — Coordinates + encrypted email readouts.
+     3. .flip-status — Footer bar: left pod = pulsing dot + LINK
+                       status; sweep rule in the middle; right pod
+                       = signal bars + live local clock (only when
+                       `timezone` prop is passed, so the blog demo
+                       stays minimal).
+
+  When MRZ is present (`flip-bezel--paired`), the two horizontal
+  sweeps share a 5s clock: link runs L→R during the first half, then
+  MRZ runs R→L during the second half. Reads as one amber glow
+  cycling through the whole panel.
 
   `fused` prop collapses the module into the host card: no outer
   border, no side shadow, no screws — just a 2px top rule that acts as
@@ -30,16 +54,51 @@ interface Props {
   email: string;
   /* When true, the module removes its own border/shadow/screws and
      bleeds to the parent's edges so it reads as part of the card
-     itself, joined by a single 2px seam. */
+     itself, joined by a single 2px seam. Also switches internal
+     typography to the OCR-mono telemetry style. */
   fused?: boolean;
+  /* Machine-Readable Zone lines. Each line is padded with '<' to
+     `mrzWidth`. Rendered at the top of the display. */
+  mrz?: string[];
+  mrzWidth?: number;
+  /* IANA timezone identifier (e.g. "America/Los_Angeles"). When set,
+     the status footer renders a live HH:MM:SS clock in that
+     timezone, prefixed by `timezoneLabel`. This is what makes the
+     passport feel "alive" — seconds tick where the subject lives. */
+  timezone?: string;
+  timezoneLabel?: string;
 }
 
-const { fields = [], email, fused = false } = Astro.props;
+const {
+  fields = [],
+  email,
+  fused = false,
+  mrz,
+  mrzWidth = 44,
+  timezone,
+  timezoneLabel = "LOCAL",
+} = Astro.props;
 const emailCipher = encodeContact(email);
+
+// ICAO MRZ glyph set: A-Z, 0-9, '<', space. Everything else becomes
+// '<' so stray punctuation from user data can't break the OCR look.
+function padMrz(raw: string): string {
+  const cleaned = raw.toUpperCase().replace(/[^A-Z0-9< ]/g, "<");
+  if (cleaned.length >= mrzWidth) return cleaned.slice(0, mrzWidth);
+  return cleaned + "<".repeat(mrzWidth - cleaned.length);
+}
+
+const mrzPadded = mrz?.map(padMrz) ?? [];
+const hasTelemetry = !!timezone;
 ---
 
 <div class:list={["flip-board", fused && "flip-board--fused"]} data-flip-board>
-  <div class="flip-bezel">
+  <div
+    class:list={[
+      "flip-bezel",
+      mrzPadded.length > 0 && "flip-bezel--paired",
+    ]}
+  >
     {
       !fused && (
         <>
@@ -51,11 +110,37 @@ const emailCipher = encodeContact(email);
       )
     }
 
+    {
+      mrzPadded.length > 0 && (
+        <div class="flip-mrz" aria-hidden="true">
+          <div class="flip-mrz-head">
+            <span class="flip-mrz-label">
+              <span class="flip-mrz-rec" /> MRZ · ICAO 9303
+            </span>
+            <span class="flip-sweep flip-sweep--mrz" />
+            <span class="flip-mrz-meta">TD3 · 2 × 44</span>
+          </div>
+          {mrzPadded.map((line) => (
+            <div class="flip-mrz-line">
+              {line.split("").map((ch) => (
+                <span class="flip-mrz-ch" data-ch={ch}>
+                  {ch === " " ? " " : ch}
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      )
+    }
+
     <div class="flip-grid">
       {
-        fields.map((f) => (
+        fields.map((f, i) => (
           <div class="flip-col">
-            <div class="flip-label">{f.label}</div>
+            <div class="flip-label">
+              <span class="flip-label-num">{String(i + 1).padStart(2, "0")}</span>
+              {f.label}
+            </div>
             {f.href ? (
               <a
                 class="flip-value"
@@ -64,13 +149,13 @@ const emailCipher = encodeContact(email);
                 data-text={f.value}
               >
                 {f.value.split("").map((ch) => (
-                  <span class="flap">{ch === " " ? " " : ch}</span>
+                  <span class="flap">{ch === " " ? " " : ch}</span>
                 ))}
               </a>
             ) : (
               <span class="flip-value" data-flip data-text={f.value}>
                 {f.value.split("").map((ch) => (
-                  <span class="flap">{ch === " " ? " " : ch}</span>
+                  <span class="flap">{ch === " " ? " " : ch}</span>
                 ))}
               </span>
             )}
@@ -79,7 +164,10 @@ const emailCipher = encodeContact(email);
       }
 
       <div class="flip-col flip-col--email">
-        <div class="flip-label">Transmit</div>
+        <div class="flip-label">
+          <span class="flip-label-num">{String(fields.length + 1).padStart(2, "0")}</span>
+          Transmit
+        </div>
         <a
           class="flip-value flip-value--email"
           href="#"
@@ -93,10 +181,35 @@ const emailCipher = encodeContact(email);
       </div>
     </div>
 
+    <!-- Footer bar. Left pod: pulsing dot + LINK · 1200 BAUD · LOCKED.
+         Middle: amber sweep rule (same animation family as the MRZ
+         head rule). Right pod: signal bars + live local clock,
+         rendered only when the `timezone` prop is passed. The clock
+         is the "alive signal" — proves the document is being actively
+         received, not stamped once and shelved. -->
     <div class="flip-status">
-      <span class="flip-dot"></span>
-      <span class="flip-status-text">LINK · 1200 BAUD · LOCKED</span>
-      <span class="flip-sweep"></span>
+      <span class="flip-pod flip-pod--left">
+        <span class="flip-dot" />
+        <span class="flip-status-text">LINK · 1200 BAUD · LOCKED</span>
+      </span>
+      <span class="flip-sweep flip-sweep--link" />
+      {
+        hasTelemetry && (
+          <span class="flip-pod flip-pod--right">
+            <span class="flip-bars" aria-hidden="true">
+              <span /><span /><span /><span />
+            </span>
+            <span
+              class="flip-clock"
+              data-flip-clock
+              data-tz={timezone}
+              data-tz-label={timezoneLabel}
+            >
+              {timezoneLabel} · --:--:--
+            </span>
+          </span>
+        )
+      }
     </div>
   </div>
 </div>
@@ -126,7 +239,7 @@ const emailCipher = encodeContact(email);
     for (const ch of text) {
       const span = document.createElement("span");
       span.className = "flap";
-      span.textContent = ch === " " ? " " : ch;
+      span.textContent = ch === " " ? " " : ch;
       el.appendChild(span);
     }
   }
@@ -148,7 +261,7 @@ const emailCipher = encodeContact(email);
         if (local < 0) return;
         if (local >= durations[i]) {
           flap.textContent =
-            targetChars[i] === " " ? " " : targetChars[i];
+            targetChars[i] === " " ? " " : targetChars[i];
           flap.classList.remove("flap--flipping");
           settled++;
           return;
@@ -203,6 +316,28 @@ const emailCipher = encodeContact(email);
       { threshold: 0.4 },
     );
     io.observe(board);
+
+    /* Live local clock in the status-bar right pod. One setInterval
+       per clock element; the component currently renders at most one
+       per page, but keeping the handler per-element keeps the code
+       general and cheap. */
+    const clocks = board.querySelectorAll<HTMLElement>("[data-flip-clock]");
+    clocks.forEach((clock) => {
+      const tz = clock.getAttribute("data-tz") || undefined;
+      const label = clock.getAttribute("data-tz-label") || "LOCAL";
+      const fmt = new Intl.DateTimeFormat("en-GB", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+        timeZone: tz,
+      });
+      const tick = () => {
+        clock.textContent = `${label} · ${fmt.format(new Date())}`;
+      };
+      tick();
+      window.setInterval(tick, 1000);
+    });
   });
 </script>
 
@@ -211,12 +346,15 @@ const emailCipher = encodeContact(email);
     --flip-bg: #1a160f;
     --flip-ink: #f3e8c8;
     --flip-ink-dim: rgba(243, 232, 200, 0.55);
+    --flip-ink-faint: rgba(243, 232, 200, 0.32);
     --flip-tile: #0f0c08;
     --flip-rule: rgba(243, 232, 200, 0.18);
+    --flip-rule-soft: rgba(243, 232, 200, 0.08);
     --flip-amber: #f5b712;
-    /* Per-character slot width. Every flap claims exactly this much
-       space regardless of which glyph is currently showing, so random
-       scramble chars never push the row wider. */
+    /* Per-character slot width. In standalone mode this is the flap
+       tile width; in fused mode where flaps go chrome-less, it just
+       sets the gap between OCR glyphs so scramble/settle never shifts
+       alignment. */
     --flip-slot: 14px;
 
     margin-top: 32px;
@@ -236,7 +374,9 @@ const emailCipher = encodeContact(email);
   /* Fused mode — the module becomes the card's bottom strip. Negative
      horizontal margin pulls the panel out to the card's border, then
      a 2px top rule (same weight as FoilCard's border) acts as the
-     seam between paper and display. */
+     seam between paper and display. An inner hairline amber glow
+     hugs the top rule so the strip reads as "powered" — a cold dark
+     surface with a warm instrument glow leaking along the seam. */
   .flip-board--fused {
     margin: 32px calc(var(--foil-pad-x, 44px) * -1)
       calc(var(--foil-pad-b, 32px) * -1);
@@ -245,9 +385,30 @@ const emailCipher = encodeContact(email);
     border: none;
     border-top: 2px solid var(--rule);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      inset 0 1px 0 rgba(245, 183, 18, 0.18),
       inset 0 -1px 0 rgba(0, 0, 0, 0.6);
-    padding: 22px var(--foil-pad-x, 44px) 18px;
+    padding: 24px var(--foil-pad-x, 44px) 18px;
+  }
+  /* Subtle scanline wash ties the whole console together — one
+     texture across MRZ, grid, and status rather than three bands.
+     Kept very low contrast so it reads as a backlit screen, not a
+     CRT filter. */
+  .flip-board--fused .flip-bezel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 2px,
+      rgba(243, 232, 200, 0.015) 2px,
+      rgba(243, 232, 200, 0.015) 3px
+    );
+    mix-blend-mode: screen;
+  }
+  .flip-board--fused .flip-bezel > * {
+    position: relative;
   }
 
   .flip-screw {
@@ -277,25 +438,91 @@ const emailCipher = encodeContact(email);
     );
   }
 
+  /* --- Shared instrument-head pattern --------------------------------
+     MRZ head and status footer are the same compositional object: a
+     pixel-label "pod" on one side, a sweep rule through the middle,
+     and a meta-pod on the other side. Pulling this into a shared
+     pattern is what makes the top and bottom of the console feel
+     like siblings. */
+  .flip-mrz-head,
+  .flip-status {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-family: var(--font-pixel);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--flip-ink-dim);
+    line-height: 1;
+  }
+
+  /* --- MRZ (top block) ---------------------------------------------- */
+  .flip-mrz {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .flip-mrz-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    color: var(--flip-ink);
+  }
+  /* "Recording" indicator — small filled square that pulses.
+     Square (not round) so it reads as a VU-meter / digital gauge
+     element instead of a generic LED, matching the panel's rectilinear
+     vocabulary. */
+  .flip-mrz-rec {
+    width: 8px;
+    height: 8px;
+    background: var(--flip-amber);
+    box-shadow: 0 0 6px rgba(245, 183, 18, 0.6);
+    animation: flipPulse 1.6s ease-in-out infinite;
+  }
+  .flip-mrz-meta {
+    flex-shrink: 0;
+    color: var(--flip-ink-faint);
+  }
+  .flip-mrz-line {
+    font-family: var(--font-mono);
+    font-variation-settings: "wght" 500;
+    /* Clamp scales the line so 44 chevron-padded chars fit the bezel
+       on any width. */
+    font-size: clamp(11px, 1.55vw, 13px);
+    letter-spacing: 0.14em;
+    color: var(--flip-ink);
+    line-height: 1.3;
+    white-space: nowrap;
+    display: flex;
+  }
+  .flip-mrz-ch {
+    display: inline-block;
+  }
+  /* Chevron filler is the printed guide — fade it so the meaningful
+     letters/digits stand out from the padding. */
+  .flip-mrz-ch[data-ch="<"] {
+    color: var(--flip-ink-faint);
+  }
+
+  /* --- Grid (middle block) ------------------------------------------
+     In fused mode this block carries the telemetry readouts; labels
+     get a numeric prefix ("01", "02") so they read as addressed
+     channels on an instrument rather than form fields. */
   .flip-grid {
     display: grid;
-    /* Columns size themselves to their widest content (locked per
-       character by --flip-slot), so adding or removing fields doesn't
-       require retuning column counts. */
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 22px 28px;
-    padding-bottom: 14px;
-    border-bottom: 1px dashed var(--flip-rule);
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 18px 40px;
+    padding: 22px 0 18px;
   }
 
   .flip-col {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
     min-width: 0;
   }
-  /* Email row can need more width on tiny screens — span the whole grid
-     there so it has room to breathe. */
   @media (max-width: 520px) {
     .flip-col--email {
       grid-column: 1 / -1;
@@ -305,9 +532,23 @@ const emailCipher = encodeContact(email);
   .flip-label {
     font-family: var(--font-pixel);
     font-size: 9px;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--flip-ink-dim);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  /* Channel-number chip: small inset block with the digit. Using a
+     background tile instead of a color swap gives it weight without
+     pulling chroma — fits the monochrome-amber palette. */
+  .flip-label-num {
+    font-size: 8px;
+    letter-spacing: 0.14em;
+    color: var(--flip-ink-faint);
+    padding: 2px 5px 1px;
+    background: rgba(243, 232, 200, 0.06);
+    border: 1px solid var(--flip-rule);
   }
 
   .flip-value {
@@ -319,14 +560,12 @@ const emailCipher = encodeContact(email);
     font-size: 13px;
     letter-spacing: 0.02em;
     line-height: 1;
-    /* Never wrap mid-value — the fixed-width tiles keep the whole
-       string the same width regardless of which char is showing. */
     white-space: nowrap;
   }
-  .flip-value.flip-value--email {
-    font-size: 12px;
-  }
 
+  /* --- Flap cell base (standalone mode) ------------------------------
+     Black tile with a horizontal hinge line. On fused mode we override
+     to strip the chrome and let OCR glyphs breathe. */
   .flap {
     flex: 0 0 var(--flip-slot);
     position: relative;
@@ -352,6 +591,35 @@ const emailCipher = encodeContact(email);
     transform-origin: center;
     transition: color 0.15s ease;
   }
+
+  /* In fused/telemetry mode the "flaps" become clean OCR glyphs — no
+     tile background, no border, no hinge line. The scramble-settle
+     rotateX animation still plays but now reads as characters
+     decoding in place rather than mechanical cards turning. This is
+     the key move that unifies the three zones typographically: MRZ
+     mono + coord/email mono, one voice. */
+  .flip-board--fused .flip-value {
+    font-family: var(--font-mono);
+    font-variation-settings: "wght" 500;
+    font-size: 15px;
+    letter-spacing: 0.08em;
+    gap: 0;
+    /* Tabular digits so settled values don't shimmy by 0.5px. */
+    font-variant-numeric: tabular-nums;
+  }
+  .flip-board--fused .flip-value--email {
+    font-size: 14px;
+  }
+  .flip-board--fused .flap {
+    flex: 0 0 auto;
+    min-width: 0.62em;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    background-image: none;
+  }
+
   a.flip-value:hover .flap {
     color: var(--flip-amber);
   }
@@ -373,22 +641,36 @@ const emailCipher = encodeContact(email);
     }
   }
 
+  /* --- Status footer -------------------------------------------------
+     Same structural pattern as MRZ head: left pod, sweep rule, right
+     pod. A 1px solid divider above instead of the old dashed one —
+     the dashed texture was fighting the OCR chevrons. */
   .flip-status {
-    display: flex;
+    padding: 14px 0 0;
+    border-top: 1px solid var(--flip-rule);
+  }
+  .flip-pod {
+    display: inline-flex;
     align-items: center;
-    gap: 10px;
-    margin-top: 14px;
-    font-family: var(--font-pixel);
-    font-size: 9px;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
+    gap: 8px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .flip-pod--left {
+    color: var(--flip-ink);
+  }
+  .flip-pod--right {
     color: var(--flip-ink-dim);
+    font-variant-numeric: tabular-nums;
+  }
+  .flip-status-text {
+    letter-spacing: 0.22em;
   }
   .flip-dot {
-    width: 7px;
-    height: 7px;
+    width: 8px;
+    height: 8px;
     background: var(--flip-amber);
-    box-shadow: 0 0 4px var(--flip-amber);
+    box-shadow: 0 0 6px rgba(245, 183, 18, 0.6);
     animation: flipPulse 1.6s ease-in-out infinite;
   }
   @keyframes flipPulse {
@@ -400,14 +682,55 @@ const emailCipher = encodeContact(email);
       opacity: 0.35;
     }
   }
+
+  /* Signal-strength bars. Four stacked rectangles, increasing height,
+     with a slow crest animation so the last bar blinks occasionally
+     — like a radio receiver hunting for a lock. */
+  .flip-bars {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 10px;
+  }
+  .flip-bars span {
+    width: 2px;
+    background: var(--flip-amber);
+    opacity: 0.9;
+  }
+  .flip-bars span:nth-child(1) { height: 30%; }
+  .flip-bars span:nth-child(2) { height: 55%; }
+  .flip-bars span:nth-child(3) { height: 80%; }
+  .flip-bars span:nth-child(4) {
+    height: 100%;
+    animation: flipBarPulse 3.4s ease-in-out infinite;
+  }
+  @keyframes flipBarPulse {
+    0%, 60%, 100% { opacity: 0.9; }
+    70%          { opacity: 0.25; }
+    80%          { opacity: 0.9; }
+  }
+
+  .flip-clock {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--flip-ink);
+  }
+
+  /* --- Sweep rule (shared across MRZ head and status) ---------------
+     Thin rule with an amber glow riding across it. Default (non-
+     paired) mode: each sweep runs an independent LTR transit. Paired
+     overrides below phase them so in the /about passport the glow
+     reads as one light cycling around the panel. */
   .flip-sweep {
     flex: 1;
     height: 1px;
     background: linear-gradient(
       90deg,
       transparent 0%,
-      var(--flip-rule) 20%,
-      var(--flip-rule) 80%,
+      var(--flip-rule) 15%,
+      var(--flip-rule) 85%,
       transparent 100%
     );
     position: relative;
@@ -435,9 +758,44 @@ const emailCipher = encodeContact(email);
     }
   }
 
+  /* Paired mode: link sweep hands off to MRZ sweep. Both on a shared
+     5s clock so the glow alternates halves. */
+  .flip-bezel--paired .flip-sweep--link::after {
+    animation: flipSweepLink 5s linear infinite;
+  }
+  .flip-bezel--paired .flip-sweep--mrz::after {
+    left: auto;
+    right: -20%;
+    animation: flipSweepMrz 5s linear infinite;
+  }
+
+  @keyframes flipSweepLink {
+    0%   { left: -20%; opacity: 0.6; }
+    45%  { opacity: 0.6; }
+    50%  { left: 100%; opacity: 0; }
+    100% { left: 100%; opacity: 0; }
+  }
+  @keyframes flipSweepMrz {
+    0%, 50% { right: -20%; opacity: 0; }
+    55%     { opacity: 0.6; }
+    95%     { opacity: 0.6; }
+    100%    { right: 100%; opacity: 0; }
+  }
+
+  /* Responsive: on narrow viewports the right telemetry pod drops
+     (signal bars + clock) since the footer row can't fit all three
+     segments without squishing. */
+  @media (max-width: 600px) {
+    .flip-pod--right {
+      display: none;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .flap,
     .flip-dot,
+    .flip-mrz-rec,
+    .flip-bars span:nth-child(4),
     .flip-sweep::after {
       animation: none !important;
     }

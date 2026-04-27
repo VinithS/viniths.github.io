@@ -23,12 +23,13 @@
   } = $props();
 
   const MONTHS = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
-  const dd = String(date.getDate()).padStart(2, "0");
-  const mmm = MONTHS[date.getMonth()];
-  const yyyy = date.getFullYear();
-
-  const ringColor = `var(--${ringAccent})`;
-  const dateColor = `var(--${dateAccent})`;
+  // $derived so prop reads live in a reactive context — module-level
+  // consts over props only capture the initial value (Svelte 5 runes).
+  const dd = $derived(String(date.getDate()).padStart(2, "0"));
+  const mmm = $derived(MONTHS[date.getMonth()]);
+  const yyyy = $derived(date.getFullYear());
+  const ringColor = $derived(`var(--${ringAccent})`);
+  const dateColor = $derived(`var(--${dateAccent})`);
 </script>
 
 <svg viewBox="0 0 100 100" class="date-mark" aria-hidden="true">

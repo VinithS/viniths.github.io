@@ -99,6 +99,12 @@ const inlineStyle = stampSrc
     window.addEventListener("scroll", recompute, { passive: true });
 
     const onMove = (e: PointerEvent) => {
+      // While a stamp is armed, the card should stay inert — no tilt,
+      // no foil glint, no active hover. The CSS also enforces this
+      // (see `:root[data-stamp-armed] .foil-card`), but returning
+      // here skips the rect math + style writes entirely so we don't
+      // pay layout cost on every trackpad pointermove either.
+      if (document.documentElement.hasAttribute("data-stamp-armed")) return;
       if (!rect) return;
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
@@ -335,6 +341,27 @@ const inlineStyle = stampSrc
   }
   :global(:root[data-theme="light"]) .holo {
     opacity: calc(0.14 + var(--active) * 0.18);
+  }
+
+  /* While a stamp is armed on the page, freeze the card flat. This is
+     belt-and-suspenders with the JS early-return in onMove: even if a
+     pointermove does slip through (e.g. the cursor is over the card's
+     2px border where the StampArea overlay can't catch it), the
+     custom properties are pinned here so the card doesn't tilt or
+     glint under the ghost cursor. The inherited transition on
+     .foil-card (0.6s on transform) makes this look like a smooth
+     "lock" when arming, and a smooth "wake" when disarming. */
+  :global(:root[data-stamp-armed]) .foil-card {
+    --rx: 0deg;
+    --ry: 0deg;
+    --active: 0;
+  }
+  :global(:root[data-stamp-armed]) .foil-card:hover {
+    /* Don't grow the drop shadow on hover either — the card should
+       read as "paper pinned to the table" while you aim. */
+    box-shadow:
+      8px 8px 0 var(--rule),
+      0 30px 60px -30px rgba(0, 0, 0, 0.35);
   }
 
   @media (prefers-reduced-motion: reduce) {

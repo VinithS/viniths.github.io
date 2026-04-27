@@ -1,0 +1,53 @@
+---
+/*
+  PassportFields — a <dl> grid holding PassportField children.
+
+  Default: two-column grid separated by thin dividing rules (horizontal
+  between rows, vertical between columns) — the way a real passport's
+  data page is drawn with faint printed guides.
+*/
+
+interface Props {
+  class?: string;
+}
+
+const { class: className = "" } = Astro.props;
+---
+
+<dl class:list={["pfields", className]}>
+  <slot />
+</dl>
+
+<style>
+  .pfields {
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px 36px;
+    /* Subtle vertical rule between the two columns — the "printed
+       guide" look. Implemented with a background gradient because it
+       must only cover the grid's width, not spill into padding. */
+    position: relative;
+  }
+  .pfields::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    background: var(--rule-soft);
+    pointer-events: none;
+  }
+
+  /* Responsive: collapse to a single column and drop the rule. */
+  @media (max-width: 640px) {
+    .pfields {
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+    .pfields::before {
+      display: none;
+    }
+  }
+</style>

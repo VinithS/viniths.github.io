@@ -1,104 +1,145 @@
 ---
+/*
+  /about — Bureau of Cosmic Census passport page.
+
+  The card is shaped like the data page of a real passport: masthead
+  at the top (crest + issuing body + field office), a two-column
+  biographical block (portrait + cycling status on the left,
+  passport-style data fields on the right), a remarks box, and a
+  machine-readable zone strip. The fused flip-board below acts as the
+  passport's RFID / contact strip.
+
+  The stamping mechanic stays: passports get stamped, so it's on-
+  theme. StampArea bleeds to the card edges itself via FoilCard's
+  --foil-pad-* vars; the digital strip opts out via data-no-stamp.
+*/
+
 import Layout from "../layouts/Layout.astro";
 import FoilCard from "../components/primitives/FoilCard.astro";
-import Stamp from "../components/primitives/Stamp.astro";
-import Serial from "../components/primitives/Serial.astro";
-import SpecList from "../components/primitives/SpecList.astro";
-import SpecRow from "../components/primitives/SpecRow.astro";
-import UniverseLogo from "../components/UniverseLogo.astro";
 import DisplayFlipBoard from "../components/primitives/displays/DisplayFlipBoard.astro";
 import StampArea from "../components/StampArea.svelte";
 import StampTray from "../components/StampTray.svelte";
 
-// Single source of truth for the four available stamps. Both the tray
-// (outside the card) and the stamp area (inside the card) read this.
+import MastheadFrame from "../components/crests/MastheadFrame.astro";
+import CrestBlackHole from "../components/crests/CrestBlackHole.astro";
+
+import PassportFields from "../components/primitives/PassportFields.astro";
+import PassportField from "../components/primitives/PassportField.astro";
+import ObserverStatus from "../components/ObserverStatus.svelte";
+
+// Same four stamps as before. Passport theme — stamping fits.
 const STAMPS = [
-  { id: "bee",      kind: "ink",   src: "/assets/bee.svg",      accent: "yellow", label: "Bee" },
-  { id: "coffee",   kind: "ink",   src: "/assets/coffee.svg",   accent: "red",    label: "Coffee" },
-  { id: "wisteria", kind: "ink",   src: "/assets/wisteria.svg", accent: "blue",   label: "Wisteria" },
-  { id: "galaxy",   kind: "color", src: "/assets/galaxy.svg",                      label: "Galaxy" },
-  { id: "date",     kind: "date",                                                   label: "Date" },
+  { id: "bee",      kind: "ink", src: "/assets/bee.svg",       accent: "yellow", label: "Bee" },
+  { id: "coffee",   kind: "ink", src: "/assets/coffee.svg",    accent: "red",    label: "Coffee" },
+  { id: "fairytail",kind: "ink", src: "/assets/fairy-tail.svg",accent: "blue",   label: "Fairy Tail" },
+  { id: "date",     kind: "date",                                                label: "Date" },
 ];
+
+// Biographical data. The MRZ on the digital display is built from
+// these same fields so the two representations stay in sync.
+const BIO = {
+  surname: "SHARMA",
+  given: "VINITH",
+  genus: "Homo Sapiens",
+  seat: "Terra · Sol System",
+  classification: "Emergent Observer",
+  vocation: "Builder",
+  birthYear: "1997",
+  issued: "2026",
+};
+
+// ICAO TD3-style two-line MRZ. Top line: document type + issuing
+// state + full name. Bottom line: doc number + nationality + DOB +
+// sex + expiry. We fake the structure faithfully enough to read as a
+// real MRZ without claiming to be one.
+//   P   — document type (passport)
+//   <   — separator
+//   COS — issuing "state" (Cosmos). ICAO uses 3-letter codes.
+const mrzLine1 = `P<COS${BIO.surname}<<${BIO.given}`;
+const mrzLine2 = `N0001<<<<COS${BIO.birthYear}101<M${BIO.issued}101`;
 ---
 
-<Layout title="About - Vinith">
+<Layout title="About · Vinith">
   <section class="about-page">
-    <FoilCard
-      maxWidth={880}
-      stampSrc="/assets/wisteria.svg"
-    >
-      <Stamp
-        slot="corner"
-        class="card-stamp"
-        lines={["Est · 1997", "Entry · 001"]}
-        accent="green"
-        size="md"
-        rotate={-15}
-      />
+    <FoilCard maxWidth={880} stampSrc="/assets/wisteria.svg">
+      <!-- StampArea spans the whole card via negative insets that read
+           FoilCard's exposed --foil-pad-* vars. Anything marked
+           data-no-stamp (like the display) is skipped by hit-testing. -->
+      <StampArea client:load ageMs={30000} />
 
-      <!-- .paper-zone wraps everything that counts as stampable paper.
-           StampArea is mounted inside and fills the zone via inset:0,
-           so the digital display below (outside the zone) is not
-           reachable by the armed cursor. Stamps also clip at the
-           zone's bounds, so nothing bleeds onto the display. -->
-      <div class="paper-zone">
-        <StampArea client:load ageMs={30000} />
+      <MastheadFrame
+        variant="bureau"
+        institution="Bureau of Cosmic Census"
+        department="Field Office · Milky Way · Orion Arm"
+        kicker="Cosmological Authority"
+        serial={[
+          { k: "Doc", v: "N-0001" },
+          { k: "Issued", v: BIO.issued },
+        ]}
+      >
+        <CrestBlackHole slot="crest" size={72} />
+      </MastheadFrame>
 
-        <header class="masthead">
-          <UniverseLogo size={52} accent="yellow" />
-          <div class="masthead-text">
-            <div class="institution">Observable Universe</div>
-            <div class="department">Registry of Emergent Observers</div>
-          </div>
-          <Serial
-            class="masthead-serial"
-            items={[
-              { k: "Issue", v: "N-0001" },
-              { k: "Foil", v: "Gravitational" },
-            ]}
-          />
-        </header>
-
-        <div class="card-grid">
+      <!-- Bio block: portrait + status on the left, passport field
+           grid on the right. The portrait column sizes to content so
+           ObserverStatus can sit centered underneath without
+           overflowing or stretching the grid. -->
+      <div class="bio">
+        <div class="bio-portrait">
           <figure class="portrait">
             <img
               src="/portrait-placeholder.svg"
               alt="A pixelated portrait of Vinith."
             />
-            <figcaption class="portrait-caption">
-              <span class="dot"></span>
-              Homo Sapien
-            </figcaption>
           </figure>
-
-          <SpecList>
-            <SpecRow label="Designation">Vinith</SpecRow>
-            <SpecRow label="Passion">Builder</SpecRow>
-            <SpecRow label="Currently">[Svelte + Astro] & [Flutter + Dart]</SpecRow>
-            <SpecRow label="Reading">
-              <em>The Power of Now</em> — Eckhart Tolle
-            </SpecRow>
-          </SpecList>
+          <ObserverStatus client:load />
         </div>
 
-        <p class="flavor">
-          Stray thoughts that didn't fit anywhere else. I'm drawn to automation,
-          unique creative expression, and a coffee a little too strong. Trying to
-          build more, break less. Lets see where this takes us.
-        </p>
+        <PassportFields class="bio-fields">
+          <PassportField label="Surname / Nom">
+            {BIO.surname}
+          </PassportField>
+          <PassportField label="Given Names / Prénoms">
+            {BIO.given}
+          </PassportField>
+          <PassportField label="Genus">
+            {BIO.genus}
+          </PassportField>
+          <PassportField label="Classification">
+            {BIO.classification}
+          </PassportField>
+          <PassportField label="Seat / Place of Emergence">
+            {BIO.seat}
+          </PassportField>
+          <PassportField label="Vocation">
+            {BIO.vocation}
+          </PassportField>
+          <PassportField label="Year of Birth" mono>
+            {BIO.birthYear}
+          </PassportField>
+          <PassportField label="Year of Issue" mono>
+            {BIO.issued}
+          </PassportField>
+        </PassportFields>
       </div>
 
-      <!-- Digital display sits OUTSIDE .paper-zone — deliberately
-           unreachable by the stamp area so presses can't land on it. -->
-      <DisplayFlipBoard
-        fused
-        email="vinith.sharma13@gmail.com"
-        fields={[{ label: "Coordinates", value: "47.62, -122.35" }]}
-      />
+      <!-- data-no-stamp opts this subtree out of the StampArea's hit
+           test — clicks and ghost cursor skip over the dark strip.
+           The MRZ rides *inside* the display's dark bezel as the
+           last block, so the whole "printed below the waterline"
+           region reads as one module. -->
+      <div data-no-stamp>
+        <DisplayFlipBoard
+          fused
+          email="vinith.sharma13@gmail.com"
+          fields={[{ label: "Coordinates", value: "47.62, -122.35" }]}
+          mrz={[mrzLine1, mrzLine2]}
+          timezone="America/Los_Angeles"
+          timezoneLabel="SEA"
+        />
+      </div>
     </FoilCard>
 
-    <!-- Tiny icon-only tray, positioned outside the card at bottom-right.
-         Shares state with the StampArea via stamp-store.svelte.js. -->
     <div class="stamp-tray-wrap">
       <StampTray client:load stamps={STAMPS} />
     </div>
@@ -114,53 +155,50 @@ const STAMPS = [
     align-items: center;
     justify-content: center;
     padding: 48px 0 32px;
-    /* Depth context for the FoilCard's cursor-driven tilt. */
     perspective: 1600px;
   }
 
-  /* Stamp breaks the grid in the top-right of the card. Solid bg matches
-     the card so the foil layers don't bleed through. */
-  :global(.card-stamp) {
-    position: absolute;
-    top: -18px;
-    right: 36px;
-    z-index: 6;
-    background: var(--bg-card);
+  /* Bio block: passport photo stack + field grid. Left column is
+     pinned to the portrait width so a long status verb can't grow
+     the column and shove the fields right. Anything wider than the
+     portrait wraps within the stack. */
+  .bio {
+    display: grid;
+    grid-template-columns: 136px 1fr;
+    gap: 28px;
+    align-items: start;
+    margin-top: 4px;
+  }
+  /* Portrait stack: photo + status. justify-items:start pins both
+     children to the stack's left edge so the status aligns with the
+     portrait's left edge. The stack is the column's full width; any
+     long verb wraps rather than pushing the grid. */
+  .bio-portrait {
+    display: grid;
+    justify-items: start;
+    gap: 10px;
+    padding: 0 0 5px;
+    min-width: 0;
+  }
+  .portrait {
+    margin: 0;
+  }
+  .portrait img {
+    display: block;
+    width: 136px;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    image-rendering: pixelated;
+    background: var(--bg-inset);
+    border: 2px solid var(--rule);
+    /* Double rule: cream gutter + soft outer. Evokes the printed
+       frame around a passport photo. */
+    box-shadow:
+      0 0 0 3px var(--bg-card),
+      0 0 0 4px var(--rule-soft);
   }
 
-  /* The stampable "paper" region of the card.
-
-     It wraps the masthead, portrait/spec grid, and flavor paragraph
-     (the digital display below is a sibling, not a child, so it can't
-     be stamped on). Negative margins + restored padding make the zone
-     physically span the entire card's paper area — from the card's
-     inner edge all the way to just above the display — while children
-     keep their original content inset. Without the negative margins,
-     StampArea would only cover the content block, leaving the card's
-     own padding "off-limits" even though it's paper. No overflow
-     clipping — stamps can visually spill up to the card's own border. */
-  .paper-zone {
-    position: relative;
-    margin: -44px -44px 0;
-    padding: 44px 44px 0;
-  }
-  @media (max-width: 860px) {
-    .paper-zone {
-      margin: -36px -28px 0;
-      padding: 36px 28px 0;
-    }
-  }
-  @media (max-width: 720px) {
-    .paper-zone {
-      margin: -30px -22px 0;
-      padding: 30px 22px 0;
-    }
-  }
-
-  /* Tray sits outside the card at the bottom-right, on the same
-     centered column as the card. Pointer-events stays enabled even
-     when stamping is armed — users need to click the tray to change
-     or deselect their stamp. */
+  /* Tray: outside the card, bottom-right. */
   .stamp-tray-wrap {
     width: 100%;
     max-width: 880px;
@@ -169,134 +207,29 @@ const STAMPS = [
     justify-content: flex-end;
     padding: 0 4px;
   }
-
   @media (max-width: 720px) {
     .stamp-tray-wrap {
       padding: 0 16px;
     }
   }
 
-  /* Masthead — crest + institution on the left, Serial on the right. */
-  .masthead {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    gap: 16px;
-    padding-bottom: 20px;
-    margin-bottom: 28px;
-    border-bottom: 1px solid var(--rule-soft);
-  }
-  .masthead-text {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  .institution {
-    font-family: var(--font-serif);
-    font-variation-settings:
-      "opsz" 24,
-      "SOFT" 40,
-      "wght" 600;
-    font-size: 22px;
-    color: var(--ink);
-    line-height: 1.1;
-    letter-spacing: -0.005em;
-  }
-  .department {
-    font-family: var(--font-pixel);
-    font-size: 10px;
-    color: var(--ink-muted);
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-  }
-
-  .card-grid {
-    display: grid;
-    grid-template-columns: minmax(140px, 180px) 1fr;
-    gap: 36px;
-    align-items: start;
-  }
-
-  .portrait {
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .portrait img {
-    display: block;
-    width: 100%;
-    aspect-ratio: 3 / 4;
-    object-fit: cover;
-    image-rendering: pixelated;
-    background: var(--bg-inset);
-    border: 2px solid var(--rule);
-    box-shadow:
-      0 0 0 4px var(--bg-card),
-      0 0 0 5px var(--rule-soft);
-  }
-  .portrait-caption {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-family: var(--font-pixel);
-    font-size: 10px;
-    color: var(--ink-muted);
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    margin-top: 8px;
-  }
-  .portrait-caption .dot {
-    width: 7px;
-    height: 7px;
-    background: var(--signal);
-  }
-
-  .flavor {
-    margin: 32px 0 0;
-    padding: 28px 0;
-    border-top: 1px solid var(--rule-soft);
-    border-bottom: 1px solid var(--rule-soft);
-    font-family: var(--font-serif);
-    font-variation-settings:
-      "opsz" 22,
-      "SOFT" 80,
-      "wght" 400;
-    font-size: 19px;
-    line-height: 1.55;
-    color: var(--ink-soft);
-    max-width: 58ch;
-  }
-
-  @media (max-width: 860px) {
-    .masthead {
-      grid-template-columns: auto 1fr;
-      row-gap: 12px;
-    }
-    :global(.masthead-serial) {
-      grid-column: 1 / -1;
-      justify-self: start;
-    }
-  }
   @media (max-width: 720px) {
-    .card-grid {
+    .bio {
+      grid-template-columns: 120px 1fr;
+      gap: 20px;
+    }
+    .portrait img {
+      width: 120px;
+    }
+  }
+  @media (max-width: 520px) {
+    .bio {
       grid-template-columns: 1fr;
-      gap: 24px;
+      justify-items: start;
     }
-    .portrait {
-      max-width: 180px;
-    }
-    .masthead {
-      gap: 12px;
-      padding-bottom: 16px;
-      margin-bottom: 22px;
-    }
-    .institution {
-      font-size: 18px;
-    }
-    :global(.card-stamp) {
-      right: 20px;
-      top: -14px;
+    .bio-portrait {
+      justify-items: start;
+      padding: 0 0 4px;
     }
   }
 </style>

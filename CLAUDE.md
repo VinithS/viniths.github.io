@@ -52,6 +52,20 @@ When adding content: add the file(s) to the appropriate `src/content/` location 
 - `.card` for surface containers, `.tag` for small badges, `.mono` for inline monospace text.
 - Component-scoped styles live in `<style>` tags inside `.astro`/`.svelte` files — prefer these over adding new global rules.
 
+## Light/dark parity (read this before any visual change)
+
+The site ships two full themes — `:root[data-theme="light"]` (dawn/warm cream paper) and `:root[data-theme="dark"]` (dusk paper). They are *not* inversions of each other: each redefines its own `--bg-*`, `--ink-*`, `--rule*`, accent palette, and semantic role tokens (`--em`, `--signal`, `--toggle-dot`, …) in `global.css`. Blend modes, opacities, and filter values are tuned per theme — `.stamp` uses `mix-blend-mode: multiply` in light, `screen` in dark; `.gloss` uses `overlay` in light, `soft-light` in dark; `FoilCard` pulls saturation down in dark, etc.
+
+Any change that touches color, opacity, blend mode, filter, shadow, or gradient must be verified in *both* themes before you consider it done:
+
+- Toggle with the nav button or press `T` on the page.
+- Check contrast (body text on paper, ink on accent surfaces, rule borders against their bg).
+- Check any blend-moded or filtered surface — `multiply` and `screen` behave very differently on dusk vs. cream bases; what reads as "subtle watermark" in light can become "rainbow pinwheel" in dark (see the FoilCard stamp history). If you add a new blended layer, pair it with a per-theme override in the same component.
+- Check hover/active states — both themes share the interaction logic but can diverge in contrast.
+- If a bug reproduces in one theme only, treat that as a signal that one of the per-theme overrides is missing, not that the "broken" theme is fine to ignore.
+
+When touching only one theme's tokens (e.g. bumping dark's `.holo` opacity), still sanity-check that the light side still looks right — the selectors often cascade through shared rules.
+
 ## Design Context
 
 Dark charcoal background (`--bg-primary: #0d1117`), subtle borders, muted green accent (`--accent: #39d353`), sans-serif body with monospace accents. Content column is `--max-width: 1080px`, centered.
