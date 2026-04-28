@@ -48,15 +48,17 @@ const BIO = {
   issued: "2026",
 };
 
-// ICAO TD3-style two-line MRZ. Top line: document type + issuing
-// state + full name. Bottom line: doc number + nationality + DOB +
-// sex + expiry. We fake the structure faithfully enough to read as a
-// real MRZ without claiming to be one.
-//   P   — document type (passport)
-//   <   — separator
-//   COS — issuing "state" (Cosmos). ICAO uses 3-letter codes.
-const mrzLine1 = `P<COS${BIO.surname}<<${BIO.given}`;
-const mrzLine2 = `N0001<<<<COS${BIO.birthYear}101<M${BIO.issued}101`;
+// Single-line typewriter stamp. Flex dot-leaders join the segments,
+// so the line always spans the display edge-to-edge. Reads like a
+// typed registry entry: "this subject, from there, logged on that
+// day, under this doc number." Compressed into one ribbon-typed row
+// rather than two ICAO MRZ rows that needed their own caption.
+const stampSegments = [
+  `P<COS ${BIO.surname}<<${BIO.given}`,
+  `ORIGIN ${BIO.seat.toUpperCase()}`,
+  `EM ${BIO.birthYear} / REG ${BIO.issued}`,
+  `DOC N-0001`,
+];
 ---
 
 <Layout title="About · Vinith">
@@ -133,9 +135,8 @@ const mrzLine2 = `N0001<<<<COS${BIO.birthYear}101<M${BIO.issued}101`;
           fused
           email="vinith.sharma13@gmail.com"
           fields={[{ label: "Coordinates", value: "47.62, -122.35" }]}
-          mrz={[mrzLine1, mrzLine2]}
+          stamp={stampSegments}
           timezone="America/Los_Angeles"
-          timezoneLabel="SEA"
         />
       </div>
     </FoilCard>
