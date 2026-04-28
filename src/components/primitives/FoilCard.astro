@@ -1,30 +1,32 @@
 ---
 /*
-  FoilCard - a document pressed on holographic foil stock.
+  FoilCard — a document pressed on holographic foil stock.
 
-  The shell handles everything pointer-reactive:
-    .stamp    shaped foil watermark (SVG-masked conic gradient)
-    .foil     static diagonal hairline grain (paper stock, always visible)
-    .holo     subtle full-card iridescent wash, cursor shifts the hue
-    .gloss    specular cursor highlight, overlay blend
+  Layer stack (bottom → top), all pointer-events: none:
 
-  A small inline script tracks the pointer and drives CSS custom
-  properties. Unitless companions (--mxn, --myn, 0..100) are emitted
-  alongside the %-suffixed --mx/--my so gradient angles can be
-  computed as calc(var(--mxn) * 3.6deg).
+    .mark-shine  wide rainbow band masked by the stamp SVG. The band
+                 itself is a fixed linear gradient; the cursor only
+                 drives its transform, so paint stays compositor-only.
+                 In dark mode the mask is dropped so the rainbow
+                 floods the whole card.
+
+  Prior versions used conic gradients with `from calc(var(--mxn)*deg)`
+  on two layers plus a 40px blur. Every pointermove invalidated the
+  gradient caches and re-ran the blur pass — the main source of card-
+  hover stutter. The current design touches only transforms, so cost
+  is dominated by the one-time gradient rasterization at mount.
 
   Slots:
     - default: content "printed" on top of the foil
     - corner:  absolutely-positioned decoration at the top-right
-               (stamps, seals, ribbons)
 
   Props:
-    - ticks       render corner viewfinder L-brackets (default true)
-    - tilt        enable pointer-driven 3D rotation (default true)
-    - maxWidth    card max-width, number (px) or CSS value
-    - stampSrc    URL of an SVG to use as the foil-stamp shape.
-                  If unset, no stamp layer is rendered.
-    - class       forwarded to the outer article
+    - ticks     render corner viewfinder L-brackets (default true)
+    - tilt      enable pointer-driven 3D rotation (default true)
+    - maxWidth  card max-width, number (px) or CSS value
+    - stampSrc  URL of an SVG to use as the foil-stamp silhouette.
+                Without it, the card is just paper + tilt.
+    - class     forwarded to the outer article
 */
 
 interface Props {
@@ -57,10 +59,13 @@ const inlineStyle = stampSrc
   data-tilt={tilt ? "" : undefined}
   style={inlineStyle}
 >
-  <span class="foil" aria-hidden="true"></span>
-  {stampSrc && <span class="stamp" aria-hidden="true" />}
-  <span class="holo" aria-hidden="true"></span>
-  <span class="gloss" aria-hidden="true"></span>
+  {
+    stampSrc && (
+      <span class="mark-shine" aria-hidden="true">
+        <span class="shine-band" />
+      </span>
+    )
+  }
 
   {
     ticks && (
@@ -99,11 +104,10 @@ const inlineStyle = stampSrc
     window.addEventListener("scroll", recompute, { passive: true });
 
     const onMove = (e: PointerEvent) => {
-      // While a stamp is armed, the card should stay inert — no tilt,
-      // no foil glint, no active hover. The CSS also enforces this
-      // (see `:root[data-stamp-armed] .foil-card`), but returning
-      // here skips the rect math + style writes entirely so we don't
-      // pay layout cost on every trackpad pointermove either.
+      // While a stamp is armed, the card should stay inert. The CSS
+      // also pins --rx/--ry/--active to 0 via [data-stamp-armed], but
+      // returning here skips the rect math + style writes on every
+      // trackpad pointermove while aiming a stamp.
       if (document.documentElement.hasAttribute("data-stamp-armed")) return;
       if (!rect) return;
       cancelAnimationFrame(raf);
@@ -112,9 +116,8 @@ const inlineStyle = stampSrc
         const y = e.clientY - rect!.top;
         const px = Math.max(0, Math.min(100, (x / rect!.width) * 100));
         const py = Math.max(0, Math.min(100, (y / rect!.height) * 100));
-        card.style.setProperty("--mx", `${px}%`);
-        card.style.setProperty("--my", `${py}%`);
-        // Unitless companions so calc() can multiply by deg/px.
+        // Unitless so calc() can multiply by % in the shine-band
+        // transform without unit-juggling.
         card.style.setProperty("--mxn", `${px}`);
         card.style.setProperty("--myn", `${py}`);
         card.style.setProperty("--active", "1");
@@ -141,13 +144,20 @@ const inlineStyle = stampSrc
 
 <style>
   .foil-card {
-    --mx: 50%;
-    --my: 50%;
     --mxn: 50;
     --myn: 50;
     --active: 0;
     --rx: 0deg;
     --ry: 0deg;
+
+    /* Per-theme knobs for the wisteria shine. Light defaults here;
+       the dark override block redefines them further down. Keeping
+       the knobs on .foil-card means component rules read one set of
+       vars and don't have to fork by theme. */
+    --wisteria-shine-mask:      var(--stamp-src) no-repeat 50% 180% / 62% auto;
+    --wisteria-shine-opacity:   0.1;
+    --wisteria-shine-blend:     multiply;
+    --wisteria-shine-saturate:  1.5;
 
     position: relative;
     width: 100%;
@@ -166,108 +176,69 @@ const inlineStyle = stampSrc
       transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
       box-shadow 0.4s ease;
     will-change: transform;
+    /* Keep repaints on descendants (ObserverStatus spinner, flipboard
+       animations) from leaking up to parent layers. */
+    contain: layout paint;
   }
   .foil-card:hover {
     box-shadow:
       10px 10px 0 var(--rule),
       0 40px 80px -30px rgba(0, 0, 0, 0.55);
   }
-  .foil,
-  .stamp,
-  .holo,
-  .gloss {
+
+  /* Rainbow wash. In light mode it's clipped to the wisteria
+     silhouette (shine lives inside the leaves). In dark mode the
+     mask is `none`, so the rainbow floods the whole card. */
+  .mark-shine {
     position: absolute;
     inset: 0;
     pointer-events: none;
-  }
-
-  .foil {
-    z-index: 0;
-    opacity: 0.55;
-    background:
-      repeating-linear-gradient(
-        115deg,
-        transparent 0px,
-        transparent 2px,
-        var(--rule-xsoft) 2px,
-        var(--rule-xsoft) 3px
-      ),
-      repeating-linear-gradient(
-        25deg,
-        transparent 0px,
-        transparent 7px,
-        var(--rule-xsoft) 7px,
-        var(--rule-xsoft) 8px
-      );
-    mix-blend-mode: multiply;
-  }
-
-  /* Shaped foil stamp — an SVG masks a conic iridescent gradient so
-     only the stamp's silhouette takes on the foil, like real hot-stamp
-     foil pressed into paper. Cursor rotates the gradient's hue axis.
-
-     Conic center sits at the bottom-right corner (at 100% 100%), not
-     the card center — a conic gradient has a hue-convergence point
-     right at its center, which would otherwise plant a visible "sharp
-     pinwheel" singularity inside the masked fairy-tail silhouette.
-     Off-card center makes the iridescent read as hue bands *sweeping*
-     across the foil as you tilt, closer to how real holographic foil
-     behaves. */
-  .stamp {
     z-index: 1;
-    /* Gently brighter when the cursor is over the card, but always
-       visible so it reads as a printed watermark, not a screen effect. */
-    opacity: calc(0.55 + var(--active) * 0.35);
-    transition:
-      opacity 0.45s cubic-bezier(0.2, 0.8, 0.2, 1),
-      filter 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
-    mix-blend-mode: screen;
-    background: conic-gradient(
-      from calc(var(--mxn) * 3.6deg) at 90% 90%,
-      var(--red) 0deg,
-      var(--yellow) 72deg,
-      var(--green) 144deg,
-      var(--blue) 216deg,
-      var(--red) 288deg,
-      var(--red) 360deg
-    );
-    /* Size the stamp shape to ~62% of the card, centered. */
-    -webkit-mask: var(--stamp-src) no-repeat center / 62% auto;
-    mask: var(--stamp-src) no-repeat center / 62% auto;
-  }
-
-  /* Continuous iridescent wash across the whole card — the "foil
-     backing" of the paper. Cursor shifts the hue axis so it breathes
-     without a hard hotspot. */
-  .holo {
-    z-index: 2;
-    opacity: calc(0.18 + var(--active) * 0.22);
+    overflow: hidden;
+    -webkit-mask: var(--wisteria-shine-mask);
+    mask: var(--wisteria-shine-mask);
+    opacity: calc(var(--wisteria-shine-opacity) * (0.78 + var(--active) * 0.22));
+    mix-blend-mode: var(--wisteria-shine-blend);
     transition: opacity 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
-    mix-blend-mode: screen;
-    background: conic-gradient(
-      from calc(var(--mxn) * 3.6deg) at var(--mx) var(--my),
-      var(--red) 0deg,
-      var(--yellow) 90deg,
-      var(--green) 180deg,
-      var(--blue) 270deg,
-      var(--red) 360deg
-    );
-    filter: blur(40px) saturate(1.2);
   }
 
-  .gloss {
-    z-index: 3;
-    opacity: calc(var(--active) * 1);
-    transition: opacity 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
-    mix-blend-mode: overlay;
-    background: radial-gradient(
-      ellipse 55% 65% at var(--mx) var(--my),
-      rgba(255, 245, 220, 0.38) 0%,
-      rgba(255, 245, 220, 0) 45%
+  /* The rainbow. Oversized so transform can pan it without exposing
+     an edge. Gradient is *static* — the browser rasterizes it once and
+     the cursor only shifts the transform. That's the whole point of
+     this rewrite: no gradient interpolation on the hot path.
+
+     Horizontal buffer is -100% on each side (band is 3x the card's
+     width). With the pan math below capped at ±25% of the band's own
+     width, the card never reaches the edge of the gradient at any
+     cursor position. */
+  .shine-band {
+    position: absolute;
+    inset: -30% -100%;
+    background: linear-gradient(
+      100deg,
+      var(--red)    0%,
+      var(--yellow) 18%,
+      var(--green)  36%,
+      var(--blue)   54%,
+      var(--red)    72%,
+      var(--yellow) 90%,
+      var(--red)   100%
     );
+    /* --mxn/--myn are 0..100 unitless. (mxn - 50) * -0.5% gives ±25%
+       of the band's own width (which, at 3x card width, equals ±75%
+       of the card width) — plenty of pan without ever exposing a band
+       edge. Vertical pan is smaller so the band mostly slides
+       left/right as the pointer traverses the card. */
+    transform: translate3d(
+      calc((var(--mxn) - 50) * -0.5%),
+      calc((var(--myn) - 50) * -0.3%),
+      0
+    );
+    will-change: transform;
+    filter: saturate(var(--wisteria-shine-saturate));
   }
 
-  /* Corner viewfinder ticks sit above foil/hologram but below content. */
+  /* Corner viewfinder ticks — above the foil, below content. */
   .tick {
     position: absolute;
     width: 14px;
@@ -313,52 +284,27 @@ const inlineStyle = stampSrc
     padding: var(--foil-pad-t) var(--foil-pad-x) var(--foil-pad-b);
   }
 
-  /* Theme tuning: dark dusk paper swallows color, push foil harder.
-     Light cream burns out faster, ease it off.
-
-     Dark mode stays on screen (not color-dodge). color-dodge's
-     result = base / (1 - blend) amplifies each hue-to-hue transition
-     in the conic gradient into a crisp banded rainbow wheel — fine
-     under .holo's 40px blur, but the masked .stamp is unblurred so
-     the banding shows through as a spinning pinwheel. Opacity is
-     bumped ~0.1 to keep the "stronger in dark" intent without relying
-     on a blend mode that amplifies gradient discontinuities. */
-  :global(:root[data-theme="dark"]) .stamp {
-    opacity: calc(0.85 + var(--active) * 0.35);
-    /* Dusk paper's dark base (#241f18) doesn't soften saturated hues
-       through `screen` the way the light cream does — pull saturation
-       down so the stamp reads as warm iridescence, not a rainbow. */
-    filter: saturate(0.7);
-  }
-  :global(:root[data-theme="dark"]) .holo {
-    opacity: calc(0.32 + var(--active) * 0.3);
-  }
-  :global(:root[data-theme="dark"]) .gloss {
-    mix-blend-mode: soft-light;
-  }
-  :global(:root[data-theme="light"]) .stamp {
-    opacity: calc(0.45 + var(--active) * 0.3);
-  }
-  :global(:root[data-theme="light"]) .holo {
-    opacity: calc(0.14 + var(--active) * 0.18);
+  /* Dark-mode knobs. Drop the shine mask so the rainbow paints the
+     whole card. Saturation is pulled way down so the rainbow reads
+     as a warm iridescent wash, not a crayon-box flood that fights
+     with the passport content sitting on top of it. */
+  :global(:root[data-theme="dark"]) .foil-card {
+    --wisteria-shine-mask:     var(--stamp-src) no-repeat 50% 180% / 62% auto;
+    --wisteria-shine-opacity:  0.35;
+    --wisteria-shine-blend:    normal;
+    --wisteria-shine-saturate: 1.5;
   }
 
-  /* While a stamp is armed on the page, freeze the card flat. This is
-     belt-and-suspenders with the JS early-return in onMove: even if a
-     pointermove does slip through (e.g. the cursor is over the card's
-     2px border where the StampArea overlay can't catch it), the
-     custom properties are pinned here so the card doesn't tilt or
-     glint under the ghost cursor. The inherited transition on
-     .foil-card (0.6s on transform) makes this look like a smooth
-     "lock" when arming, and a smooth "wake" when disarming. */
+  /* While a stamp is armed on the page, freeze the card flat. Keeps
+     the card from tilting or glinting under the stamping ghost cursor.
+     Inherited transform transition on .foil-card makes this a smooth
+     "lock/wake" between armed and disarmed. */
   :global(:root[data-stamp-armed]) .foil-card {
     --rx: 0deg;
     --ry: 0deg;
     --active: 0;
   }
   :global(:root[data-stamp-armed]) .foil-card:hover {
-    /* Don't grow the drop shadow on hover either — the card should
-       read as "paper pinned to the table" while you aim. */
     box-shadow:
       8px 8px 0 var(--rule),
       0 30px 60px -30px rgba(0, 0, 0, 0.35);
@@ -367,6 +313,9 @@ const inlineStyle = stampSrc
   @media (prefers-reduced-motion: reduce) {
     .foil-card {
       transition: none;
+      transform: none !important;
+    }
+    .shine-band {
       transform: none !important;
     }
   }

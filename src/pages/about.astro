@@ -40,12 +40,11 @@ const STAMPS = [
 const BIO = {
   surname: "SHARMA",
   given: "VINITH",
-  genus: "Homo Sapiens",
-  seat: "Terra · Sol System",
+  genus: "Homo Sapien",
+  seat: "Terra ☉ Sol",
   classification: "Emergent Observer",
-  vocation: "Builder",
-  birthYear: "1997",
-  issued: "2026",
+  vocation: "Artist",
+  issued: "1997",
 };
 
 // Single-line typewriter stamp. Flex dot-leaders join the segments,
@@ -54,9 +53,9 @@ const BIO = {
 // day, under this doc number." Compressed into one ribbon-typed row
 // rather than two ICAO MRZ rows that needed their own caption.
 const stampSegments = [
-  `P<COS ${BIO.surname}<<${BIO.given}`,
+  `P<COS ${BIO.surname}<<<${BIO.given}`,
   `ORIGIN ${BIO.seat.toUpperCase()}`,
-  `EM ${BIO.birthYear} / REG ${BIO.issued}`,
+  `EM<<REG ${BIO.issued}`,
   `DOC N-0001`,
 ];
 ---
@@ -115,9 +114,6 @@ const stampSegments = [
           </PassportField>
           <PassportField label="Vocation">
             {BIO.vocation}
-          </PassportField>
-          <PassportField label="Year of Birth" mono>
-            {BIO.birthYear}
           </PassportField>
           <PassportField label="Year of Issue" mono>
             {BIO.issued}

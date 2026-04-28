@@ -718,7 +718,7 @@ const hasTelemetry = !!timezone;
     content: "";
     position: absolute;
     top: -3px;
-    left: -20%;
+    left: 0;
     width: 20%;
     height: 7px;
     background: linear-gradient(
@@ -728,12 +728,18 @@ const hasTelemetry = !!timezone;
       transparent 100%
     );
     opacity: 0.6;
+    /* Glow is 20% of the rail wide; translating by multiples of 100%
+       of its own width moves it by multiples of 20% of the rail.
+       -100% = rail's left edge at -20%, 500% = rail's left edge at
+       100%. Transform is compositor-only — the old `left:` animation
+       was re-running layout on every frame. */
+    transform: translateX(-100%);
     animation: flipSweep 4.2s linear infinite;
+    will-change: transform;
   }
   @keyframes flipSweep {
-    to {
-      left: 100%;
-    }
+    from { transform: translateX(-100%); }
+    to   { transform: translateX(500%);  }
   }
 
   /* Paired mode: link sweep hands off to MRZ sweep. Both on a shared
@@ -742,22 +748,20 @@ const hasTelemetry = !!timezone;
     animation: flipSweepLink 5s linear infinite;
   }
   .flip-bezel--paired .flip-sweep--mrz::after {
-    left: auto;
-    right: -20%;
     animation: flipSweepMrz 5s linear infinite;
   }
 
   @keyframes flipSweepLink {
-    0%   { left: -20%; opacity: 0.6; }
-    45%  { opacity: 0.6; }
-    50%  { left: 100%; opacity: 0; }
-    100% { left: 100%; opacity: 0; }
+    0%   { transform: translateX(-100%); opacity: 0.6; }
+    45%  {                                opacity: 0.6; }
+    50%  { transform: translateX(500%);  opacity: 0;   }
+    100% { transform: translateX(500%);  opacity: 0;   }
   }
   @keyframes flipSweepMrz {
-    0%, 50% { right: -20%; opacity: 0; }
-    55%     { opacity: 0.6; }
-    95%     { opacity: 0.6; }
-    100%    { right: 100%; opacity: 0; }
+    0%, 50% { transform: translateX(500%);  opacity: 0;   }
+    55%     {                                opacity: 0.6; }
+    95%     {                                opacity: 0.6; }
+    100%    { transform: translateX(-100%); opacity: 0;   }
   }
 
   /* Responsive: on narrow viewports the right telemetry pod drops
