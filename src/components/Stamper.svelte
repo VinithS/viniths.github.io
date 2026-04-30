@@ -15,11 +15,11 @@
                   drift toward the paper color over 30s instead of
                   fading to zero. No GC.
 
-    Stamps are rendered with three SVG loaders: an InkStamp-style
-    single-ink silhouette (CSS mask), a ColorStamp-style full-color
-    <img>, or an inline DateStamp SVG, matching the Astro primitives.
-    The shared #rubber-ink filter is defined once in Layout.astro and
-    works here too.
+    Stamps render in three ways depending on `kind`: a single-ink
+    silhouette via CSS mask ("ink"), a native-color <img> ("color"),
+    or the inline DateMark postmark SVG ("date"). The shared
+    #rubber-ink filter defined in Layout.astro provides the rubber
+    edge wobble for all three.
 
     Props:
       mode     — press | smear | surprise | archive (default press)

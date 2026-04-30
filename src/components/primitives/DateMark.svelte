@@ -1,10 +1,9 @@
 <script>
   /*
-    DateMark — the inline postal cancellation SVG used inside Svelte
-    islands. DateStamp.astro renders the same thing at build time, but
-    islands need a reactive version (the placed stamps need per-stamp
-    dates, and the `defs > path` id must be unique per instance so
-    overlapping marks don't cross-reference each other's ring path).
+    DateMark — inline postal cancellation SVG for Svelte islands.
+    Each placed stamp gets its own `date`; the `defs > path` id is
+    suffixed per instance so overlapping marks don't cross-reference
+    each other's ring path.
 
     Props:
       date         Date rendered into the center block. Defaults to now.

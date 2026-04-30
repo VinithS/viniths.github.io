@@ -1,0 +1,106 @@
+---
+/*
+  HoloPatch — a standalone passport-style holographic foil tile.
+
+  Thin wrapper around HoloShine with label + microtype chrome. Use
+  this when you want a dedicated decorative patch; when you want the
+  foil to cover an existing surface, reach for HoloShine directly
+  (see MastheadFrame's serial pill).
+
+  Props:
+    label      — short pixel glyph over the patch (default GEN).
+    microtype  — string tiled across as a microtext watermark; fades
+                 in on hover like an anti-forgery inscription.
+    width      — px width of the patch (default 44).
+*/
+
+import HoloShine from "./HoloShine.astro";
+
+interface Props {
+  label?: string;
+  microtype?: string;
+  width?: number;
+  class?: string;
+}
+
+const {
+  label = "GEN",
+  microtype = "COSMIC CENSUS · GENUINE",
+  width = 44,
+  class: className = "",
+} = Astro.props;
+
+const micro = `${microtype} · ${microtype} · ${microtype}`;
+const inlineStyle = `--holo-width: ${width}px;`;
+---
+
+<span
+  class:list={["holo", className]}
+  data-holo-host
+  style={inlineStyle}
+  aria-hidden="true"
+>
+  <HoloShine intensity="full" />
+  <span class="holo-micro">{micro}</span>
+  <span class="holo-label">{label}</span>
+</span>
+
+<style>
+  .holo {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--holo-width, 44px);
+    height: 22px;
+    padding: 0 6px;
+    background: var(--bg-inset);
+    border: 1px solid var(--rule-soft);
+    overflow: hidden;
+    cursor: crosshair;
+    isolation: isolate;
+    contain: paint;
+  }
+
+  .holo-label {
+    position: relative;
+    font-family: var(--font-pixel);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    color: var(--ink);
+    mix-blend-mode: luminosity;
+    z-index: 2;
+  }
+
+  /* Microtext watermark — hidden at rest, softly lifted on hover. */
+  .holo-micro {
+    position: absolute;
+    inset: 0;
+    padding: 2px 4px;
+    font-family: var(--font-pixel);
+    font-size: 5.5px;
+    letter-spacing: 0.08em;
+    line-height: 1.3;
+    color: var(--ink);
+    opacity: 0;
+    text-align: center;
+    word-break: break-all;
+    white-space: normal;
+    mix-blend-mode: multiply;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+    z-index: 1;
+  }
+  :root[data-theme="dark"] .holo-micro {
+    mix-blend-mode: screen;
+  }
+  .holo:hover .holo-micro {
+    opacity: 0.6;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .holo-micro {
+      transition: none;
+    }
+  }
+</style>

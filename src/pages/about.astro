@@ -29,10 +29,16 @@ import ObserverStatus from "../components/ObserverStatus.svelte";
 
 // Same four stamps as before. Passport theme — stamping fits.
 const STAMPS = [
-  { id: "bee",      kind: "ink", src: "/assets/bee.svg",       accent: "yellow", label: "Bee" },
-  { id: "coffee",   kind: "ink", src: "/assets/coffee.svg",    accent: "red",    label: "Coffee" },
-  { id: "fairytail",kind: "ink", src: "/assets/fairy-tail.svg",accent: "blue",   label: "Fairy Tail" },
-  { id: "date",     kind: "date",                                                label: "Date" },
+  { id: "bee", kind: "ink", src: "/assets/bee.svg", accent: "yellow", label: "Bee" },
+  { id: "coffee", kind: "ink", src: "/assets/coffee.svg", accent: "red", label: "Coffee" },
+  {
+    id: "fairytail",
+    kind: "ink",
+    src: "/assets/fairy-tail.svg",
+    accent: "blue",
+    label: "Fairy Tail",
+  },
+  { id: "date", kind: "date", label: "Date" },
 ];
 
 // Biographical data. The MRZ on the digital display is built from
@@ -43,7 +49,7 @@ const BIO = {
   genus: "Homo Sapien",
   seat: "Terra ☉ Sol",
   classification: "Emergent Observer",
-  vocation: "Artist",
+  vocation: "Art",
   issued: "1997",
 };
 
@@ -56,7 +62,7 @@ const stampSegments = [
   `P<COS ${BIO.surname}<<<${BIO.given}`,
   `ORIGIN ${BIO.seat.toUpperCase()}`,
   `EM<<REG ${BIO.issued}`,
-  `DOC N-0001`,
+  `FILE WISTERIA-I`,
 ];
 ---
 
@@ -69,14 +75,14 @@ const stampSegments = [
       <StampArea client:load ageMs={30000} />
 
       <MastheadFrame
-        variant="bureau"
         institution="Bureau of Cosmic Census"
         department="Field Office · Milky Way · Orion Arm"
         kicker="Cosmological Authority"
         serial={[
-          { k: "Doc", v: "N-0001" },
+          { k: "File", v: "Wisteria-I" },
           { k: "Issued", v: BIO.issued },
         ]}
+        holo
       >
         <CrestBlackHole slot="crest" size={72} />
       </MastheadFrame>
@@ -88,10 +94,7 @@ const stampSegments = [
       <div class="bio">
         <div class="bio-portrait">
           <figure class="portrait">
-            <img
-              src="/portrait-placeholder.svg"
-              alt="A pixelated portrait of Vinith."
-            />
+            <img src="/portrait-placeholder.svg" alt="A pixelated portrait of Vinith." />
           </figure>
           <ObserverStatus client:load />
         </div>

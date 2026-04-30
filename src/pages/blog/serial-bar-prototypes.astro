@@ -1,0 +1,1024 @@
+---
+/*
+  /blog/serial-bar-prototypes — "Three takes on a bureaucratic sliver."
+
+  Promoted from /sandbox/serial-bar-prototypes. Three hover-activated
+  treatments for the tiny DOC · ISSUED pill in the About card's
+  masthead:
+
+    01 — Living document clock. Serial flips on hover to a live age
+         counter derived from the issue year.
+
+    02 — Holographic security patch. Transform-only iridescent foil
+         extracted to the HoloPatch primitive. This is the direction
+         that ships on /about.
+
+    03 — UV-reactive microtype. Hover dims the printed line and reveals
+         a second line of glowing "UV ink" beneath it.
+
+  Only prototype 02 was wired into the about card; the blog post keeps
+  all three so the decision reads in context.
+*/
+
+import Layout from "../../layouts/Layout.astro";
+import HoloPatch from "../../components/primitives/HoloPatch.astro";
+
+const POST_DATE = new Date("2026-04-30");
+const POST_DATE_LABEL = POST_DATE.toLocaleDateString("en-US", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+});
+
+// Mock subject biography for the stage mastheads. The age ticker
+// counts from `issued` (00:00 local on Jan 1 of that year — we don't
+// know the subject's actual DOB and the about card only exposes the
+// year).
+const BIO = {
+  surname: "SHARMA",
+  given: "VINITH",
+  issued: "1997",
+  doc: "N-0001",
+  lat: "47.62°N",
+  lon: "122.35°W",
+  caseload: "WISTERIA",
+};
+
+const prototypes = [
+  {
+    id: "age",
+    number: "01",
+    title: "Living document clock",
+    blurb:
+      "The serial pill stays DOC · ISSUED at rest. Hover it and the tile flips on the X axis to a live age counter — years, days, seconds since the document was issued. Same typeface, same pill shape, same weight; the flip is the only motion. The Bureau's subject is you, so age-since-issue is literally your age, ticking right now.",
+  },
+  {
+    id: "holo",
+    number: "02",
+    title: "Holographic security patch",
+    blurb:
+      "Real passports embed a tiny holographic foil next to the data. Here: a small iridescent rectangle butted against the right of the serial. Two stacked conic gradients pan with the cursor (transform-only, no filter-blur on the hot path, following the same rewrite FoilCard got), and a microtype watermark — COSMIC CENSUS · GENUINE — fades in across it on hover. The card already has foil, so this intentionally sits smaller and denser; it reads as instrument-grade rather than decorative.",
+  },
+  {
+    id: "uv",
+    number: "03",
+    title: "UV-reactive microtype",
+    blurb:
+      "At rest the pill is ordinary DOC · ISSUED. Hover and the printed text dims while a second line of microtype glows up beneath it in UV ink — coordinates, caseload codename. The reveal is staggered character-by-character so it reads as paper turning under a blacklight, not a CSS opacity swap.",
+  },
+];
+---
+
+<Layout title="Serial bar prototypes — Vinith">
+  <article class="post">
+    <a href="/blog" class="back">&larr; BACK</a>
+
+    <header class="post-head">
+      <div class="post-kicker">
+        <span class="post-kicker-tag">Interactive</span>
+        <span class="post-kicker-dot">·</span>
+        <span>Three prototypes</span>
+      </div>
+      <h1 class="post-title">
+        Serial bar <em>prototypes</em>
+      </h1>
+      <div class="post-meta">
+        <span class="post-date">{POST_DATE_LABEL}</span>
+        <span class="tag-pixel">design</span>
+        <span class="tag-pixel">about</span>
+        <span class="tag-pixel">css</span>
+      </div>
+    </header>
+
+    <div class="post-lede">
+      <p>
+        The <a href="/about"><code>about</code></a> card's masthead ends in a
+        tiny pill in the top-right corner — static <code>DOC · ISSUED</code>,
+        pixel-font, inset. It's the most bureaucratic element on the page and
+        it was doing nothing. The card itself already shimmers, tilts, gets
+        stamped, blinks with status — so whatever lives in that pill has to
+        be a small gesture, not another loud animation.
+      </p>
+      <p>
+        Three directions below, each isolated to the masthead strip so the
+        mechanic reads on its own. Prototype <strong>02 (holographic patch)</strong>
+        is the one that ended up on the live card — it sits the quietest at
+        rest and rewards inspection without competing with anything else on
+        the card. The other two made it further than I expected.
+      </p>
+    </div>
+
+    <!-- Reference / baseline. No behavior; just the starting shape
+         the three prototypes are all building on. -->
+    <section class="proto" id="baseline">
+      <header class="proto-head">
+        <div class="proto-num">00</div>
+        <h2 class="proto-title">Baseline (current)</h2>
+      </header>
+      <p class="proto-blurb">
+        The pill as it shipped before this. Static DOC + ISSUED values
+        inside an inset tile with pixel-font kerning. The three prototypes
+        all inherit this shape — only what happens on hover changes.
+      </p>
+      <div class="proto-card">
+        <div class="proto-card-tab">
+          <span class="proto-card-tab-dot"></span>
+          Prototype · 00
+        </div>
+        <div class="proto-card-stage">
+          <div class="stage-masthead stage--registry">
+            <span class="stage-register">Register · Registry</span>
+            <span class="stage-crest" aria-hidden="true"></span>
+            <div class="stage-text">
+              <div class="stage-kicker">Cosmological Authority</div>
+              <div class="stage-institution">Bureau of Cosmic Census</div>
+            </div>
+            <div class="serial">
+              <span class="serial-k">Doc</span>
+              <span class="serial-v">{BIO.doc}</span>
+              <span class="serial-sep">·</span>
+              <span class="serial-k">Issued</span>
+              <span class="serial-v">{BIO.issued}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <nav class="post-nav" aria-label="Prototype index">
+      {
+        prototypes.map((p) => (
+          <a href={`#${p.id}`} class="post-nav-item">
+            <span class="post-nav-num">{p.number}</span>
+            <span class="post-nav-title">{p.title}</span>
+          </a>
+        ))
+      }
+    </nav>
+
+    {/* ============ Prototype 01 — Living document clock ============ */}
+    <section class="proto" id={prototypes[0].id}>
+      <header class="proto-head">
+        <div class="proto-num">{prototypes[0].number}</div>
+        <h2 class="proto-title">{prototypes[0].title}</h2>
+      </header>
+      <p class="proto-blurb">{prototypes[0].blurb}</p>
+
+      <div class="proto-card">
+        <div class="proto-card-tab">
+          <span class="proto-card-tab-dot"></span>
+          Prototype · {prototypes[0].number}
+        </div>
+        <div class="proto-card-stage">
+          <div class="stage-masthead stage--survey">
+            <span class="stage-register">Register · Survey</span>
+            <span class="stage-crest" aria-hidden="true"></span>
+            <div class="stage-text">
+              <div class="stage-kicker">Cosmological Authority</div>
+              <div class="stage-institution">Bureau of Cosmic Census</div>
+              <div class="stage-tagline"><em>observations, in perpetuity</em></div>
+            </div>
+
+            <!-- Flip pill. Both faces are identically sized; the
+                 container uses rotateX on :hover/:focus-visible.
+                 data-issued-year drives the ticker so the markup
+                 stays declarative. -->
+            <div
+              class="serial serial--flip"
+              tabindex="0"
+              data-serial-age
+              data-issued-year={BIO.issued}
+            >
+              <span class="serial-flip-inner">
+                <span class="serial-face serial-face--front">
+                  <span class="serial-k">Doc</span>
+                  <span class="serial-v">{BIO.doc}</span>
+                  <span class="serial-sep">·</span>
+                  <span class="serial-k">Issued</span>
+                  <span class="serial-v">{BIO.issued}</span>
+                </span>
+                <span class="serial-face serial-face--back">
+                  <span class="serial-k">Age</span>
+                  <span class="serial-v" data-age-value>—</span>
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {/* ============ Prototype 02 — Holographic security patch ============ */}
+    <section class="proto proto--chosen" id={prototypes[1].id}>
+      <header class="proto-head">
+        <div class="proto-num">{prototypes[1].number}</div>
+        <h2 class="proto-title">{prototypes[1].title}</h2>
+        <span class="proto-chosen-tag">Shipped</span>
+      </header>
+      <p class="proto-blurb">{prototypes[1].blurb}</p>
+
+      <div class="proto-card">
+        <div class="proto-card-tab">
+          <span class="proto-card-tab-dot"></span>
+          Prototype · {prototypes[1].number}
+        </div>
+        <div class="proto-card-stage">
+          <div class="stage-masthead stage--panoptic">
+            <span class="stage-register">Register · Panoptic</span>
+            <span class="stage-crest" aria-hidden="true"></span>
+            <div class="stage-text">
+              <div class="stage-kicker">Cosmological Authority</div>
+              <div class="stage-institution">Bureau of Cosmic Census</div>
+              <div class="stage-department">Field Office · Orion Arm</div>
+            </div>
+
+            <div class="serial-group">
+              <div class="serial">
+                <span class="serial-k">Doc</span>
+                <span class="serial-v">{BIO.doc}</span>
+                <span class="serial-sep">·</span>
+                <span class="serial-k">Issued</span>
+                <span class="serial-v">{BIO.issued}</span>
+              </div>
+              <HoloPatch
+                label="GEN"
+                microtype="COSMIC CENSUS · GENUINE"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {/* ============ Prototype 03 — UV-reactive microtype ============ */}
+    <section class="proto" id={prototypes[2].id}>
+      <header class="proto-head">
+        <div class="proto-num">{prototypes[2].number}</div>
+        <h2 class="proto-title">{prototypes[2].title}</h2>
+      </header>
+      <p class="proto-blurb">{prototypes[2].blurb}</p>
+
+      <div class="proto-card">
+        <div class="proto-card-tab">
+          <span class="proto-card-tab-dot"></span>
+          Prototype · {prototypes[2].number}
+        </div>
+        <div class="proto-card-stage">
+          <div class="stage-masthead stage--commission">
+            <span class="stage-register">Register · Commission</span>
+            <span class="stage-crest" aria-hidden="true"></span>
+            <div class="stage-text">
+              <div class="stage-kicker">Cosmological Authority</div>
+              <div class="stage-institution">Bureau of Cosmic Census</div>
+              <div class="stage-department">Field Office · Orion Arm</div>
+            </div>
+
+            <div
+              class="serial serial--uv"
+              tabindex="0"
+              data-serial-uv
+            >
+              <span class="serial-print">
+                <span class="serial-k">Doc</span>
+                <span class="serial-v">{BIO.doc}</span>
+                <span class="serial-sep">·</span>
+                <span class="serial-k">Issued</span>
+                <span class="serial-v">{BIO.issued}</span>
+              </span>
+              <!-- UV-ink secondary line. Characters are animated in
+                   one at a time via a --i custom prop + per-index
+                   transition-delay; pure CSS, no JS. -->
+              <span class="serial-uv-line" aria-hidden="true">
+                {
+                  `LAT ${BIO.lat} · LON ${BIO.lon} · CASE ${BIO.caseload}`
+                    .split("")
+                    .map((ch, i) => (
+                      <span
+                        class="serial-uv-char"
+                        style={`--i:${i}`}
+                      >
+                        {ch === " " ? " " : ch}
+                      </span>
+                    ))
+                }
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {/* ============ Appendix — masthead registers ============
+         The mini-mastheads above each prototype aren't identical:
+         each one is a different typographic register the about
+         card could have worn. This appendix collects the fifth
+         one that didn't fit a prototype, for completeness. */}
+    <section class="proto" id="helio">
+      <header class="proto-head">
+        <div class="proto-num">A</div>
+        <h2 class="proto-title">Appendix · Helio wordmark</h2>
+      </header>
+      <p class="proto-blurb">
+        Wordmark-only register — crest is small, text is set in display-size
+        Fraunces with a ligature-friendly SOFT curve. Reads like the
+        title on a heliographic print rather than a document header.
+        Not paired with a serial-pill mechanic; the pill inherits the
+        base shape.
+      </p>
+      <div class="proto-card">
+        <div class="proto-card-tab">
+          <span class="proto-card-tab-dot"></span>
+          Register · Helio
+        </div>
+        <div class="proto-card-stage">
+          <div class="stage-masthead stage--helio">
+            <span class="stage-register">Register · Helio</span>
+            <span class="stage-crest stage-crest--sm" aria-hidden="true"></span>
+            <div class="stage-text">
+              <div class="stage-institution">Bureau of Cosmic Census</div>
+              <div class="stage-department">Field Office · Orion Arm</div>
+            </div>
+            <div class="serial">
+              <span class="serial-k">Doc</span>
+              <span class="serial-v">{BIO.doc}</span>
+              <span class="serial-sep">·</span>
+              <span class="serial-k">Issued</span>
+              <span class="serial-v">{BIO.issued}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="post-foot">
+      <a href="/blog" class="post-foot-back">&larr; BACK TO BLOG</a>
+    </footer>
+  </article>
+</Layout>
+
+{/* =========================================================
+     Interactivity
+
+     01: age ticker — walks the DOM once at load, computes a
+         live string, and writes into [data-age-value]. One 1Hz
+         setInterval covers every instance on the page; the tick
+         is skipped while the document is hidden so the tab
+         doesn't burn cycles in the background.
+
+     02: holo patch — handled by HoloPatch.astro's own script;
+         nothing to wire here.
+   ========================================================= */}
+<script>
+  // --- 01: age ticker --------------------------------------
+  const ageNodes = document.querySelectorAll<HTMLElement>("[data-serial-age]");
+  if (ageNodes.length > 0) {
+    const startMs = new Map<HTMLElement, number>();
+    for (const n of ageNodes) {
+      const year = Number(n.dataset.issuedYear ?? "1997");
+      startMs.set(n, new Date(year, 0, 1).getTime());
+    }
+    const fmt = (n: number, pad = 2) => String(n).padStart(pad, "0");
+    const update = () => {
+      if (document.hidden) return;
+      const now = Date.now();
+      for (const node of ageNodes) {
+        const start = startMs.get(node)!;
+        const d = new Date(now);
+        const s = new Date(start);
+        // Year-delta correction: if we haven't hit the issue month/day
+        // yet this year, we're a year short.
+        let years = d.getFullYear() - s.getFullYear();
+        const anniversary = new Date(
+          d.getFullYear(),
+          s.getMonth(),
+          s.getDate(),
+        );
+        if (d < anniversary) years -= 1;
+        const lastAnniv = new Date(
+          d.getFullYear() - (d < anniversary ? 1 : 0),
+          s.getMonth(),
+          s.getDate(),
+        );
+        const days = Math.floor(
+          (d.getTime() - lastAnniv.getTime()) / 86_400_000,
+        );
+        const remainder = d.getTime() - lastAnniv.getTime() - days * 86_400_000;
+        const h = Math.floor(remainder / 3_600_000);
+        const m = Math.floor((remainder % 3_600_000) / 60_000);
+        const sec = Math.floor((remainder % 60_000) / 1000);
+        const out = `${years}Y ${fmt(days, 3)}D ${fmt(h)}:${fmt(m)}:${fmt(sec)}`;
+        const target = node.querySelector<HTMLElement>("[data-age-value]");
+        if (target && target.textContent !== out) target.textContent = out;
+      }
+    };
+    update();
+    setInterval(update, 1000);
+  }
+</script>
+
+<style>
+  /* =========================================================
+     Post chrome — lifted from display-prototypes.astro so this
+     post reads in the same register as the other interactive
+     entries on /blog.
+     ========================================================= */
+  .post {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 20px 0 40px;
+  }
+  .back,
+  .post-foot-back {
+    font-family: var(--font-pixel);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    display: inline-block;
+    margin-bottom: 32px;
+  }
+  .back:hover,
+  .post-foot-back:hover {
+    color: var(--ink);
+  }
+  .post-head {
+    margin-bottom: 28px;
+  }
+  .post-kicker {
+    font-family: var(--font-pixel);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .post-kicker-tag {
+    background: var(--yellow);
+    color: var(--on-yellow);
+    padding: 3px 7px 2px;
+    letter-spacing: 0.14em;
+  }
+  .post-kicker-dot {
+    color: var(--ink-muted);
+    opacity: 0.6;
+  }
+  .post-title {
+    font-family: var(--font-serif);
+    font-variation-settings:
+      "opsz" 72,
+      "SOFT" 60,
+      "wght" 500;
+    font-size: clamp(34px, 5vw, 52px);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    margin-bottom: 18px;
+  }
+  .post-title em {
+    font-style: italic;
+    color: var(--em);
+  }
+  .post-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .post-date {
+    font-family: var(--font-pixel);
+    font-size: 11px;
+    color: var(--ink-muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .post-lede {
+    font-family: var(--font-serif);
+    font-variation-settings:
+      "opsz" 18,
+      "SOFT" 70,
+      "wght" 400;
+    font-size: 18px;
+    line-height: 1.7;
+    color: var(--ink-soft);
+    margin: 32px 0 40px;
+  }
+  .post-lede p + p {
+    margin-top: 16px;
+  }
+  .post-lede code {
+    font-family: var(--font-pixel);
+    font-size: 13px;
+    padding: 1px 5px;
+    background: var(--bg-inset);
+    border: 1px solid var(--rule-soft);
+  }
+  .post-lede strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .post-nav {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 48px;
+  }
+  .post-nav-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--rule);
+    color: var(--ink-soft);
+    text-decoration: none;
+    transition:
+      transform 0.08s ease,
+      background 0.15s ease;
+  }
+  .post-nav-item:hover {
+    transform: translateY(-2px);
+    background: var(--bg-raised);
+    color: var(--ink);
+  }
+  .post-nav-num {
+    font-family: var(--font-pixel);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    color: var(--ink-muted);
+  }
+  .post-nav-title {
+    font-family: var(--font-serif);
+    font-variation-settings:
+      "opsz" 14,
+      "SOFT" 60,
+      "wght" 500;
+    font-size: 14px;
+    line-height: 1.15;
+  }
+  @media (max-width: 620px) {
+    .post-nav {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  .proto {
+    margin: 64px 0;
+    scroll-margin-top: 80px;
+  }
+  .proto-head {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+  .proto-num {
+    font-family: var(--font-pixel);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--ink-muted);
+  }
+  .proto-title {
+    font-family: var(--font-serif);
+    font-variation-settings:
+      "opsz" 32,
+      "SOFT" 60,
+      "wght" 500;
+    font-size: 28px;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+    line-height: 1;
+  }
+  /* Marker for the prototype that graduated. Subtle — no accent
+     bar on the card itself, just a small pixel tag in the header
+     so a reader skimming the TOC knows which one won. */
+  .proto-chosen-tag {
+    font-family: var(--font-pixel);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 3px 7px 2px;
+    color: var(--on-green);
+    background: var(--green);
+    margin-left: auto;
+  }
+  .proto-blurb {
+    font-family: var(--font-serif);
+    font-variation-settings:
+      "opsz" 18,
+      "SOFT" 70,
+      "wght" 400;
+    font-size: 17px;
+    line-height: 1.65;
+    color: var(--ink-soft);
+    margin-bottom: 24px;
+    max-width: 62ch;
+  }
+  .proto-card {
+    background: var(--bg-card);
+    border: 2px solid var(--rule);
+    box-shadow: 4px 4px 0 var(--rule);
+    padding: 20px 22px 28px;
+  }
+  .proto-card-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px 3px;
+    margin-bottom: 16px;
+    font-family: var(--font-pixel);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    background: var(--bg-inset);
+    border: 1px solid var(--rule-soft);
+  }
+  .proto-card-tab-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--signal);
+  }
+  .proto-card-stage {
+    padding: 24px 4px 12px;
+  }
+  .post-foot {
+    padding-top: 32px;
+    border-top: 1px solid var(--rule-soft);
+  }
+
+  /* =========================================================
+     Mini-masthead stage — a scaled-down version of the about
+     card's header, just enough context for the serial pill.
+     ========================================================= */
+  .stage-masthead {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 18px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  /* Stand-in for CrestBlackHole. A concentric ink/gold eye —
+     keeps the card's black-hole language without shipping the
+     full SVG into prototype stages. */
+  .stage-crest {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 50% 50%, var(--ink) 0 22%, transparent 23%),
+      radial-gradient(circle at 50% 50%, var(--yellow) 0 38%, transparent 39%),
+      radial-gradient(circle at 50% 50%, var(--ink) 0 50%, transparent 51%);
+    box-shadow: 0 0 0 1px var(--rule-soft);
+  }
+  .stage-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+  .stage-kicker {
+    font-family: var(--font-pixel);
+    font-size: 9px;
+    color: var(--ink-muted);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+  .stage-institution {
+    font-family: var(--font-serif);
+    font-variation-settings:
+      "opsz" 96,
+      "SOFT" 20,
+      "wght" 500;
+    font-size: 18px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .stage-department {
+    font-family: var(--font-pixel);
+    font-size: 10px;
+    color: var(--ink-muted);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-top: 3px;
+  }
+  .stage-tagline {
+    margin-top: 4px;
+    font-family: var(--font-serif);
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.2;
+  }
+  .stage-tagline :global(em) {
+    font-style: italic;
+    color: var(--em);
+    font-variation-settings: "opsz" 18, "SOFT" 80, "wght" 400;
+  }
+  /* Small "Register · X" label in the top-left of each stage so the
+     visual differences read as intentional choices rather than
+     stylistic drift. Uses the grid area above the crest. */
+  .stage-register {
+    grid-column: 1 / -1;
+    font-family: var(--font-pixel);
+    font-size: 8px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    opacity: 0.6;
+    margin-bottom: 10px;
+  }
+  .stage-masthead {
+    /* Give each stage-masthead an explicit first row for the register
+       tag; crest/text/serial land in the second row. */
+    grid-template-rows: auto auto;
+  }
+  .stage-masthead > .stage-crest,
+  .stage-masthead > .stage-text,
+  .stage-masthead > .serial,
+  .stage-masthead > .serial-group {
+    grid-row: 2;
+  }
+
+  /* ------ Register variants. These mirror the five CSS blocks that
+     used to live on MastheadFrame — preserved here because the page
+     is where the exploration is documented; the live about card ships
+     only the bureau register baked into MastheadFrame. ------ */
+
+  /* Registry — the baseline. Tighter leading, slightly deeper serif. */
+  .stage--registry .stage-institution {
+    font-variation-settings: "opsz" 28, "SOFT" 40, "wght" 600;
+    font-size: 22px;
+    letter-spacing: -0.01em;
+    text-transform: none;
+  }
+
+  /* Survey — editorial / chapel. Larger institution, sharper serifs,
+     italic tagline. */
+  .stage--survey .stage-institution {
+    font-variation-settings: "opsz" 48, "SOFT" 20, "wght" 500;
+    font-size: 26px;
+    letter-spacing: -0.025em;
+    text-transform: none;
+  }
+  .stage--survey .stage-tagline {
+    margin-top: 6px;
+  }
+
+  /* Panoptic — bold wordmark. Italic, extra-heavy axis. Crest floats
+     inside a subtle inset tile. */
+  .stage--panoptic .stage-crest {
+    padding: 6px;
+    background: var(--bg-inset);
+    border: 1px solid var(--rule-soft);
+    box-sizing: content-box;
+    border-radius: 0;
+  }
+  .stage--panoptic .stage-institution {
+    font-variation-settings: "opsz" 72, "SOFT" 0, "wght" 700;
+    font-size: 26px;
+    letter-spacing: -0.03em;
+    font-style: italic;
+    text-transform: none;
+  }
+  .stage--panoptic .stage-department {
+    color: var(--ink);
+    letter-spacing: 0.18em;
+  }
+
+  /* Commission — small-caps treaty-body. Institution smaller, heavy
+     tracking; department becomes an italic serif subtitle. */
+  .stage--commission .stage-institution {
+    font-variation-settings: "opsz" 14, "SOFT" 20, "wght" 600;
+    font-size: 14px;
+    letter-spacing: 0.18em;
+  }
+  .stage--commission .stage-department {
+    font-family: var(--font-serif);
+    font-variation-settings: "opsz" 20, "SOFT" 80, "wght" 400;
+    font-style: italic;
+    font-size: 15px;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--ink-soft);
+    margin-top: 2px;
+  }
+
+  /* Helio — wordmark-only. Display-size Fraunces, ligature-friendly
+     SOFT curve. Crest is small. */
+  .stage-crest--sm {
+    width: 28px;
+    height: 28px;
+  }
+  .stage--helio .stage-institution {
+    font-variation-settings: "opsz" 120, "SOFT" 100, "wght" 400;
+    font-size: 32px;
+    line-height: 0.9;
+    letter-spacing: -0.035em;
+    text-transform: none;
+  }
+  .stage--helio .stage-department {
+    margin-top: 6px;
+  }
+
+  /* =========================================================
+     The serial pill — the thing this whole post is about.
+     Shared base so every prototype starts from the same shape;
+     variants layer behavior on top.
+     ========================================================= */
+  .serial {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 10px;
+    background: var(--bg-inset);
+    border: 1px solid var(--rule-soft);
+    font-family: var(--font-pixel);
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink);
+    white-space: nowrap;
+    user-select: none;
+  }
+  .serial-k { color: var(--ink-muted); }
+  .serial-v { color: var(--ink); }
+  .serial-sep { color: var(--ink-muted); opacity: 0.6; }
+
+  /* ===============================================================
+     01 — Living document clock
+     =============================================================== */
+  .serial--flip {
+    position: relative;
+    perspective: 400px;
+    /* Fixed width keeps the pill from jittering when the ticker
+       advances a digit. Tuned so "Age 29Y 118D 14:23:45" fits. */
+    min-width: 210px;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    cursor: help;
+    outline: none;
+  }
+  .serial--flip .serial-flip-inner {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 24px;
+    transition: transform 0.5s cubic-bezier(0.6, 0.02, 0.32, 1);
+    transform-style: preserve-3d;
+  }
+  .serial--flip:hover .serial-flip-inner,
+  .serial--flip:focus-visible .serial-flip-inner {
+    transform: rotateX(180deg);
+  }
+  .serial-face {
+    position: absolute;
+    inset: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 0 10px;
+    background: var(--bg-inset);
+    border: 1px solid var(--rule-soft);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    font-family: var(--font-pixel);
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+  .serial-face--back {
+    transform: rotateX(180deg);
+    /* Faint amber wash so the back reads as "active / live" rather
+       than a flipped duplicate. --em resolves to red on light,
+       amber on dark; the tonal relationship holds in both. */
+    background: color-mix(in oklab, var(--bg-inset), var(--em) 10%);
+    border-color: color-mix(in oklab, var(--rule-soft), var(--em) 20%);
+  }
+  .serial-face--back .serial-v {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ===============================================================
+     02 — Holographic security patch
+     (HoloPatch primitive handles its own styles + script.)
+     =============================================================== */
+  .serial-group {
+    display: inline-flex;
+    align-items: stretch;
+    gap: 0;
+  }
+  .serial-group .serial {
+    /* Shared seam with the patch — the patch has its own left border. */
+    border-right: 0;
+  }
+  /* HoloPatch defaults to a fixed 22px height for standalone use; in a
+     serial-group it needs to stretch to the serial pill's taller box so
+     the two read as one ruled strip. Reach past Astro's style scoping
+     with :global() since .holo lives in HoloPatch.astro. */
+  .serial-group :global(.holo) {
+    height: auto;
+  }
+
+  /* ===============================================================
+     03 — UV-reactive microtype
+     =============================================================== */
+  .serial--uv {
+    position: relative;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 6px 10px 4px;
+    cursor: help;
+    transition: padding-bottom 0.35s ease;
+    outline: none;
+  }
+  .serial-print {
+    display: inline-flex;
+    gap: 7px;
+    transition:
+      opacity 0.25s ease,
+      letter-spacing 0.25s ease;
+  }
+  .serial--uv:hover .serial-print,
+  .serial--uv:focus-visible .serial-print {
+    opacity: 0.38;
+    letter-spacing: 0.18em;
+  }
+  /* UV-ink line. Sits clipped at 0 height at rest; pill grows
+     downward on hover to reveal it. */
+  .serial-uv-line {
+    display: inline-flex;
+    font-family: var(--font-pixel);
+    font-size: 8px;
+    letter-spacing: 0.14em;
+    color: #7a5bff;
+    max-height: 0;
+    overflow: hidden;
+    /* Halo in the same purple — this is what sells "UV ink." */
+    text-shadow:
+      0 0 4px rgba(122, 91, 255, 0.7),
+      0 0 8px rgba(122, 91, 255, 0.45);
+    transition: max-height 0.35s ease;
+  }
+  :root[data-theme="dark"] .serial-uv-line {
+    /* Same purple reads too dark on dusk; lift it. */
+    color: #b49cff;
+    text-shadow:
+      0 0 6px rgba(180, 156, 255, 0.8),
+      0 0 12px rgba(180, 156, 255, 0.45);
+  }
+  .serial--uv:hover .serial-uv-line,
+  .serial--uv:focus-visible .serial-uv-line {
+    max-height: 14px;
+  }
+  .serial-uv-char {
+    opacity: 0;
+    transform: translateY(-2px);
+    transition:
+      opacity 0.25s ease,
+      transform 0.25s ease;
+    transition-delay: calc(var(--i) * 18ms);
+  }
+  .serial--uv:hover .serial-uv-char,
+  .serial--uv:focus-visible .serial-uv-char {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .serial--uv:hover,
+  .serial--uv:focus-visible {
+    padding-bottom: 8px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .serial--flip .serial-flip-inner,
+    .serial-uv-line,
+    .serial-uv-char,
+    .serial-print {
+      transition: none !important;
+    }
+  }
+
+  /* Responsive: on narrow screens stack the masthead so the
+     serial pill sits under the text instead of getting squeezed. */
+  @media (max-width: 560px) {
+    .stage-masthead {
+      grid-template-columns: auto 1fr;
+      row-gap: 12px;
+    }
+    .serial,
+    .serial-group,
+    .serial--flip,
+    .serial--uv {
+      grid-column: 1 / -1;
+      justify-self: start;
+    }
+  }
+</style>
