@@ -1,0 +1,98 @@
+---
+/*
+  CrestObserver — stylized all-seeing eye. Four cardinal + four
+  diagonal rays (accent @ 0.5), an iris shell (accent), a dark pupil
+  (ink) with a tiny cream glint, framed by a thin lash/lid line.
+*/
+
+interface Props {
+  size?: number;
+  accent?: "red" | "yellow" | "blue" | "green";
+  class?: string;
+}
+
+const {
+  size = 52,
+  accent = "yellow",
+  class: className = "",
+} = Astro.props;
+---
+
+<div
+  class:list={["crest", `crest--${accent}`, className]}
+  style={`--crest-size: ${size}px;`}
+  aria-hidden="true"
+>
+  <svg
+    viewBox="0 0 40 40"
+    shape-rendering="crispEdges"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <g class="rays">
+      <rect x="18" y="0"  width="4" height="4"/>
+      <rect x="18" y="36" width="4" height="4"/>
+      <rect x="0"  y="18" width="4" height="4"/>
+      <rect x="36" y="18" width="4" height="4"/>
+      <rect x="6"  y="6"  width="2" height="2"/>
+      <rect x="32" y="6"  width="2" height="2"/>
+      <rect x="6"  y="32" width="2" height="2"/>
+      <rect x="32" y="32" width="2" height="2"/>
+    </g>
+
+    <g class="iris">
+      <rect x="14" y="12" width="12" height="2"/>
+      <rect x="10" y="14" width="20" height="2"/>
+      <rect x="8"  y="16" width="24" height="8"/>
+      <rect x="10" y="24" width="20" height="2"/>
+      <rect x="14" y="26" width="12" height="2"/>
+    </g>
+
+    <g class="lid">
+      <rect x="14" y="10" width="12" height="2"/>
+      <rect x="10" y="12" width="4"  height="2"/>
+      <rect x="26" y="12" width="4"  height="2"/>
+      <rect x="8"  y="14" width="2"  height="2"/>
+      <rect x="30" y="14" width="2"  height="2"/>
+      <rect x="6"  y="16" width="2"  height="8"/>
+      <rect x="32" y="16" width="2"  height="8"/>
+      <rect x="8"  y="24" width="2"  height="2"/>
+      <rect x="30" y="24" width="2"  height="2"/>
+      <rect x="10" y="26" width="4"  height="2"/>
+      <rect x="26" y="26" width="4"  height="2"/>
+      <rect x="14" y="28" width="12" height="2"/>
+    </g>
+
+    <g class="pupil">
+      <rect x="16" y="16" width="8" height="8"/>
+    </g>
+
+    <g class="glint">
+      <rect x="17" y="17" width="2" height="2"/>
+    </g>
+  </svg>
+</div>
+
+<style>
+  .crest {
+    display: inline-block;
+    width: var(--crest-size);
+    line-height: 0;
+    flex-shrink: 0;
+  }
+  .crest svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .crest--red    { --crest-accent: var(--red); }
+  .crest--yellow { --crest-accent: var(--yellow); }
+  .crest--blue   { --crest-accent: var(--blue); }
+  .crest--green  { --crest-accent: var(--green); }
+
+  .iris  { fill: var(--crest-accent); }
+  .lid   { fill: var(--ink); }
+  .pupil { fill: var(--ink); }
+  .rays  { fill: var(--crest-accent); opacity: 0.5; }
+  .glint { fill: var(--bg-card); opacity: 0.9; }
+</style>

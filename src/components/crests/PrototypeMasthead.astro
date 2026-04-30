@@ -1,0 +1,201 @@
+---
+/*
+  PrototypeMasthead — register-chrome only. Used exclusively by the
+  serial-bar-prototypes page to switch between typographic registers
+  (registry / survey / panoptic / commission) without duplicating the
+  tri-column grid five times. The live /about card uses MastheadFrame,
+  not this.
+
+  The component owns layout + typography. Each prototype drops its
+  own serial pill markup through the default slot so the mechanic
+  stays obvious in the page source.
+*/
+
+interface Props {
+  variant: "registry" | "survey" | "panoptic" | "commission";
+  institution: string;
+  department?: string;
+  kicker?: string;
+  tagline?: string;
+}
+
+const { variant, institution, department, kicker, tagline } = Astro.props;
+---
+
+<header class:list={["masthead", `masthead--${variant}`]}>
+  <div class="crest-slot">
+    <slot name="crest" />
+  </div>
+
+  <div class="text">
+    {kicker && <div class="kicker">{kicker}</div>}
+    <div class="institution">{institution}</div>
+    {department && <div class="department">{department}</div>}
+    {
+      tagline && (
+        <div class="tagline">
+          <em>{tagline}</em>
+        </div>
+      )
+    }
+  </div>
+
+  <div class="serial-slot">
+    <slot />
+  </div>
+</header>
+
+<style>
+  .masthead {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 18px;
+  }
+  .crest-slot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+  .serial-slot {
+    display: inline-flex;
+    align-items: center;
+    justify-self: end;
+  }
+
+  .kicker {
+    font-family: var(--font-pixel);
+    font-size: 9px;
+    color: var(--ink-muted);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .institution {
+    font-family: var(--font-serif);
+    color: var(--ink);
+    line-height: 1.02;
+  }
+  .department {
+    font-family: var(--font-pixel);
+    font-size: 10px;
+    color: var(--ink-muted);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .tagline {
+    margin-top: 4px;
+    font-family: var(--font-serif);
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.2;
+  }
+  .tagline :global(em) {
+    font-style: italic;
+    color: var(--em);
+    font-variation-settings:
+      "opsz" 18,
+      "SOFT" 80,
+      "wght" 400;
+  }
+
+  /* --- per-variant tuning. Values copied verbatim from the old
+         MastheadFrame variant blocks so the registers read the same. --- */
+
+  /* Registry — the baseline. Tighter leading, slightly deeper serif. */
+  .masthead--registry .institution {
+    font-variation-settings:
+      "opsz" 28,
+      "SOFT" 40,
+      "wght" 600;
+    font-size: 24px;
+    letter-spacing: -0.01em;
+  }
+
+  /* Survey — editorial / chapel. Larger institution, sharper serifs,
+     italic tagline. */
+  .masthead--survey .institution {
+    font-variation-settings:
+      "opsz" 48,
+      "SOFT" 20,
+      "wght" 500;
+    font-size: 30px;
+    letter-spacing: -0.025em;
+  }
+  .masthead--survey .tagline {
+    margin-top: 6px;
+  }
+
+  /* Panoptic — bold wordmark. Italic, extra-heavy axis. Crest floats
+     inside a subtle inset tile rendered around the slotted crest. */
+  .masthead--panoptic .crest-slot {
+    padding: 8px;
+    background: var(--bg-inset);
+    border: 1px solid var(--rule-soft);
+  }
+  .masthead--panoptic .institution {
+    font-variation-settings:
+      "opsz" 72,
+      "SOFT" 0,
+      "wght" 700;
+    font-size: 30px;
+    letter-spacing: -0.03em;
+    font-style: italic;
+  }
+  .masthead--panoptic .department {
+    color: var(--ink);
+    letter-spacing: 0.18em;
+  }
+
+  /* Commission — small-caps treaty-body. Institution smaller, heavy
+     tracking; department becomes an italic serif subtitle. */
+  .masthead--commission .institution {
+    font-variation-settings:
+      "opsz" 14,
+      "SOFT" 20,
+      "wght" 600;
+    font-size: 16px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .masthead--commission .department {
+    font-family: var(--font-serif);
+    font-variation-settings:
+      "opsz" 20,
+      "SOFT" 80,
+      "wght" 400;
+    font-style: italic;
+    font-size: 17px;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--ink-soft);
+    margin-top: 2px;
+  }
+
+  /* Responsive: collapse serial under text on medium, stack on small. */
+  @media (max-width: 860px) {
+    .masthead {
+      grid-template-columns: auto 1fr;
+      row-gap: 12px;
+    }
+    .serial-slot {
+      grid-column: 1 / -1;
+      justify-self: start;
+    }
+  }
+  @media (max-width: 520px) {
+    .masthead {
+      grid-template-columns: 1fr;
+      justify-items: start;
+    }
+    .crest-slot {
+      justify-content: flex-start;
+    }
+  }
+</style>

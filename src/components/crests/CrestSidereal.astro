@@ -1,0 +1,99 @@
+---
+/*
+  CrestSidereal — astrolabe ring with a fixed star at the center.
+  Outer pixel-stepped ring (accent), four cardinal ticks pointing
+  inward (ink), faint crosshair reticle (accent @ 0.5), and a four-
+  point star at the origin (ink).
+*/
+
+interface Props {
+  size?: number;
+  accent?: "red" | "yellow" | "blue" | "green";
+  class?: string;
+}
+
+const {
+  size = 52,
+  accent = "yellow",
+  class: className = "",
+} = Astro.props;
+---
+
+<div
+  class:list={["crest", `crest--${accent}`, className]}
+  style={`--crest-size: ${size}px;`}
+  aria-hidden="true"
+>
+  <svg
+    viewBox="0 0 40 40"
+    shape-rendering="crispEdges"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <g class="ring">
+      <rect x="16" y="4"  width="8" height="2"/>
+      <rect x="12" y="6"  width="4" height="2"/>
+      <rect x="24" y="6"  width="4" height="2"/>
+      <rect x="10" y="8"  width="2" height="2"/>
+      <rect x="28" y="8"  width="2" height="2"/>
+      <rect x="8"  y="10" width="2" height="2"/>
+      <rect x="30" y="10" width="2" height="2"/>
+      <rect x="6"  y="12" width="2" height="4"/>
+      <rect x="32" y="12" width="2" height="4"/>
+      <rect x="4"  y="16" width="2" height="8"/>
+      <rect x="34" y="16" width="2" height="8"/>
+      <rect x="6"  y="24" width="2" height="4"/>
+      <rect x="32" y="24" width="2" height="4"/>
+      <rect x="8"  y="28" width="2" height="2"/>
+      <rect x="30" y="28" width="2" height="2"/>
+      <rect x="10" y="30" width="2" height="2"/>
+      <rect x="28" y="30" width="2" height="2"/>
+      <rect x="12" y="32" width="4" height="2"/>
+      <rect x="24" y="32" width="4" height="2"/>
+      <rect x="16" y="34" width="8" height="2"/>
+    </g>
+
+    <g class="crosshair">
+      <rect x="19" y="10" width="2" height="4"/>
+      <rect x="19" y="26" width="2" height="4"/>
+      <rect x="10" y="19" width="4" height="2"/>
+      <rect x="26" y="19" width="4" height="2"/>
+    </g>
+
+    <g class="tick">
+      <rect x="19" y="2"  width="2" height="2"/>
+      <rect x="19" y="36" width="2" height="2"/>
+      <rect x="2"  y="19" width="2" height="2"/>
+      <rect x="36" y="19" width="2" height="2"/>
+    </g>
+
+    <g class="star">
+      <rect x="19" y="16" width="2" height="2"/>
+      <rect x="16" y="18" width="8" height="4"/>
+      <rect x="19" y="22" width="2" height="2"/>
+    </g>
+  </svg>
+</div>
+
+<style>
+  .crest {
+    display: inline-block;
+    width: var(--crest-size);
+    line-height: 0;
+    flex-shrink: 0;
+  }
+  .crest svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .crest--red    { --crest-accent: var(--red); }
+  .crest--yellow { --crest-accent: var(--yellow); }
+  .crest--blue   { --crest-accent: var(--blue); }
+  .crest--green  { --crest-accent: var(--green); }
+
+  .ring      { fill: var(--crest-accent); }
+  .tick      { fill: var(--ink); }
+  .star      { fill: var(--ink); }
+  .crosshair { fill: var(--crest-accent); opacity: 0.45; }
+</style>
