@@ -1,46 +1,24 @@
-# Astro Starter Kit: Basics
+# viniths.github.io
+
+My personal corner of the web — a retro-themed blog, photo album, and
+portfolio with a dusk-paper aesthetic. Built as a place to learn Astro
+and tinker with CSS.
+
+Live at **[viniths.github.io](https://viniths.github.io)**.
+
+## Stack
+
+- [Astro](https://astro.build) for static site generation
+- [Svelte](https://svelte.dev) for the few interactive islands
+- Hand-rolled CSS with per-theme (light/dark) tokens
+- Deployed to GitHub Pages via GitHub Actions
+
+## Running locally
 
 ```sh
-npm create astro@latest -- --template basics
+npm install
+npm run dev      # localhost:4321
+npm run build    # static build to ./dist/
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
-
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-│   └── favicon.svg
-├── src
-│   ├── assets
-│   │   └── astro.svg
-│   ├── components
-│   │   └── Welcome.astro
-│   ├── layouts
-│   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
-└── package.json
-```
-
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+Requires Node 22+.
