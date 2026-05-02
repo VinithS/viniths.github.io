@@ -132,7 +132,6 @@ const crests = [
         <section class="proto" id={c.id}>
           <header class="proto-head">
             <div class="proto-num">{c.number}</div>
-            <span class="proto-register">{c.variant}</span>
             <h2 class="proto-title">{c.name}</h2>
           </header>
           <p class="proto-blurb">{c.blurb}</p>
@@ -170,19 +169,13 @@ const crests = [
             <div class="specimen">
               <figure class="specimen-hero">
                 <div class="specimen-plate">
-                  {c.id === "blackhole" && <CrestBlackHole size={128} />}
+                  {c.id === "blackhole" && <CrestBlackHole size={96} />}
                   {c.id === "lagrangian" && (
-                    <CrestLagrangian size={128} accent={c.accent!} />
+                    <CrestLagrangian size={96} accent={c.accent!} />
                   )}
-                  {c.id === "observer" && <CrestObserver size={128} accent={c.accent!} />}
-                  {c.id === "sidereal" && <CrestSidereal size={128} accent={c.accent!} />}
+                  {c.id === "observer" && <CrestObserver size={96} accent={c.accent!} />}
+                  {c.id === "sidereal" && <CrestSidereal size={96} accent={c.accent!} />}
                 </div>
-                <figcaption class="specimen-cap">
-                  <span class="specimen-cap-k">Spec</span>
-                  <span class="specimen-cap-v">
-                    40×40 · crispEdges · token-filled
-                  </span>
-                </figcaption>
               </figure>
 
               {c.accent && (
@@ -194,9 +187,9 @@ const crests = [
                   <div class="palette-row">
                     {ACCENTS.map((a) => (
                       <div class:list={["palette-cell", a === c.accent && "is-current"]}>
-                        {c.id === "lagrangian" && <CrestLagrangian size={36} accent={a} />}
-                        {c.id === "observer" && <CrestObserver size={36} accent={a} />}
-                        {c.id === "sidereal" && <CrestSidereal size={36} accent={a} />}
+                        {c.id === "lagrangian" && <CrestLagrangian size={28} accent={a} />}
+                        {c.id === "observer" && <CrestObserver size={28} accent={a} />}
+                        {c.id === "sidereal" && <CrestSidereal size={28} accent={a} />}
                         <span class="palette-tick">{a.charAt(0).toUpperCase()}</span>
                       </div>
                     ))}
@@ -213,7 +206,7 @@ const crests = [
                   <p class="palette-note">
                     Hand-tuned tiers — <code>bh-core</code>, <code>bh-ring</code>,
                     <code>bh-disk</code>, <code>bh-halo</code> — rather than a single
-                    accent slot. This is the crest that ships on the live about card.
+                    accent slot. This is the crest that shipped on the live about card.
                   </p>
                 </div>
               )}
@@ -396,16 +389,6 @@ const crests = [
     color: var(--ink);
     line-height: 1;
   }
-  .proto-register {
-    font-family: var(--font-pixel);
-    font-size: 9px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--ink);
-    background: var(--bg-inset);
-    border: 1px solid var(--rule-soft);
-    padding: 3px 7px 2px;
-  }
   .proto-blurb {
     font-family: var(--font-serif);
     font-variation-settings:
@@ -435,7 +418,7 @@ const crests = [
      ========================================================= */
   .specimen {
     display: grid;
-    grid-template-columns: minmax(160px, 200px) 1fr;
+    grid-template-columns: minmax(130px, 160px) 1fr;
     gap: 22px;
     padding-top: 20px;
   }
@@ -456,7 +439,7 @@ const crests = [
     align-items: center;
     justify-content: center;
     aspect-ratio: 1;
-    max-width: 200px;
+    max-width: 160px;
     background: var(--bg-inset);
     border: 1px solid var(--rule-soft);
     /* Faint 16px grid so the pixelation reads as intentional. */
@@ -464,21 +447,6 @@ const crests = [
       linear-gradient(to right, var(--rule-xsoft) 1px, transparent 1px),
       linear-gradient(to bottom, var(--rule-xsoft) 1px, transparent 1px);
     background-size: 16px 16px;
-  }
-  .specimen-cap {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    font-family: var(--font-pixel);
-    font-size: 9px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-  }
-  .specimen-cap-k {
-    color: var(--ink-muted);
-  }
-  .specimen-cap-v {
-    color: var(--ink);
   }
 
   .palette {

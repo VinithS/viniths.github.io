@@ -53,16 +53,28 @@ const BIO = {
   issued: "1997",
 };
 
-// Single-line typewriter stamp. Flex dot-leaders join the segments,
-// so the line always spans the display edge-to-edge. Reads like a
-// typed registry entry: "this subject, from there, logged on that
-// day, under this doc number." Compressed into one ribbon-typed row
-// rather than two ICAO MRZ rows that needed their own caption.
-const stampSegments = [
-  `P<COS ${BIO.surname}<<<${BIO.given}`,
-  `ORIGIN ${BIO.seat.toUpperCase()}`,
-  `EM<<REG ${BIO.issued}`,
-  `FILE WISTERIA-I`,
+// Two-line MRZ block. Row 1 is the passport header (subject + origin
+// + issue reg). Row 2 carries the live telemetry — coords on the
+// left, encrypted email on the right, both with small pixel labels.
+// Cipher segments keep the email out of the served HTML: it's
+// XOR-encoded at build time and decoded client-side on reveal.
+const EMAIL = "vinith.sharma13@gmail.com";
+
+const mrz = [
+  [
+    { kind: "text" as const, value: `P<COS ${BIO.surname}<<<${BIO.given}` },
+    { kind: "text" as const, value: `ORIGIN ${BIO.seat.toUpperCase()}` },
+    { kind: "text" as const, value: `EM<<REG ${BIO.issued}` },
+  ],
+  [
+    { kind: "text" as const, value: `COORD 47.62,-122.35` },
+    {
+      kind: "cipher" as const,
+      label: "XMIT",
+      display: "[encrypted]",
+      email: EMAIL,
+    },
+  ],
 ];
 ---
 
@@ -132,9 +144,7 @@ const stampSegments = [
       <div data-no-stamp>
         <DisplayFlipBoard
           fused
-          email="vinith.sharma13@gmail.com"
-          fields={[{ label: "Coordinates", value: "47.62, -122.35" }]}
-          stamp={stampSegments}
+          mrz={mrz}
           timezone="America/Los_Angeles"
         />
       </div>

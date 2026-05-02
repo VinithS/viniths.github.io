@@ -6,36 +6,38 @@
   heavy black cells, hinge-line seam, cream pixel glyphs. This is the
   "mechanical departure board" showcase the blog post is about.
 
-  FUSED (/about passport): the same structural grid, but stripped of
-  tile chrome and retyped in a typewriter voice so the entire dark
-  strip reads as a single typed document — stamp line, coord/email
-  readouts, and a status footer all on one typographic voice. The
-  rotateX flip animation still plays during scramble-settle; without
-  a tile underneath it reads as keys striking the ribbon, which fits
-  the encrypted-email reveal.
+  FUSED (/about passport): the whole dark strip reads as one typed
+  telegram. The bezel is a sweep rail on top, a multi-line MRZ block
+  in the middle, and a status footer at the bottom. Rows of the MRZ
+  are joined edge-to-edge by dot-leader runs; cipher segments render
+  [encrypted] in the served HTML and decode client-side on reveal.
 
   Stack order inside the bezel (top → bottom):
 
-     1. .flip-stamp  — Single typewriter-line stamp that spans the
-                       bezel edge-to-edge via dot-leader runs between
-                       segments (only when `stamp` prop is passed).
-     2. .flip-grid   — Coordinates + encrypted email readouts.
-     3. .flip-status — Footer bar: left pod = pulsing dot + LINK
-                       status; sweep rule in the middle; right pod
-                       = signal bars + live local clock (only when
-                       `timezone` prop is passed, so the blog demo
-                       stays minimal).
+     1. .flip-bezel-rail — Top sweep rail (amber glow travelling the
+                            bezel's width when paired with the status).
+     2. .flip-mrz        — Multi-row typewriter MRZ block. Each row is
+                            a flex line of segments separated by dot
+                            leaders that flex-fill remaining width.
+     3. .flip-status     — Footer bar: left pod = pulsing dot + LINK
+                            status; sweep rule in the middle; right
+                            pod = signal bars + live local clock.
 
-  When the stamp line is present (`flip-bezel--paired`), both sweep
-  rules (status + stamp) share a 5s clock: link runs L→R during the
-  first half, then stamp runs R→L during the second half. Reads as
-  one amber glow cycling through the whole panel.
+  When `mrz` is present (`flip-bezel--paired`), both sweep rules
+  (status middle + top rail) share a 5s clock: link runs L→R during
+  the first half, then the top rail runs R→L during the second half.
+  Reads as one amber glow cycling around the panel perimeter.
 
   `fused` prop collapses the module into the host card: no outer
   border, no side shadow, no screws — just a 2px top rule that acts as
   a continuous seam with the card's own border, and horizontal
   negative margin equal to the FoilCard's padding so the dark panel
   runs edge-to-edge.
+
+  Hovering the MRZ block re-plays the scramble on every character at
+  once. A data-animating flag on the block blocks re-entry until the
+  current run settles, so repeated hovers can't pile up staggered
+  copies of the animation.
 
   Email is decoded client-side from an XOR'd hex cipher; the raw
   address never appears in the served HTML.
@@ -49,20 +51,25 @@ interface Field {
   href?: string;
 }
 
+type MrzSegment =
+  | { kind: "text"; value: string }
+  /* Cipher segment: `label` renders as static prefix text, `display`
+     is the placeholder shown until scramble-settle decodes to `email`.
+     Email stays XOR-encoded in the served HTML (data-cfe). */
+  | { kind: "cipher"; label?: string; display: string; email: string };
+
 interface Props {
   fields?: Field[];
-  email: string;
+  email?: string;
   /* When true, the module removes its own border/shadow/screws and
      bleeds to the parent's edges so it reads as part of the card
      itself, joined by a single 2px seam. Also switches internal
      typography to the typewriter style. */
   fused?: boolean;
-  /* Typewriter-stamp line segments. Rendered as one row where
-     consecutive segments are joined by dot-leader runs that flex-
-     fill remaining width, so the line always spans edge-to-edge.
-     Each segment is its own string; no ICAO padding, no fixed
-     width — the layout does the spacing. */
-  stamp?: string[];
+  /* MRZ rows for fused mode. Each row is an array of segments
+     joined by dot leaders. Rendered as one typewriter block with a
+     single hover-triggered scramble across all characters. */
+  mrz?: MrzSegment[][];
   /* IANA timezone identifier (e.g. "America/Los_Angeles"). When set,
      the status footer renders a live HH:MM:SS clock in that
      timezone. This is what makes the passport feel "alive" —
@@ -74,13 +81,12 @@ const {
   fields = [],
   email,
   fused = false,
-  stamp,
+  mrz,
   timezone,
 } = Astro.props;
-const emailCipher = encodeContact(email);
 
-const stampSegments = stamp ?? [];
-const hasStamp = stampSegments.length > 0;
+const standaloneCipher = email ? encodeContact(email) : "";
+const hasMrz = fused && !!mrz && mrz.length > 0;
 const hasTelemetry = !!timezone;
 ---
 
@@ -88,7 +94,7 @@ const hasTelemetry = !!timezone;
   <div
     class:list={[
       "flip-bezel",
-      hasStamp && "flip-bezel--paired",
+      hasMrz && "flip-bezel--paired",
     ]}
   >
     {
@@ -103,60 +109,95 @@ const hasTelemetry = !!timezone;
     }
 
     {
-      hasStamp && (
-        <div class="flip-stamp" aria-hidden="true">
-          {stampSegments.map((seg, i) => (
-            <>
-              {i > 0 && <span class="flip-stamp-leader" />}
-              <span class="flip-stamp-seg">{seg}</span>
-            </>
-          ))}
+      hasMrz && (
+        <div class="flip-bezel-rail">
           <span class="flip-sweep flip-sweep--mrz" />
         </div>
       )
     }
 
-    <div class="flip-grid">
-      {
-        fields.map((f) => (
-          <div class="flip-col">
-            <div class="flip-label">{f.label}</div>
-            {f.href ? (
-              <a
-                class="flip-value"
-                href={f.href}
-                data-flip
-                data-text={f.value}
-              >
-                {f.value.split("").map((ch) => (
-                  <span class="flap">{ch === " " ? " " : ch}</span>
-                ))}
-              </a>
-            ) : (
-              <span class="flip-value" data-flip data-text={f.value}>
-                {f.value.split("").map((ch) => (
-                  <span class="flap">{ch === " " ? " " : ch}</span>
-                ))}
-              </span>
-            )}
-          </div>
-        ))
-      }
-
-      <div class="flip-col flip-col--email">
-        <div class="flip-label">Transmit</div>
-        <a
-          class="flip-value flip-value--email"
-          href="#"
-          data-flip
-          data-cfe={emailCipher}
-        >
-          {"[encrypted]".split("").map((ch) => (
-            <span class="flap">{ch}</span>
+    {
+      hasMrz && (
+        <div class="flip-mrz" data-mrz>
+          {mrz!.map((row) => (
+            <div class="flip-mrz-row">
+              {row.map((seg, i) => (
+                <>
+                  {i > 0 && <span class="flip-stamp-leader" />}
+                  {seg.kind === "text" ? (
+                    <span class="flip-mrz-seg" data-flip data-text={seg.value}>
+                      {seg.value.split("").map((ch) => (
+                        <span class="flap">{ch === " " ? " " : ch}</span>
+                      ))}
+                    </span>
+                  ) : (
+                    <span class="flip-mrz-seg flip-mrz-seg--cipher">
+                      {seg.label && (
+                        <span class="flip-mrz-label">{seg.label}</span>
+                      )}
+                      <a
+                        class="flip-mrz-cipher"
+                        href="#"
+                        data-flip
+                        data-cfe={encodeContact(seg.email)}
+                      >
+                        {seg.display.split("").map((ch) => (
+                          <span class="flap">{ch}</span>
+                        ))}
+                      </a>
+                    </span>
+                  )}
+                </>
+              ))}
+            </div>
           ))}
-        </a>
-      </div>
-    </div>
+        </div>
+      )
+    }
+
+    {
+      !fused && (
+        <div class="flip-grid">
+          {fields.map((f) => (
+            <div class="flip-col">
+              <div class="flip-label">{f.label}</div>
+              {f.href ? (
+                <a
+                  class="flip-value"
+                  href={f.href}
+                  data-flip
+                  data-text={f.value}
+                >
+                  {f.value.split("").map((ch) => (
+                    <span class="flap">{ch === " " ? " " : ch}</span>
+                  ))}
+                </a>
+              ) : (
+                <span class="flip-value" data-flip data-text={f.value}>
+                  {f.value.split("").map((ch) => (
+                    <span class="flap">{ch === " " ? " " : ch}</span>
+                  ))}
+                </span>
+              )}
+            </div>
+          ))}
+
+          <div class="flip-col flip-col--email">
+            <div class="flip-label">Transmit</div>
+            <a
+              class="flip-value flip-value--email"
+              href="#"
+              data-flip
+              data-cfe={standaloneCipher}
+            >
+              {"[encrypted]".split("").map((ch) => (
+                <span class="flap">{ch}</span>
+              ))}
+            </a>
+          </div>
+        </div>
+      )
+    }
 
     <!-- Footer bar. Left pod: pulsing dot + LINK · 1200 BAUD · LOCKED.
          Middle: amber sweep rule. Right pod: signal bars + live local
@@ -247,39 +288,131 @@ const hasTelemetry = !!timezone;
     }, speed);
   }
 
+  /* Promise-returning wrapper — resolves when the scramble settles so
+     the MRZ block-hover handler can await a full cycle before
+     accepting another hover. */
+  function scrambleSettleAsync(el: HTMLElement, target: string, speed = 38) {
+    return new Promise<void>((resolve) => {
+      renderTo(el, target);
+      const flaps = Array.from(el.querySelectorAll<HTMLElement>(".flap"));
+      const targetChars = target.split("");
+      const starts: number[] = flaps.map((_, i) => i * 4);
+      const durations: number[] = flaps.map((_, i) => 14 + i * 2);
+      let tick = 0;
+
+      flaps.forEach((f) => f.classList.add("flap--flipping"));
+
+      const iv = window.setInterval(() => {
+        let settled = 0;
+        flaps.forEach((flap, i) => {
+          const local = tick - starts[i];
+          if (local < 0) return;
+          if (local >= durations[i]) {
+            flap.textContent =
+              targetChars[i] === " " ? " " : targetChars[i];
+            flap.classList.remove("flap--flipping");
+            settled++;
+            return;
+          }
+          flap.textContent =
+            CHARSET[Math.floor(Math.random() * CHARSET.length)];
+        });
+        tick++;
+        if (settled === flaps.length) {
+          window.clearInterval(iv);
+          resolve();
+        }
+      }, speed);
+    });
+  }
+
+  function resolveCellTarget(cell: HTMLElement): string {
+    const cipher = cell.getAttribute("data-cfe");
+    if (cipher) return decodeCfe(cipher);
+    return cell.getAttribute("data-text") || cell.textContent || "";
+  }
+
+  /* Kick off every cell at the same tick and resolve once all have
+     settled. Used for whole-MRZ-block hover and reveal. */
+  function scrambleCellsInParallel(cells: HTMLElement[]): Promise<void> {
+    return Promise.all(
+      cells.map((cell) => {
+        const cipher = cell.getAttribute("data-cfe");
+        const target = resolveCellTarget(cell);
+        if (cipher && cell.tagName === "A") {
+          cell.setAttribute("href", "mailto:" + target);
+        }
+        return scrambleSettleAsync(cell, target);
+      }),
+    ).then(() => undefined);
+  }
+
   const boards = document.querySelectorAll<HTMLElement>("[data-flip-board]");
 
   boards.forEach((board) => {
-    const cells = board.querySelectorAll<HTMLElement>("[data-flip]");
-
-    cells.forEach((cell) => {
-      const cipher = cell.getAttribute("data-cfe");
-      const target = cipher
-        ? decodeCfe(cipher)
-        : cell.getAttribute("data-text") || cell.textContent || "";
-
-      if (cipher && cell.tagName === "A") {
-        cell.setAttribute("href", "mailto:" + target);
-      }
-
-      cell.addEventListener("pointerenter", () => {
-        scrambleSettle(cell, target);
+    const mrzBlock = board.querySelector<HTMLElement>("[data-mrz]");
+    /* In fused/MRZ mode the whole block is a single hover unit:
+       all characters scramble in parallel and a data-animating flag
+       blocks re-entry until the run completes. Standalone mode keeps
+       per-cell hover for the original "each tile flips independently"
+       feel. */
+    if (mrzBlock) {
+      const mrzCells = Array.from(
+        mrzBlock.querySelectorAll<HTMLElement>("[data-flip]"),
+      );
+      mrzCells.forEach((cell) => {
+        const cipher = cell.getAttribute("data-cfe");
+        if (cipher && cell.tagName === "A") {
+          cell.setAttribute("href", "mailto:" + decodeCfe(cipher));
+        }
       });
-    });
+      mrzBlock.addEventListener("pointerenter", async () => {
+        if (mrzBlock.dataset.animating === "1") return;
+        mrzBlock.dataset.animating = "1";
+        await scrambleCellsInParallel(mrzCells);
+        delete mrzBlock.dataset.animating;
+      });
+    } else {
+      const cells = board.querySelectorAll<HTMLElement>("[data-flip]");
+      cells.forEach((cell) => {
+        const cipher = cell.getAttribute("data-cfe");
+        const target = resolveCellTarget(cell);
+        if (cipher && cell.tagName === "A") {
+          cell.setAttribute("href", "mailto:" + target);
+        }
+        cell.addEventListener("pointerenter", () => {
+          scrambleSettle(cell, target);
+        });
+      });
+    }
 
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            entry.target
-              .querySelectorAll<HTMLElement>("[data-flip]")
-              .forEach((cell, i) => {
-                const cipher = cell.getAttribute("data-cfe");
-                const target = cipher
-                  ? decodeCfe(cipher)
-                  : cell.getAttribute("data-text") || "";
-                window.setTimeout(() => scrambleSettle(cell, target), i * 140);
-              });
+            if (mrzBlock) {
+              /* Initial reveal runs once, in parallel, under the same
+                 lockout as hover. */
+              if (mrzBlock.dataset.animating !== "1") {
+                mrzBlock.dataset.animating = "1";
+                const cells = Array.from(
+                  mrzBlock.querySelectorAll<HTMLElement>("[data-flip]"),
+                );
+                scrambleCellsInParallel(cells).then(() => {
+                  delete mrzBlock.dataset.animating;
+                });
+              }
+            } else {
+              entry.target
+                .querySelectorAll<HTMLElement>("[data-flip]")
+                .forEach((cell, i) => {
+                  const cipher = cell.getAttribute("data-cfe");
+                  const target = cipher
+                    ? decodeCfe(cipher)
+                    : cell.getAttribute("data-text") || "";
+                  window.setTimeout(() => scrambleSettle(cell, target), i * 140);
+                });
+            }
             io.unobserve(entry.target);
           }
         });
@@ -357,7 +490,7 @@ const hasTelemetry = !!timezone;
     box-shadow:
       inset 0 1px 0 rgba(245, 183, 18, 0.18),
       inset 0 -1px 0 rgba(0, 0, 0, 0.6);
-    padding: 18px var(--foil-pad-x, 44px) 14px;
+    padding: 22px var(--foil-pad-x, 44px) 18px;
   }
   /* Subtle scanline wash ties the whole console together — one
      texture across MRZ, grid, and status rather than three bands.
@@ -408,40 +541,98 @@ const hasTelemetry = !!timezone;
     );
   }
 
-  /* --- Stamp line (top) ---------------------------------------------
-     One typewriter-typed row spanning the bezel edge-to-edge. Segments
-     are separated by dot-leader runs that flex-fill remaining width,
-     so the line stays edge-locked at any card size.
+  /* --- Top sweep rail (fused mode) ---------------------------------
+     Thin bare rule above the MRZ block. Carries only the travelling
+     amber glow (no static gradient) so the rail looks empty until a
+     sweep crosses it. Phased with the status-row sweep in paired
+     mode so the glow reads as one light circling the panel.
+
+     Negative margins pull the rail closer to the bezel edges —
+     half the bezel's top (22px) and side (var(--foil-pad-x)) pads,
+     so the rail hugs the seam and runs further out toward the
+     corners without changing the bezel's own padding. */
+  .flip-bezel-rail {
+    position: relative;
+    height: 1px;
+    margin: -11px calc(var(--foil-pad-x, 44px) * -0.5) 22px;
+  }
+  .flip-bezel-rail .flip-sweep {
+    position: absolute;
+    inset: 0;
+    flex: none;
+    background: none;
+  }
+
+  /* --- MRZ block (fused mode) --------------------------------------
+     Multi-row typewriter block. Each row is a flex line of segments
+     joined by dot leaders that flex-fill remaining width. Whole block
+     scrambles-in-parallel on hover under a lockout flag.
 
      Typewriter feel is built from four moves:
        1. Courier (not the site's JetBrains Mono) — wider, rounder,
           less "screen", more "ribbon-on-paper".
-       2. Double-strike text-shadow — the faint halo left by a typed
-          character impressing twice as the carriage advances.
+       2. Light ribbon-ink horizontal shadow — the faint halo left by
+          a typed character impressing twice as the carriage advances.
        3. Slight letter-spacing — typewriters don't kern; each slug
           claims a fixed cell.
        4. The dot leaders themselves — that distinctive dot-dot-dot
           run between typed fields on forms/ledgers. */
-  .flip-stamp {
-    position: relative;
+  .flip-mrz {
     display: flex;
-    align-items: baseline;
-    gap: 10px;
+    flex-direction: column;
+    gap: 12px;
     font-family: "Courier New", Courier, monospace;
     font-weight: 500;
     font-size: clamp(11px, 1.3vw, 13px);
     letter-spacing: 0.08em;
     color: var(--flip-ink);
     line-height: 1;
-    white-space: nowrap;
-    /* Subtle ribbon-ink bleed — a single hair-width horizontal
-       shadow, so glyphs read as lightly impressed rather than bold.
-       Dropping the vertical offsets shed the heavy-halo effect the
-       earlier version had. */
     text-shadow: 0.3px 0 0 currentColor;
+    cursor: default;
   }
-  .flip-stamp-seg {
+  .flip-mrz-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
+  }
+  .flip-mrz-seg {
     flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .flip-mrz-seg--cipher {
+    gap: 6px;
+  }
+  /* Tiny label prefix for cipher segments ("XMIT", "COORD") — reads
+     as the form-field name while the cipher is the typed value. */
+  .flip-mrz-label {
+    font-family: var(--font-pixel);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--flip-ink-dim);
+    /* Strip the ribbon halo from pixel label text; it only helps
+       Courier glyphs. */
+    text-shadow: none;
+  }
+  .flip-mrz-cipher {
+    display: inline-flex;
+    gap: 0;
+    color: var(--flip-ink);
+    text-decoration: none;
+    /* Explicitly match the .flip-mrz Courier voice so <a>'s UA
+       defaults don't drop the typewriter typography. */
+    font-family: inherit;
+    font-size: inherit;
+    letter-spacing: inherit;
+    text-shadow: inherit;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+  }
+  .flip-mrz-cipher:hover {
+    color: var(--flip-amber);
   }
   /* Dot-leader run. Uses a repeating dot pattern via background-image
      so its density stays constant regardless of container width —
@@ -451,9 +642,6 @@ const hasTelemetry = !!timezone;
     flex: 1;
     min-width: 20px;
     height: 1em;
-    /* Dots vertically centered on the typed baseline. The 0.6em
-       sizing keeps the dot pattern scaling with the stamp font, so
-       it reads as part of the typed line not a decorative strip. */
     background-image: radial-gradient(
       circle,
       var(--flip-ink-faint) 0.8px,
@@ -462,21 +650,7 @@ const hasTelemetry = !!timezone;
     background-size: 0.6em 0.6em;
     background-position: center;
     background-repeat: repeat-x;
-    /* Sit the dots on the baseline of the typed glyphs. */
     align-self: center;
-  }
-  /* Sweep track for the stamp line — absolute-positioned so it
-     doesn't steal flex space from the typed segments. The static
-     rule gradient is stripped (background: none) so only the amber
-     glow travels across bare dark surface; nothing visible sits
-     between the stamp line and the grid below. */
-  .flip-stamp .flip-sweep {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: -6px;
-    flex: none;
-    background: none;
   }
 
   /* --- Grid (middle block) ------------------------------------------
@@ -610,7 +784,7 @@ const hasTelemetry = !!timezone;
     display: flex;
     align-items: center;
     gap: 14px;
-    padding: 6px 0 0;
+    padding: 18px 0 0;
     font-family: var(--font-pixel);
     font-size: 9px;
     letter-spacing: 0.2em;
