@@ -14,7 +14,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint:css": "stylelint \"src/**/*.{css,astro,svelte}\"",
-    "lint:staged": "lint-staged"
+    "lint:staged": "lint-staged",
+    "test": "playwright test",
+    "test:report": "playwright show-report"
   },
   "lint-staged": {
     "*.{astro,svelte,ts,js,md,json}": "prettier --write",
@@ -28,6 +30,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.8",
+    "@playwright/test": "^1.60.0",
     "lint-staged": "^16.4.0",
     "postcss-html": "^1.8.1",
     "prettier": "^3.8.3",
