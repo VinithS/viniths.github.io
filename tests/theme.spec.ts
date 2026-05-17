@@ -11,12 +11,6 @@ async function getStoredTheme(
 }
 
 test.describe("theme toggle", () => {
-  test.beforeEach(async ({ context }) => {
-    // Start each test from a clean localStorage so the pre-paint script
-    // falls back to prefers-color-scheme rather than a leftover value.
-    await context.clearCookies();
-  });
-
   test("pre-paint script sets data-theme to a valid value", async ({ page }) => {
     await page.goto("/");
     const theme = await getTheme(page);
