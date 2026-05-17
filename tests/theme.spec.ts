@@ -4,9 +4,7 @@ async function getTheme(page: import("@playwright/test").Page): Promise<string> 
   return await page.evaluate(() => document.documentElement.getAttribute("data-theme") ?? "");
 }
 
-async function getStoredTheme(
-  page: import("@playwright/test").Page,
-): Promise<string | null> {
+async function getStoredTheme(page: import("@playwright/test").Page): Promise<string | null> {
   return await page.evaluate(() => localStorage.getItem("theme"));
 }
 
@@ -17,9 +15,7 @@ test.describe("theme toggle", () => {
     expect(["light", "dark"]).toContain(theme);
   });
 
-  test("clicking the toggle flips data-theme and updates the label", async ({
-    page,
-  }) => {
+  test("clicking the toggle flips data-theme and updates the label", async ({ page }) => {
     await page.goto("/");
     const before = await getTheme(page);
     const expectedAfter = before === "light" ? "dark" : "light";
@@ -31,9 +27,7 @@ test.describe("theme toggle", () => {
     await expect(page.locator("#themeLabel")).toHaveText(expectedLabelAfter);
   });
 
-  test("the toggled theme persists across reload via localStorage", async ({
-    page,
-  }) => {
+  test("the toggled theme persists across reload via localStorage", async ({ page }) => {
     await page.goto("/");
     const before = await getTheme(page);
     const expectedAfter = before === "light" ? "dark" : "light";
