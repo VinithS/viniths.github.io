@@ -4,68 +4,97 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Retro-themed personal website (blog/photo album/portfolio) with a dark, minimalist aesthetic inspired by RetroCatalog dark mode. Built as a learning project — the owner is learning Astro and web development, so explanations should be educational.
+Retro-themed personal website (blog/photo album/portfolio) with a "warm arcade paper" aesthetic — editorial typography carrying the voice, pixel ornament and arcade-primary accents used as spice. Built as a learning project; the owner is learning Astro and web development, so explanations should be educational.
+
+**`DESIGN.md` is the source of truth for visual decisions.** Read it before writing CSS, adding components, or making visual changes — it defines the direction ("warm arcade paper"), the "emergent observer" frame for identity pages, and the four color rules (layer separation, theme symmetry, semantic roles, paired fg/bg tokens). If a request conflicts with `DESIGN.md`, surface the conflict before implementing.
 
 ## Commands
 
-- `npm run dev` — Start dev server (localhost:4321)
-- `npm run build` — Build static site to `./dist/`
-- `npm run preview` — Preview production build locally
-- `npm run astro -- --help` — Access Astro CLI (e.g. `astro add`, `astro check`)
+- `npm run dev` — Dev server (localhost:4321)
+- `npm run build` — Static build to `./dist/`
+- `npm run preview` — Preview the production build locally
+- `npm run typecheck` — `astro check` (TypeScript + Astro diagnostics)
+- `npm run format` / `npm run format:check` — Prettier (with `prettier-plugin-astro` and `prettier-plugin-svelte`)
+- `npm run lint:css` — Stylelint over `.css`, `.astro`, `.svelte` (uses `postcss-html` for the latter two)
+- `npm run lint:staged` — Runs Prettier + Stylelint over staged files only (manual invocation; no Husky pre-commit hook is wired up)
+- `npm test` — Run Playwright tests against the running dev server (Chromium only). Assumes `npm run dev` is up at `localhost:4321`; fails fast if not.
+- `npm run test:report` — Open the HTML report from the last `npm test` run.
+- `npm run astro -- --help` — Astro CLI
 
-No lint or test commands are configured.
+Playwright tests live under `tests/` at the repo root (not `src/`). Two specs: `tests/smoke.spec.ts` (home page + nav) and `tests/theme.spec.ts` (theme toggle round-trip). Single Chromium project, configured in `playwright.config.ts`.
+
+Tests assume `npm run dev` is already running on `localhost:4321` — there is no `webServer` block. If the dev server is down, `npm test` fails with a connection error.
+
+To add a test, drop a `*.spec.ts` file under `tests/`. Use `getByRole`/`getByText` over class selectors so visual refactors don't break tests. Don't test `src/pages/sandbox/*` — that area is allowed to break the design system.
+
+**Do not spin up the dev server yourself.** I always have it running so you must just let me know to restart if you add new assets or changs that require a restart.
+
+## Deployment
+
+Pushes to `main` trigger `.github/workflows/deploy.yml`, which runs `npm ci && npm run build` and publishes `./dist/` to GitHub Pages. The `site` URL in `astro.config.mjs` (`https://viniths.github.io`) must stay aligned with the Pages domain — canonical URLs and RSS-style absolute links rely on it.
 
 ## Tech Stack
 
-- **Astro v6** — Static site generator with file-based routing and zero-JS-by-default
-- **Svelte v5** — Integrated via `@astrojs/svelte` for interactive islands. Uses runes syntax (`$props()`, `$state()`) — not legacy reactive declarations.
-- **CSS** — Dark theme via CSS custom properties
-- **TypeScript** — Strict mode (`astro/tsconfigs/strict`)
+- **Astro v6** — Static site generator with file-based routing, zero-JS-by-default
+- **Svelte v5** — Interactive islands via `@astrojs/svelte`. Runes only (`$props()`, `$state()`, `$derived()`) — no legacy `export let` or `$:` reactive statements. Shared reactive state lives in `.svelte.js` files (see `src/components/stamp-store.svelte.js`) — these use runes outside of components.
+- **TypeScript** — `astro/tsconfigs/strict`
 - **Node >= 22.12.0**
 
 ## Architecture
 
 ### Routing
 
-- `src/pages/` — File-based routing. `.astro` and `.md` files become routes.
-- Dynamic routes use bracketed filenames: `src/pages/blog/[slug].astro` and `src/pages/photos/[album].astro`. Each exports `getStaticPaths()` that iterates a content collection to produce one page per entry at build time.
-- `src/layouts/Layout.astro` — Shared shell: sticky top nav, `<main>` slot, footer. Pages wrap their content in `<Layout title="...">`.
+- `src/pages/` — File-based routing; `.astro` and `.md` files become routes.
+- Dynamic routes use bracketed filenames (`src/pages/blog/[slug].astro`, `src/pages/photos/[album].astro`). Each exports `getStaticPaths()` that iterates a content collection to emit one page per entry at build time.
+- `src/pages/sandbox/` — Experimental/exploratory pages; not linked from the main nav. Treat as a scratch area; things in here are allowed to break the design system.
+- `src/layouts/Layout.astro` — Global shell: sticky nav, theme toggle, `<main>` slot, footer, grain overlay, and the **pre-paint inline script** that sets `data-theme` before first paint to avoid a light/dark flash. Any change to theming mechanics should preserve this.
 
 ### Content collections (the data layer)
 
-Content is defined in `src/content.config.ts` using Astro's content collections API. Three collections exist, each with a Zod schema enforced at build time:
+Defined in `src/content.config.ts` with Zod schemas enforced at build time:
 
-- **`blog`** — Markdown files under `src/content/blog/*.md` (glob loader). Frontmatter: `title`, `date`, `description`, `tags?`. Rendered via `render(entry)` on the `[slug]` route.
-- **`tweets`** — JSON array at `src/content/tweets.json` (file loader). Each entry: `date`, `text` (max 250 chars). Listed on `/tweets`.
-- **`photos`** — JSON array at `src/content/photos.json` (file loader). Each album has `title`, `description`, `cover`, and an `images[]` array of `{src, alt}`. `/photos` shows album tiles; `/photos/[album]` renders the album via the Svelte `PhotoViewer` island.
+- **`blog`** — Markdown under `src/content/blog/*.md` (glob loader). Frontmatter: `title`, `date`, `description`, `tags?`. Rendered via `render(entry)` on `[slug].astro`.
+- **`tweets`** — `src/content/tweets.json` (file loader). `{ date, text }`, `text` max 250 chars. Listed on `/tweets`.
+- **`photos`** — `src/content/photos.json` (file loader). Each album: `{ title, description, cover, images: [{src, alt}] }`. `/photos` shows album tiles; `/photos/[album]` renders via the `PhotoViewer` Svelte island.
 
-When adding content: add the file(s) to the appropriate `src/content/` location — the schema and existing routes pick it up automatically. To add a new collection type, register it in `src/content.config.ts` and export it from `collections`.
+Adding content: drop the file into the right `src/content/` path; schema and existing routes pick it up. Adding a new collection type: register it in `src/content.config.ts` and re-export from `collections`.
 
-### Interactive islands
+### Components
 
-`src/components/PhotoViewer.svelte` is the only Svelte component and is the reference for the islands pattern: hydrated in `[album].astro` with `client:load` and receives album data as props from the Astro page.
+- `src/components/` — Mix of `.astro` (server-rendered) and `.svelte` (interactive islands).
+- Islands are hydrated explicitly with `client:load` / `client:visible` / `client:idle` from the Astro page and receive data as props. `PhotoViewer.svelte` is the reference example.
+- `src/components/primitives/` and `src/components/crests/` hold small building blocks (ornamental SVGs, shared UI primitives) — reuse these before inventing new ones.
+- `UniverseLogo.astro` is the **crest** — only use it where an institutional seal belongs (identity pages, mastheads). Don't scatter decoratively. See `DESIGN.md` → "Scale: the emergent-observer frame."
+- `src/lib/` — Plain TypeScript utilities (e.g. `obfuscate.ts`). Not Svelte/Astro; importable from anywhere. Add new pure helpers here rather than co-locating with a single component.
 
-## Styling Conventions
+### Styling & tokens
 
-- All colors come from CSS variables in `src/styles/global.css`: `--bg-*`, `--text-*`, `--border-*`, `--accent*`. Don't hardcode hex values in components.
-- `--font-sans` for body, `--font-mono` for code and decorative terminal-style text (greetings, status bars, timestamps).
-- `.card` for surface containers, `.tag` for small badges, `.mono` for inline monospace text.
-- Component-scoped styles live in `<style>` tags inside `.astro`/`.svelte` files — prefer these over adding new global rules.
+- All colors come from CSS variables in `src/styles/global.css`, defined twice — once under `:root[data-theme="light"]` (eggshell/cream paper) and once under `:root[data-theme="dark"]` (warm "dusk paper" — **not** GitHub-dark, **not** neon cyberpunk). Never hardcode hex values in components. Never write `[data-theme="dark"] .component { ... }` overrides — push the difference into the theme token blocks instead (`DESIGN.md` → Rule 2).
+- Semantic role tokens (`--em`, `--signal`, `--highlight-bg` / `--highlight-ink`, `--link-hover`, `--marker`, `--toggle-dot`) are the intended API for components. Direct `--red`/`--yellow`/`--blue`/`--green` references are only for explicit decorative use (button variants, palette swatches, pixel-art fills).
+- Typography: `Fraunces` (variable serif, `opsz` + `SOFT` axes) for display and body; `Silkscreen` (pixel) **only** for labels (dates, tags, eyebrows, status bars, keycaps) — always uppercase, always tracked. Never Silkscreen for prose.
+- `.card`, `.btn` (+ `.btn--red`/`--yellow`/`--blue`/`--green`), `.tag-pixel`, `.reveal`, `.pixel` are the shared utilities in `global.css`.
+- Component-scoped CSS lives in `<style>` blocks inside `.astro`/`.svelte`; prefer this over new global rules.
 
-## Light/dark parity (read this before any visual change)
+### Light/dark parity (read before any visual change)
 
-The site ships two full themes — `:root[data-theme="light"]` (dawn/warm cream paper) and `:root[data-theme="dark"]` (dusk paper). They are *not* inversions of each other: each redefines its own `--bg-*`, `--ink-*`, `--rule*`, accent palette, and semantic role tokens (`--em`, `--signal`, `--toggle-dot`, …) in `global.css`. Blend modes, opacities, and filter values are tuned per theme — `.stamp` uses `mix-blend-mode: multiply` in light, `screen` in dark; `.gloss` uses `overlay` in light, `soft-light` in dark; `FoilCard` pulls saturation down in dark, etc.
+Light and dark are **not inversions** — each theme redefines its own surface, ink, rule, accent, and semantic tokens. Blend modes, opacities, and filter values are tuned per theme (`.stamp` uses `multiply` in light, `screen` in dark; `.gloss` uses `overlay` in light, `soft-light` in dark; `FoilCard` pulls saturation down in dark; etc.).
 
-Any change that touches color, opacity, blend mode, filter, shadow, or gradient must be verified in *both* themes before you consider it done:
+Any change touching color, opacity, blend mode, filter, shadow, or gradient must be verified in **both** themes:
 
-- Toggle with the nav button or press `T` on the page.
-- Check contrast (body text on paper, ink on accent surfaces, rule borders against their bg).
-- Check any blend-moded or filtered surface — `multiply` and `screen` behave very differently on dusk vs. cream bases; what reads as "subtle watermark" in light can become "rainbow pinwheel" in dark (see the FoilCard stamp history). If you add a new blended layer, pair it with a per-theme override in the same component.
-- Check hover/active states — both themes share the interaction logic but can diverge in contrast.
-- If a bug reproduces in one theme only, treat that as a signal that one of the per-theme overrides is missing, not that the "broken" theme is fine to ignore.
+- Toggle via the nav button or press `T`.
+- Check contrast (body text on paper, ink on accent surfaces, rule borders against their background).
+- Check blend-moded/filtered surfaces — `multiply` and `screen` behave very differently over dusk vs. cream. What reads as a "subtle watermark" in light can become a "rainbow pinwheel" in dark (see FoilCard stamp history). A new blended layer needs a per-theme override in the same component.
+- A bug that reproduces in one theme only is usually a missing per-theme override — don't declare the "working" theme fine and ship.
 
-When touching only one theme's tokens (e.g. bumping dark's `.holo` opacity), still sanity-check that the light side still looks right — the selectors often cascade through shared rules.
+### Interaction idioms
 
-## Design Context
+- **Hard-offset shadows** (`3px 3px 0 var(--rule)`) for buttons and cards. On `:active`, the shadow collapses and the element translates into it — this is the site's physical button feel. Don't replace with soft/blurred shadows.
+- **Borders are 1–2px hard edges** using `--rule-*` tokens. Corner radius is 0 for buttons/ornament; small (`--radius`) only for soft content cards.
+- **One orchestrated page-load reveal** — staggered translate+fade on hero elements via `.reveal`. Not every element needs to animate.
+- Animate with CSS transitions/keyframes, not JS. Always provide a `prefers-reduced-motion: reduce` override.
 
-Dark charcoal background (`--bg-primary: #0d1117`), subtle borders, muted green accent (`--accent: #39d353`), sans-serif body with monospace accents. Content column is `--max-width: 1080px`, centered.
+## Conventions summary
+
+- Prettier: 2 spaces, double quotes, semicolons, 100-col, ES5 trailing commas. Run `npm run format` before committing non-trivial changes.
+- Stylelint config relaxes most naming/notation rules (custom-property patterns, color-function notation, selector-class patterns) — treat violations it *does* flag as real issues, not noise to silence.
+- Max content width is `--max-width: 1080px`, centered.
