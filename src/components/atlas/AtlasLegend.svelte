@@ -11,7 +11,7 @@
   let { count = 0 } = $props();
 </script>
 
-<div class="legend" role="note" aria-label="Atlas legend" tabindex="0">
+<div class="legend" role="note" aria-label="Atlas legend">
   <header class="legend-head">
     <span class="legend-pip" aria-hidden="true"></span>
     <span class="legend-title">Atlas · Legend</span>
@@ -68,16 +68,11 @@
     color: var(--ink);
     transform: none;
     min-width: 180px;
-    /* Collapsed by default; rows reveal on hover/focus below. */
+    /* Collapsed by default; rows reveal on hover below. */
     transition: padding 0.18s ease;
   }
-  .legend:hover,
-  .legend:focus-visible {
+  .legend:hover {
     padding-bottom: 10px;
-  }
-  .legend:focus-visible {
-    outline: 2px solid var(--em);
-    outline-offset: 2px;
   }
 
   .legend-head {
@@ -92,8 +87,7 @@
       margin-bottom 0.18s ease,
       border-color 0.18s ease;
   }
-  .legend:hover .legend-head,
-  .legend:focus-visible .legend-head {
+  .legend:hover .legend-head {
     padding-bottom: 6px;
     margin-bottom: 6px;
     border-bottom-color: var(--rule-soft);
@@ -133,8 +127,7 @@
       max-height 0.22s ease,
       opacity 0.16s ease;
   }
-  .legend:hover .legend-rows,
-  .legend:focus-visible .legend-rows {
+  .legend:hover .legend-rows {
     max-height: 80px;
     opacity: 1;
   }

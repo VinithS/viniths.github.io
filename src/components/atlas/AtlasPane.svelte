@@ -29,10 +29,9 @@
   let {
     graph,
     title = "Sky · Tag Atlas",
-    initialOpen = false,
   } = $props();
 
-  let open = $state(initialOpen);
+  let open = $state(false);
   let selectedSlug = $state(null);
 
   const positions = $derived(cosmicWebLayout(graph));
