@@ -1,0 +1,37 @@
+---
+/*
+  Ledger — the wrapping list of LedgerRow. Applies .paper-crease so
+  a faint horizontal fold runs across the rows.
+*/
+
+import LedgerRow from "./LedgerRow.astro";
+import type { PostType } from "../../lib/post-types";
+
+interface Entry {
+  href: string;
+  title: string;
+  description: string;
+  tags?: string[];
+  date: Date;
+  type: PostType;
+  slug: string;
+}
+
+interface Props {
+  entries: Entry[];
+}
+
+const { entries } = Astro.props;
+---
+
+<ul class="ledger paper-crease">
+  {entries.map((e) => <LedgerRow {...e} />)}
+</ul>
+
+<style>
+  .ledger {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+</style>
