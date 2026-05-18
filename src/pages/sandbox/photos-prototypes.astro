@@ -1,0 +1,402 @@
+---
+/*
+  /sandbox/photos-prototypes — Direction E.
+
+  Spec the user confirmed:
+   - Audience: friend/stranger > self > curious reader
+   - Albums grouped by year
+   - Card metadata: title, place, year, count (camera/stock only on album page)
+   - Vocabulary + behavioral homage to film (no overt sprockets/grease pencil)
+   - One Pentax mark, used once as a fleuron next to the title
+   - Masonry, native aspects (no forced crop)
+   - Accordion expand inline, dim background, prev/next + thumb strip
+   - Sprocket-style timeline rail at the bottom, one tooth per album,
+     click-to-jump, all years marked
+
+  Album shape used here mirrors what the real content collection will need
+  to add (place, year, count). The schema change goes in
+  src/content.config.ts when this is promoted.
+*/
+import Layout from "../../layouts/Layout.astro";
+import PhotoAlbumGrid from "../../components/PhotoAlbumGrid.svelte";
+
+type Album = {
+  id: string;
+  title: string;
+  place: string;
+  year: number;
+  count: number;
+  cover: string;
+  frames: { src: string; alt: string }[];
+};
+
+const albums: Album[] = [
+  {
+    id: "nostalgia",
+    title: "Nostalgia",
+    place: "Home",
+    year: 2024,
+    count: 3,
+    cover: "/photos/nostalgia/spiderman-2.jpg",
+    frames: [
+      { src: "/photos/nostalgia/spiderman-2.jpg", alt: "Spider-Man 2" },
+      { src: "/photos/nostalgia/far-cry-1.jpg", alt: "Far Cry" },
+      { src: "/photos/nostalgia/delta-ops.jpg", alt: "Delta Ops" },
+    ],
+  },
+  {
+    id: "kyoto-portra",
+    title: "Kyoto, on Portra",
+    place: "Kyoto, JP",
+    year: 2023,
+    count: 24,
+    cover: "/photos/nostalgia/far-cry-1.jpg",
+    frames: [
+      { src: "/photos/nostalgia/far-cry-1.jpg", alt: "Cobblestone alley, dusk" },
+      { src: "/photos/nostalgia/spiderman-2.jpg", alt: "Sodium-vapor doorway" },
+      { src: "/photos/nostalgia/delta-ops.jpg", alt: "Bamboo, with rain" },
+    ],
+  },
+  {
+    id: "cascades",
+    title: "Cascades, slow",
+    place: "PNW",
+    year: 2024,
+    count: 18,
+    cover: "/photos/nostalgia/delta-ops.jpg",
+    frames: [
+      { src: "/photos/nostalgia/delta-ops.jpg", alt: "Trail through ferns" },
+      { src: "/photos/nostalgia/far-cry-1.jpg", alt: "Lake at hour 6" },
+      { src: "/photos/nostalgia/spiderman-2.jpg", alt: "Tent line, morning" },
+    ],
+  },
+  {
+    id: "phone-diary",
+    title: "Phone diary",
+    place: "Everywhere",
+    year: 2025,
+    count: 41,
+    cover: "/photos/jlp-m87.png",
+    frames: [
+      { src: "/photos/jlp-m87.png", alt: "M87 still" },
+      { src: "/photos/spinning-blackhole.webp", alt: "Spinning black hole" },
+      { src: "/photos/nostalgia/spiderman-2.jpg", alt: "Spider-Man 2" },
+    ],
+  },
+  {
+    id: "study",
+    title: "Quiet rooms",
+    place: "—",
+    year: 2022,
+    count: 11,
+    cover: "/photos/nostalgia/spiderman-2.jpg",
+    frames: [
+      { src: "/photos/nostalgia/spiderman-2.jpg", alt: "Window light" },
+      { src: "/photos/nostalgia/far-cry-1.jpg", alt: "Empty hall" },
+    ],
+  },
+];
+
+// Group by year, descending
+const byYear: Record<number, Album[]> = {};
+for (const a of albums) (byYear[a.year] ??= []).push(a);
+const years = Object.keys(byYear)
+  .map(Number)
+  .sort((a, b) => b - a);
+
+// Timeline: one tooth per album, oldest → newest (left → right)
+const timeline = [...albums].sort((a, b) => a.year - b.year);
+---
+
+<Layout title="Photos — prototypes">
+  <section class="ph-head">
+    <div class="ph-kicker">
+      <span class="ph-pip"></span>
+      Sandbox · Direction E
+    </div>
+    <h1 class="ph-title">
+      <span class="ph-fleuron" aria-hidden="true">
+        <!-- One Pentax silhouette, used once. Lives in title leading. -->
+        <svg viewBox="0 0 64 40" class="fleuron-svg">
+          <!-- pentaprism -->
+          <path d="M22 10 L28 4 L36 4 L42 10 Z" fill="currentColor"/>
+          <rect x="30" y="2" width="4" height="2" fill="currentColor"/>
+          <!-- top plate -->
+          <rect x="10" y="10" width="44" height="6" fill="currentColor"/>
+          <!-- body -->
+          <rect x="6" y="16" width="52" height="20" fill="currentColor"/>
+          <!-- grip notch -->
+          <rect x="6" y="16" width="6" height="20" fill="currentColor" opacity="0.55"/>
+          <!-- lens -->
+          <circle cx="32" cy="26" r="9" fill="var(--bg)"/>
+          <circle cx="32" cy="26" r="6" fill="currentColor"/>
+          <!-- shutter dot -->
+          <circle cx="50" cy="13" r="1.6" fill="var(--em)"/>
+        </svg>
+      </span>
+      Albums.
+    </h1>
+    <p class="ph-lede">
+      Rolls and frames I've kept worth keeping. Click a card to read the roll;
+      use the rail at the bottom to jump back through the years.
+    </p>
+  </section>
+
+  {years.map((year) => (
+    <section class="ph-year" id={`y-${year}`}>
+      <header class="year-strip">
+        <span class="year-num">{year}</span>
+        <span class="year-rule"></span>
+        <span class="year-count">
+          {byYear[year].length} {byYear[year].length === 1 ? "roll" : "rolls"}
+          &nbsp;·&nbsp;
+          {byYear[year].reduce((s, a) => s + a.count, 0)} frames
+        </span>
+      </header>
+
+      <PhotoAlbumGrid client:load albums={byYear[year]} />
+    </section>
+  ))}
+
+  <!-- Timeline rail: sprocket teeth, one per album, oldest → newest.
+       Hover a tooth highlights it; click jumps to the album.
+       This is the one place sprockets earn their keep — they ARE the rail. -->
+  <section class="ph-timeline" aria-label="Album timeline">
+    <header class="tl-head">
+      <span class="tl-kicker">Timeline</span>
+      <span class="tl-range">
+        {timeline[0].year} — {timeline[timeline.length - 1].year}
+      </span>
+    </header>
+    <div class="tl-rail">
+      <span class="tl-line" aria-hidden="true"></span>
+      <ul class="tl-teeth">
+        {timeline.map((a) => (
+          <li class="tl-tooth-li">
+            <a class="tl-tooth" href={`#album-${a.id}`} aria-label={`Jump to ${a.title}, ${a.year}`}>
+              <span class="tl-perf"></span>
+              <span class="tl-tip">
+                <span class="tl-tip-title">{a.title}</span>
+                <span class="tl-tip-meta">{a.place} · {a.year} · {a.count}</span>
+              </span>
+            </a>
+            <span class="tl-year">{String(a.year).slice(2)}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  /* ============================================================
+     Headline
+     ============================================================ */
+  .ph-head {
+    max-width: 680px;
+    margin: 0 auto 44px;
+    padding: 24px 0 0;
+  }
+  .ph-kicker {
+    font-family: var(--font-pixel);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .ph-pip {
+    width: 8px;
+    height: 8px;
+    background: var(--yellow);
+    box-shadow: 0 0 0 2px var(--rule);
+  }
+  .ph-title {
+    font-family: var(--font-serif);
+    font-variation-settings: "opsz" 96, "SOFT" 60, "wght" 500;
+    font-size: clamp(40px, 6.4vw, 72px);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    margin-bottom: 14px;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 14px;
+  }
+  .ph-fleuron {
+    display: inline-block;
+    width: 0.7em;
+    height: 0.45em;
+    color: var(--ink);
+    transform: translateY(-0.05em);
+  }
+  .fleuron-svg { width: 100%; height: 100%; display: block; }
+  .ph-lede {
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    max-width: 52ch;
+  }
+
+  /* ============================================================
+     Year sections
+     ============================================================ */
+  .ph-year {
+    margin: 0 0 56px;
+  }
+  .year-strip {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+  .year-num {
+    font-family: var(--font-serif);
+    font-variation-settings: "opsz" 36, "SOFT" 60, "wght" 500;
+    font-size: 26px;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+  }
+  .year-rule {
+    flex: 1;
+    height: 1px;
+    background: var(--rule-soft);
+    align-self: center;
+  }
+  .year-count {
+    font-family: var(--font-pixel);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+
+  /* ============================================================
+     Timeline rail (sprockets)
+     ============================================================ */
+  .ph-timeline {
+    margin: 64px 0 8px;
+    padding: 18px 0 22px;
+    border-top: 1px dashed var(--rule-soft);
+    border-bottom: 1px dashed var(--rule-soft);
+  }
+  .tl-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 14px;
+    font-family: var(--font-pixel);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .tl-rail {
+    position: relative;
+    padding: 14px 0 8px;
+  }
+  .tl-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 2px;
+    background: var(--ink);
+    opacity: 0.18;
+    transform: translateY(-50%);
+  }
+  .tl-teeth {
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 0;
+    margin: 0;
+    position: relative;
+  }
+  .tl-tooth-li {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+  }
+  .tl-tooth {
+    position: relative;
+    display: block;
+    width: 100%;
+    max-width: 28px;
+    height: 28px;
+  }
+  /* The "sprocket" — square hole punched in a paper strip, white inside. */
+  .tl-perf {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
+    border: 2px solid var(--ink);
+    transition:
+      background 0.15s ease,
+      border-color 0.15s ease,
+      transform 0.1s ease;
+  }
+  .tl-tooth:hover .tl-perf,
+  .tl-tooth:focus-visible .tl-perf {
+    background: var(--em);
+    border-color: var(--ink);
+    transform: translateY(-2px);
+  }
+  .tl-tooth:focus-visible {
+    outline: none;
+  }
+  .tl-tip {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-card);
+    border: 1.5px solid var(--rule);
+    box-shadow: 3px 3px 0 var(--rule);
+    padding: 6px 9px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.12s ease;
+    z-index: 5;
+  }
+  .tl-tooth:hover .tl-tip,
+  .tl-tooth:focus-visible .tl-tip {
+    opacity: 1;
+  }
+  .tl-tip-title {
+    display: block;
+    font-family: var(--font-serif);
+    font-variation-settings: "opsz" 18, "SOFT" 60, "wght" 600;
+    font-size: 13px;
+    color: var(--ink);
+    letter-spacing: -0.005em;
+  }
+  .tl-tip-meta {
+    display: block;
+    font-family: var(--font-pixel);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-top: 2px;
+  }
+  .tl-year {
+    font-family: var(--font-pixel);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    color: var(--ink-muted);
+  }
+
+  @media (max-width: 560px) {
+    .ph-head { padding-top: 12px; }
+    .tl-tip { display: none; }
+  }
+</style>

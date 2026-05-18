@@ -6,7 +6,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Retro-themed personal website (blog/photo album/portfolio) with a "warm arcade paper" aesthetic — editorial typography carrying the voice, pixel ornament and arcade-primary accents used as spice. Built as a learning project; the owner is learning Astro and web development, so explanations should be educational.
 
-**`DESIGN.md` is the source of truth for visual decisions.** Read it before writing CSS, adding components, or making visual changes — it defines the direction ("warm arcade paper"), the "emergent observer" frame for identity pages, and the four color rules (layer separation, theme symmetry, semantic roles, paired fg/bg tokens). If a request conflicts with `DESIGN.md`, surface the conflict before implementing.
+**[`DESIGN.md`](./DESIGN.md) is the source of truth for visual decisions and you must read it every time you read this file.** Before any CSS, component, or visual change, open `DESIGN.md` and read it end-to-end. It defines:
+- The direction ("warm arcade paper") and what the site explicitly is *not*.
+- The "emergent observer" cosmological frame for identity pages.
+- The **four color rules** — layer separation, theme symmetry, semantic roles, paired fg/bg tokens.
+- **Proportion** — golden ratio (`--phi: 1.618`) is the default for rectangular surfaces.
+- **Illustrated voice (with stamped exceptions)** — clean illustrated artwork is the default; rubber-ink stamps are the deliberate counterpoint, used only for the system's "press marks" (constellation marks, name plates, classification marks). Don't stamp things that aren't press marks.
+- **Pixelated retro-game cues for animated/interactive components** — `steps()` timing functions for state changes, `shape-rendering: crispEdges` and 1px-grid SVG drawings for selectors/reticles/ornaments. JRPG menu cursor, not CAD crosshair.
+
+If a request conflicts with `DESIGN.md`, surface the conflict before implementing.
 
 ## Commands
 
@@ -74,6 +82,7 @@ Adding content: drop the file into the right `src/content/` path; schema and exi
 - Typography: `Fraunces` (variable serif, `opsz` + `SOFT` axes) for display and body; `Silkscreen` (pixel) **only** for labels (dates, tags, eyebrows, status bars, keycaps) — always uppercase, always tracked. Never Silkscreen for prose.
 - `.card`, `.btn` (+ `.btn--red`/`--yellow`/`--blue`/`--green`), `.tag-pixel`, `.reveal`, `.pixel` are the shared utilities in `global.css`.
 - Component-scoped CSS lives in `<style>` blocks inside `.astro`/`.svelte`; prefer this over new global rules.
+- Proportion (golden ratio), illustrated voice, and retro-game motion cues are all defined in [`DESIGN.md`](./DESIGN.md) — that's the contract.
 
 ### Light/dark parity (read before any visual change)
 

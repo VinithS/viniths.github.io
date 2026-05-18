@@ -78,6 +78,27 @@ Example:
 - **Never use Silkscreen for prose.** Never use Fraunces for tiny pixel labels. The contrast between the two is the aesthetic.
 - **No system-font fallbacks that change the character.** If a web font fails, fall back to a serif (Georgia) or mono, not to `Inter` or `system-ui`.
 
+## Proportion: golden ratio is the default
+
+Reach for **φ ≈ 1.618** when sizing rectangular UI surfaces — cards, popovers, hover panels, plate frames, hero panels, image crops. Use the token `--phi: 1.618;` (declared in `:root` of `global.css`) and derive sizes from it: `aspect-ratio: var(--phi) / 1` (landscape) or `aspect-ratio: 1 / var(--phi)` (portrait). For modular spacing scales, prefer powers of φ (`1`, `1.618`, `2.618`, `4.236`) over arbitrary multiples. This is a **default**, not a rule — break it deliberately when content demands it (a wide cinematic photo, a square crest), but don't reach for arbitrary 4:5 / 3:4 / 16:9 ratios when φ would do. The site's voice is editorial; proportion is part of that voice.
+
+## Illustrated voice (with stamped exceptions)
+
+**Visual content is illustrated, not photographic and not skeuomorphic.** Diagrams, ornaments, page motifs, hero artwork, section markers — drawn in vector with clean lines, flat fills, and the same restrained palette as the rest of the page. Think mid-century editorial illustration, scientific-textbook plates, woodcut, line art — not 3D renders, not gradients, not painterly photo composites. Tools that produce illustrations: SVG paths, pixel-art SVGs (`shape-rendering: crispEdges`), CSS shapes. If something *must* be a raster image, treat it like a printed plate (hard border, optional caption) rather than a free-floating photo on the page.
+
+**Stamps are the deliberate exception** — and they only work because the rest of the page is illustrated. A rubber-ink stamp (the `#rubber-ink` family of filters in `Layout.astro`) carries weathered displacement, dry-patch erosion, and slight blur. Its texture *complements* the clean lines around it the way a postal cancellation complements a printed letter. Stamps are reserved for: constellation marks on blog entries, the cosmos-page selector reticle's anchor effect, name plates inside the hover atlas card, classification marks (e.g. `INTERACTIVE`, `J0412+3841`). Do not stamp things that aren't the system's "press marks." Do not put rubber-ink filter on body type, on icons, on photos, or on any element that's already weathered (already textured / already lo-fi).
+
+The contrast between **clean illustration + occasional pressed ink** is the visual signature, the same way `Fraunces + Silkscreen` is the typographic signature. Three families, no more: serif voice, pixel labels, illustrated marks (with stamped exceptions).
+
+## Pixelated retro-game cues for animated/interactive components
+
+Animated and interactive surfaces (the cosmos chart, hover reveals, modal selectors, anything that changes state in response to input) should *remind* the user of retro video games — without becoming costume. Two specific cues:
+
+- **Use `steps()` timing functions, not eases, for state changes.** A retro selector cursor steps inward in 3–4 visible frames (`steps(4, end)`); a blink is two frames at 1Hz (`steps(2, end)`). Tweens (`cubic-bezier`) are reserved for paper / page reveals; state changes use `steps()` so the motion looks pixelated rather than cinematic.
+- **Crisp pixel-grid drawings.** When drawing selectors, reticles, ornaments, or markers in SVG, use `shape-rendering: crispEdges` and design at a 1px grid (8px / 16px ornament fields). The cosmos selector reticle (4 corner brackets, no center, with notched arms) is the canonical example — a JRPG menu cursor, not a CAD crosshair.
+
+Don't extend this beyond animated/interactive surfaces. Static editorial pages stay editorial. The retro-game flavour is *how interactive things move*, not what every page looks like.
+
 ## Components & surfaces
 
 - Surfaces are **paper, not glass**. No translucent frosted-glass panels. Backdrop blur is allowed only on the sticky nav, and only lightly.
