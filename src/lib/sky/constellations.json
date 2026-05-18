@@ -1,0 +1,181 @@
+{
+  "constellations": [
+    {
+      "abbr": "CAS",
+      "name": "Cassiopeia",
+      "epithet": "The Queen",
+      "raMin": 0.0,  "raMax": 3.0,
+      "decMin": 45,  "decMax": 75,
+      "stars": [
+        { "bayer": "α", "ra": 0.675, "dec": 56.54, "magnitude": 2.24 },
+        { "bayer": "β", "ra": 0.153, "dec": 59.15, "magnitude": 2.27 },
+        { "bayer": "γ", "ra": 0.945, "dec": 60.72, "magnitude": 2.47 },
+        { "bayer": "δ", "ra": 1.430, "dec": 60.24, "magnitude": 2.68 },
+        { "bayer": "ε", "ra": 1.906, "dec": 63.67, "magnitude": 3.38 }
+      ],
+      "lines": [[0,1],[1,2],[2,3],[3,4]]
+    },
+    {
+      "abbr": "URSA",
+      "name": "Ursa Major",
+      "epithet": "The Great Bear",
+      "raMin": 8.0, "raMax": 14.0,
+      "decMin": 30, "decMax": 70,
+      "stars": [
+        { "bayer": "α", "ra": 11.062, "dec": 61.75, "magnitude": 1.79 },
+        { "bayer": "β", "ra": 11.030, "dec": 56.38, "magnitude": 2.37 },
+        { "bayer": "γ", "ra": 11.897, "dec": 53.69, "magnitude": 2.44 },
+        { "bayer": "δ", "ra": 12.257, "dec": 57.03, "magnitude": 3.31 },
+        { "bayer": "ε", "ra": 12.900, "dec": 55.96, "magnitude": 1.77 },
+        { "bayer": "ζ", "ra": 13.398, "dec": 54.93, "magnitude": 2.27 },
+        { "bayer": "η", "ra": 13.792, "dec": 49.31, "magnitude": 1.86 }
+      ],
+      "lines": [[0,1],[1,2],[2,3],[3,0],[3,4],[4,5],[5,6]]
+    },
+    {
+      "abbr": "ORI",
+      "name": "Orion",
+      "epithet": "The Hunter",
+      "raMin": 4.5, "raMax": 6.5,
+      "decMin": -10, "decMax": 23,
+      "stars": [
+        { "bayer": "α", "ra": 5.919, "dec":  7.41, "magnitude": 0.50 },
+        { "bayer": "β", "ra": 5.242, "dec": -8.20, "magnitude": 0.18 },
+        { "bayer": "γ", "ra": 5.418, "dec":  6.35, "magnitude": 1.64 },
+        { "bayer": "δ", "ra": 5.533, "dec": -0.30, "magnitude": 2.23 },
+        { "bayer": "ε", "ra": 5.604, "dec": -1.20, "magnitude": 1.69 },
+        { "bayer": "ζ", "ra": 5.679, "dec": -1.94, "magnitude": 1.74 },
+        { "bayer": "κ", "ra": 5.796, "dec": -9.67, "magnitude": 2.06 }
+      ],
+      "lines": [[0,2],[2,3],[3,4],[4,5],[5,6],[6,1],[3,5]]
+    },
+    {
+      "abbr": "CYG",
+      "name": "Cygnus",
+      "epithet": "The Swan",
+      "raMin": 19.0, "raMax": 21.5,
+      "decMin": 27, "decMax": 56,
+      "stars": [
+        { "bayer": "α", "ra": 20.690, "dec": 45.28, "magnitude": 1.25 },
+        { "bayer": "β", "ra": 19.512, "dec": 27.96, "magnitude": 3.18 },
+        { "bayer": "γ", "ra": 20.370, "dec": 40.26, "magnitude": 2.23 },
+        { "bayer": "δ", "ra": 19.749, "dec": 45.13, "magnitude": 2.86 },
+        { "bayer": "ε", "ra": 20.770, "dec": 33.97, "magnitude": 2.46 }
+      ],
+      "lines": [[0,2],[2,1],[2,3],[2,4]]
+    },
+    {
+      "abbr": "LYR",
+      "name": "Lyra",
+      "epithet": "The Lyre",
+      "raMin": 18.0, "raMax": 19.5,
+      "decMin": 25, "decMax": 47,
+      "stars": [
+        { "bayer": "α", "ra": 18.616, "dec": 38.78, "magnitude": 0.03 },
+        { "bayer": "β", "ra": 18.834, "dec": 33.36, "magnitude": 3.52 },
+        { "bayer": "γ", "ra": 18.982, "dec": 32.69, "magnitude": 3.24 },
+        { "bayer": "δ", "ra": 18.873, "dec": 36.90, "magnitude": 4.30 }
+      ],
+      "lines": [[0,3],[3,1],[1,2],[2,3]]
+    },
+    {
+      "abbr": "AQL",
+      "name": "Aquila",
+      "epithet": "The Eagle",
+      "raMin": 18.5, "raMax": 20.5,
+      "decMin": -5, "decMax": 19,
+      "stars": [
+        { "bayer": "α", "ra": 19.846, "dec":  8.87, "magnitude": 0.77 },
+        { "bayer": "β", "ra": 19.921, "dec":  6.41, "magnitude": 3.71 },
+        { "bayer": "γ", "ra": 19.771, "dec": 10.61, "magnitude": 2.72 },
+        { "bayer": "δ", "ra": 19.425, "dec":  3.11, "magnitude": 3.36 }
+      ],
+      "lines": [[2,0],[0,1],[0,3]]
+    },
+    {
+      "abbr": "BOO",
+      "name": "Boötes",
+      "epithet": "The Herdsman",
+      "raMin": 13.5, "raMax": 15.5,
+      "decMin": 7, "decMax": 55,
+      "stars": [
+        { "bayer": "α", "ra": 14.261, "dec": 19.18, "magnitude": -0.05 },
+        { "bayer": "β", "ra": 15.032, "dec": 40.39, "magnitude": 3.50 },
+        { "bayer": "γ", "ra": 14.534, "dec": 38.31, "magnitude": 3.03 },
+        { "bayer": "ε", "ra": 14.750, "dec": 27.07, "magnitude": 2.37 }
+      ],
+      "lines": [[0,3],[3,2],[2,1]]
+    },
+    {
+      "abbr": "GEM",
+      "name": "Gemini",
+      "epithet": "The Twins",
+      "raMin": 6.0, "raMax": 8.0,
+      "decMin": 10, "decMax": 35,
+      "stars": [
+        { "bayer": "α", "ra": 7.577, "dec": 31.89, "magnitude": 1.58 },
+        { "bayer": "β", "ra": 7.755, "dec": 28.03, "magnitude": 1.14 },
+        { "bayer": "γ", "ra": 6.629, "dec": 16.40, "magnitude": 1.93 },
+        { "bayer": "δ", "ra": 7.335, "dec": 21.98, "magnitude": 3.50 }
+      ],
+      "lines": [[0,3],[3,2],[1,3]]
+    },
+    {
+      "abbr": "CMA",
+      "name": "Canis Major",
+      "epithet": "The Greater Dog",
+      "raMin": 6.0, "raMax": 7.5,
+      "decMin": -33, "decMax": -11,
+      "stars": [
+        { "bayer": "α", "ra": 6.752, "dec": -16.71, "magnitude": -1.46 },
+        { "bayer": "β", "ra": 6.378, "dec": -17.96, "magnitude": 1.98 },
+        { "bayer": "δ", "ra": 7.139, "dec": -26.39, "magnitude": 1.83 },
+        { "bayer": "ε", "ra": 6.977, "dec": -28.97, "magnitude": 1.50 }
+      ],
+      "lines": [[1,0],[0,2],[2,3]]
+    },
+    {
+      "abbr": "TAU",
+      "name": "Taurus",
+      "epithet": "The Bull",
+      "raMin": 3.0, "raMax": 6.0,
+      "decMin": 0, "decMax": 30,
+      "stars": [
+        { "bayer": "α", "ra": 4.598, "dec": 16.51, "magnitude": 0.85 },
+        { "bayer": "β", "ra": 5.439, "dec": 28.61, "magnitude": 1.65 },
+        { "bayer": "ζ", "ra": 5.628, "dec": 21.14, "magnitude": 3.00 },
+        { "bayer": "γ", "ra": 4.330, "dec": 15.63, "magnitude": 3.65 }
+      ],
+      "lines": [[3,0],[0,2],[2,1]]
+    },
+    {
+      "abbr": "LEO",
+      "name": "Leo",
+      "epithet": "The Lion",
+      "raMin": 9.5, "raMax": 12.0,
+      "decMin": 0, "decMax": 33,
+      "stars": [
+        { "bayer": "α", "ra": 10.139, "dec": 11.97, "magnitude": 1.36 },
+        { "bayer": "β", "ra": 11.818, "dec": 14.57, "magnitude": 2.14 },
+        { "bayer": "γ", "ra": 10.333, "dec": 19.84, "magnitude": 2.01 },
+        { "bayer": "δ", "ra": 11.235, "dec": 20.52, "magnitude": 2.56 },
+        { "bayer": "ε", "ra":  9.764, "dec": 23.77, "magnitude": 2.97 }
+      ],
+      "lines": [[0,2],[2,4],[2,3],[3,1],[1,0]]
+    },
+    {
+      "abbr": "PEG",
+      "name": "Pegasus",
+      "epithet": "The Winged Horse",
+      "raMin": 21.0, "raMax": 24.0,
+      "decMin": 2, "decMax": 36,
+      "stars": [
+        { "bayer": "α", "ra": 23.079, "dec": 15.21, "magnitude": 2.49 },
+        { "bayer": "β", "ra": 23.063, "dec": 28.08, "magnitude": 2.42 },
+        { "bayer": "γ", "ra":  0.221, "dec": 15.18, "magnitude": 2.83 },
+        { "bayer": "ε", "ra": 21.736, "dec":  9.88, "magnitude": 2.39 }
+      ],
+      "lines": [[0,1],[1,2],[2,0],[0,3]]
+    }
+  ]
+}
