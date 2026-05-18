@@ -25,20 +25,20 @@
   let closeTimer = 0;
 
   function placeNear(anchor) {
+    // Card is position: fixed, so we work entirely in viewport coords.
     const r = anchor.getBoundingClientRect();
     const cardW = 320;
     const cardH = Math.round(320 * 1.618);
-    let left = r.right + window.scrollX + 12;
-    let top = r.top + window.scrollY - 4;
-    // viewport-edge collision: if the card would extend past viewport right,
-    // flip to the left of the anchor instead.
-    if (left + cardW > window.scrollX + window.innerWidth - 16) {
-      left = r.left + window.scrollX - cardW - 12;
+    let left = r.right + 12;
+    let top = r.top - 4;
+    if (left + cardW > window.innerWidth - 16) {
+      left = r.left - cardW - 12;
     }
-    // and clamp top so it doesn't run off the bottom
-    if (top + cardH > window.scrollY + window.innerHeight - 16) {
-      top = window.scrollY + window.innerHeight - cardH - 16;
+    if (left < 16) left = 16;
+    if (top + cardH > window.innerHeight - 16) {
+      top = window.innerHeight - cardH - 16;
     }
+    if (top < 16) top = 16;
     pos = { left, top };
   }
 
@@ -180,7 +180,7 @@
 
 <style>
   .atlas {
-    position: absolute;
+    position: fixed;
     width: 320px;
     aspect-ratio: 1 / var(--phi);
     background: var(--bg-raised);
