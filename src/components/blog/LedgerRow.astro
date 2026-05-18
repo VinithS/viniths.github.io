@@ -15,6 +15,7 @@ import ConstellationStamp from "./ConstellationStamp.astro";
 import AtlasCard from "./AtlasCard.svelte";
 import { POST_TYPE_LABEL, type PostType } from "../../lib/post-types";
 import { skyFor } from "../../lib/sky";
+import { slugHash } from "../../lib/slug-hash";
 
 interface Props {
   href: string;
@@ -31,8 +32,7 @@ const sky = skyFor(slug, date);
 const anchorId = `atlas-${slug}`;
 
 // rotation: hash slug to ±3deg
-let h = 0;
-for (let i = 0; i < slug.length; i++) h = (h * 31 + slug.charCodeAt(i)) >>> 0;
+const h = slugHash(slug);
 const rotation = (((h % 60) - 30) / 10).toFixed(1); // -3.0 .. +2.9 deg
 
 const dateLabel = date

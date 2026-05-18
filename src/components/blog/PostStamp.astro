@@ -17,6 +17,7 @@
 import ConstellationStamp from "./ConstellationStamp.astro";
 import { skyFor } from "../../lib/sky";
 import type { PostType } from "../../lib/post-types";
+import { slugHash } from "../../lib/slug-hash";
 
 interface Props {
   slug: string;
@@ -29,8 +30,7 @@ interface Props {
 const { slug, date, type, size = 240 } = Astro.props;
 const sky = skyFor(slug, date);
 
-let h = 0;
-for (let i = 0; i < slug.length; i++) h = (h * 31 + slug.charCodeAt(i)) >>> 0;
+const h = slugHash(slug);
 const rotation = (((h % 60) - 30) / 6).toFixed(1); // -5.0 .. +4.9 deg
 const offsetX = ((h >> 8) % 30) - 15; // small horizontal jitter
 ---
