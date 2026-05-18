@@ -1,0 +1,54 @@
+---
+/*
+  SectionTag — the pixel-pip + Silkscreen label that introduces a section
+  ("[ 01 ] Blog", "[ 02 ] Photos", etc). The accent color travels through
+  the pip; the text inherits muted ink. Class variants follow the
+  .btn--{red|yellow|blue|green} naming used in global.css.
+*/
+
+type Accent = "red" | "yellow" | "blue" | "green";
+
+interface Props {
+  number: string;
+  label: string;
+  accent: Accent;
+}
+
+const { number, label, accent } = Astro.props;
+---
+
+<div class:list={["section-tag", `section-tag--${accent}`]}>
+  <span class="sq"></span>
+  [ {number} ] &nbsp; {label}
+</div>
+
+<style>
+  .section-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-pixel);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .section-tag .sq {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    box-shadow: 0 0 0 2px var(--rule);
+  }
+  .section-tag--red .sq {
+    background: var(--red);
+  }
+  .section-tag--yellow .sq {
+    background: var(--yellow);
+  }
+  .section-tag--blue .sq {
+    background: var(--blue);
+  }
+  .section-tag--green .sq {
+    background: var(--green);
+  }
+</style>

@@ -1,6 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import Ledger from "../../components/blog/Ledger.astro";
+import SectionTag from "../../components/SectionTag.astro";
 import { getCollection } from "astro:content";
 import { featured } from "../../content/_data/featured";
 
@@ -22,10 +23,7 @@ const entries = [...featured, ...posts].sort(
 <Layout title="Blog - Vinith">
   <section class="band">
     <header class="section-head">
-      <div class="section-tag">
-        <span class="sq"></span>
-        [ 01 ] &nbsp; Blog
-      </div>
+      <SectionTag number="01" label="Blog" accent="red" />
       <h1>Recent posts.</h1>
     </header>
 
@@ -50,22 +48,5 @@ const entries = [...featured, ...posts].sort(
     font-size: clamp(32px, 4.5vw, 54px);
     letter-spacing: -0.025em;
     line-height: 1;
-  }
-  .section-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    font-family: var(--font-pixel);
-    font-size: 11px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--ink-muted);
-  }
-  .section-tag .sq {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    background: var(--red);
-    box-shadow: 0 0 0 2px var(--rule);
   }
 </style>

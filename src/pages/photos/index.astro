@@ -1,5 +1,6 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import SectionTag from "../../components/SectionTag.astro";
 import { getCollection } from "astro:content";
 
 const albums = await getCollection("photos");
@@ -8,10 +9,7 @@ const albums = await getCollection("photos");
 <Layout title="Photos - Vinith">
   <section class="band">
     <header class="section-head">
-      <div class="section-tag">
-        <span class="sq"></span>
-        [ 02 ] &nbsp; Photos
-      </div>
+      <SectionTag number="02" label="Photos" accent="green" />
       <h1>Albums.</h1>
     </header>
 
@@ -64,23 +62,6 @@ const albums = await getCollection("photos");
     font-size: clamp(32px, 4.5vw, 54px);
     letter-spacing: -0.025em;
     line-height: 1;
-  }
-  .section-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    font-family: var(--font-pixel);
-    font-size: 11px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--ink-muted);
-  }
-  .section-tag .sq {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    background: var(--green);
-    box-shadow: 0 0 0 2px var(--rule);
   }
 
   .albums {

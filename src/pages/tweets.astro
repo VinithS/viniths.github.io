@@ -1,5 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import SectionTag from "../components/SectionTag.astro";
 import { getCollection } from "astro:content";
 
 const tweets = (await getCollection("tweets")).sort(
@@ -12,10 +13,7 @@ const accents = ["red", "blue", "yellow", "green"] as const;
 <Layout title="Notes - Vinith">
   <section class="band">
     <header class="section-head">
-      <div class="section-tag">
-        <span class="sq"></span>
-        [ 03 ] &nbsp; Notes
-      </div>
+      <SectionTag number="03" label="Notes" accent="blue" />
       <h1>Scraps &amp; thoughts.</h1>
     </header>
 
@@ -60,23 +58,6 @@ const accents = ["red", "blue", "yellow", "green"] as const;
     font-size: clamp(32px, 4.5vw, 54px);
     letter-spacing: -0.025em;
     line-height: 1;
-  }
-  .section-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    font-family: var(--font-pixel);
-    font-size: 11px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--ink-muted);
-  }
-  .section-tag .sq {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    background: var(--blue);
-    box-shadow: 0 0 0 2px var(--rule);
   }
 
   .notes {
