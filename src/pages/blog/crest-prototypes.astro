@@ -135,7 +135,12 @@ const crests = [
 
     {
       crests.map((c) => (
-        <section class="proto" id={c.id}>
+        <section
+          class="proto"
+          id={c.id}
+          data-proto-section={c.accent ? c.id : undefined}
+          data-accent={c.accent || undefined}
+        >
           <header class="proto-head">
             <div class="proto-num">{c.number}</div>
             <h2 class="proto-title">{c.name}</h2>
@@ -185,19 +190,24 @@ const crests = [
               </figure>
 
               {c.accent && (
-                <div class="palette">
+                <div class="palette" data-palette={c.id}>
                   <div class="palette-label">
                     <span class="palette-label-k">Accent</span>
-                    <span class="palette-label-v">{c.accent}</span>
+                    <span class="palette-label-v" data-palette-current>{c.accent}</span>
                   </div>
                   <div class="palette-row">
                     {ACCENTS.map((a) => (
-                      <div class:list={["palette-cell", a === c.accent && "is-current"]}>
+                      <button
+                        type="button"
+                        class:list={["palette-cell", a === c.accent && "is-current"]}
+                        data-set-accent={a}
+                        aria-label={`Set accent to ${a}`}
+                      >
                         {c.id === "lagrangian" && <CrestLagrangian size={28} accent={a} />}
                         {c.id === "observer" && <CrestObserver size={28} accent={a} />}
                         {c.id === "sidereal" && <CrestSidereal size={28} accent={a} />}
                         <span class="palette-tick">{a.charAt(0).toUpperCase()}</span>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -227,6 +237,63 @@ const crests = [
     </footer>
   </article>
 </Layout>
+
+<script>
+  /*
+    Accent picker. Each accentable .proto section carries a data-accent
+    that mirrors the live accent. Clicking a palette cell:
+      - swaps the `.crest--{old}` class for `.crest--{new}` on every
+        .crest inside this section (the masthead 44px and the 96px
+        specimen plate both pick up the change),
+      - updates the section's data-accent so the proto-title color and
+        any other parent-driven styles re-derive,
+      - retargets `.is-current` to the chosen palette cell and rewrites
+        the "Accent" label text.
+    Localized to this section — clicking accents in one prototype
+    doesn't bleed into the others.
+  */
+  type Accent = "red" | "yellow" | "blue" | "green";
+  const ACCENT_CLASSES = ["crest--red", "crest--yellow", "crest--blue", "crest--green"];
+
+  document
+    .querySelectorAll<HTMLElement>("[data-proto-section]")
+    .forEach((section) => {
+      const cells = Array.from(
+        section.querySelectorAll<HTMLButtonElement>("[data-set-accent]"),
+      );
+      const labelEl = section.querySelector<HTMLElement>(
+        "[data-palette-current]",
+      );
+
+      // Repaint targets: the masthead crest + the 96px specimen plate
+      // only. Swatches inside .palette-row are reference samples and
+      // must stay fixed at their own colors.
+      const targets = Array.from(
+        section.querySelectorAll<HTMLElement>(
+          ".proto-card-stage > * .crest, .specimen-plate .crest",
+        ),
+      );
+
+      const setAccent = (next: Accent) => {
+        section.dataset.accent = next;
+        targets.forEach((el) => {
+          ACCENT_CLASSES.forEach((c) => el.classList.remove(c));
+          el.classList.add(`crest--${next}`);
+        });
+        cells.forEach((c) =>
+          c.classList.toggle("is-current", c.dataset.setAccent === next),
+        );
+        if (labelEl) labelEl.textContent = next;
+      };
+
+      cells.forEach((cell) => {
+        cell.addEventListener("click", () => {
+          const next = cell.dataset.setAccent as Accent | undefined;
+          if (next) setAccent(next);
+        });
+      });
+    });
+</script>
 
 <style>
   /* =========================================================
@@ -403,7 +470,15 @@ const crests = [
     letter-spacing: -0.015em;
     color: var(--ink);
     line-height: 1;
+    transition: color 0.18s ease;
   }
+  /* When a section has a live accent, the heading takes on that
+     color. The accent picker writes data-accent on the section, so
+     clicking a swatch repaints the title in the same beat. */
+  .proto[data-accent="red"]    .proto-title { color: var(--red); }
+  .proto[data-accent="yellow"] .proto-title { color: var(--yellow); }
+  .proto[data-accent="blue"]   .proto-title { color: var(--blue); }
+  .proto[data-accent="green"]  .proto-title { color: var(--green); }
   .proto-blurb {
     font-family: var(--font-serif);
     font-variation-settings:
@@ -497,6 +572,11 @@ const crests = [
     aspect-ratio: 1;
     background: var(--bg-inset);
     border: 1px solid var(--rule-soft);
+    /* Reset button defaults — these palette cells used to be <div>s. */
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
     transition:
       transform 0.12s ease,
       border-color 0.12s ease;
