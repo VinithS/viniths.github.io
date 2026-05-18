@@ -9,8 +9,12 @@
 
 import Layout from "../../layouts/Layout.astro";
 import Stamper from "../../components/Stamper.svelte";
+import PostStamp from "../../components/blog/PostStamp.astro";
+import { featured } from "../../content/_data/featured";
 
-const POST_DATE = new Date();
+const SLUG = "stamp-prototypes";
+const META = featured.find((f) => f.slug === SLUG)!;
+const POST_DATE = META.date;
 const POST_DATE_LABEL = POST_DATE.toLocaleDateString("en-US", {
   year: "numeric",
   month: "long",
@@ -68,6 +72,7 @@ const prototypes = [
     <a href="/blog" class="back">&larr; BACK</a>
 
     <header class="post-head">
+      <PostStamp slug={SLUG} date={POST_DATE} type={META.type} />
       <div class="post-kicker">
         <span class="post-kicker-tag">Interactive</span>
         <span class="post-kicker-dot">·</span>
@@ -134,7 +139,16 @@ const prototypes = [
   }
 
   .post-head {
+    position: relative;
+    isolation: isolate;
     margin-bottom: 48px;
+  }
+  .post-head > :global(.post-kicker),
+  .post-head > .post-title,
+  .post-head > .post-lede,
+  .post-head > .post-meta {
+    position: relative;
+    z-index: 1;
   }
   .post-kicker {
     display: inline-flex;

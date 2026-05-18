@@ -1,8 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import { getCollection, render } from "astro:content";
-import ConstellationStamp from "../../components/blog/ConstellationStamp.astro";
-import { skyFor } from "../../lib/sky";
+import PostStamp from "../../components/blog/PostStamp.astro";
 
 export async function getStaticPaths() {
   const posts = await getCollection("blog");
@@ -14,17 +13,14 @@ export async function getStaticPaths() {
 
 const { post } = Astro.props;
 const { Content } = await render(post);
-const sky = skyFor(post.id, post.data.date);
 ---
 
 <Layout title={`${post.data.title} - Vinith`}>
   <article class="post">
     <a href="/blog" class="back">&larr; BACK</a>
-    <header>
+    <header class="post-head">
+      <PostStamp slug={post.id} date={post.data.date} type={post.data.type} />
       <h1>{post.data.title}</h1>
-      <div class="post-stamp" aria-hidden="true">
-        <ConstellationStamp sky={sky} variant="mark" type={post.data.type} />
-      </div>
       <div class="meta">
         <span class="writing-date">
           {
@@ -72,7 +68,13 @@ const sky = skyFor(post.id, post.data.date);
     color: var(--ink);
   }
 
-  header h1 {
+  .post-head {
+    position: relative;
+    isolation: isolate;
+  }
+  .post-head h1 {
+    position: relative;
+    z-index: 1;
     font-family: var(--font-serif);
     font-variation-settings:
       "opsz" 72,
@@ -83,12 +85,14 @@ const sky = skyFor(post.id, post.data.date);
     letter-spacing: -0.025em;
     margin-bottom: 18px;
   }
-  header h1 em {
+  .post-head h1 em {
     font-style: italic;
     color: var(--em);
   }
 
   .meta {
+    position: relative;
+    z-index: 1;
     display: flex;
     align-items: center;
     gap: 14px;
@@ -214,9 +218,4 @@ const sky = skyFor(post.id, post.data.date);
     margin: 40px 0;
   }
 
-  .post-stamp {
-    width: 56px;
-    margin-bottom: 18px;
-    transform: rotate(-2deg);
-  }
 </style>

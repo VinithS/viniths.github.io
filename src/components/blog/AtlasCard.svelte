@@ -2,13 +2,13 @@
   /*
     AtlasCard — hover popover anchored to a constellation stamp.
 
-    1 : phi portrait paper card.
+    Compact paper card sized by content (no aspect-ratio lock):
+      - Pixel status bar with a pip in the post-type accent
+      - The Sky rendered larger
+      - A name plate beneath the diagram
 
-    Top: pixel status bar.
-    Middle: the same Sky rendered larger (no name on the diagram itself —
-            the name plate sits below the diagram so the diagram is
-            visually quiet).
-    Bottom: 3-cell data row (RA·DEC, Stars/Span, Brightest).
+    Bottom data row + foot were removed — the visual is the point;
+    the metrics live elsewhere if anyone wants them.
 
     Open/close behavior:
       - opens on hover or focus of an element with `data-atlas-anchor` matching this card's id
@@ -17,18 +17,21 @@
   */
   import { onMount } from "svelte";
 
-  let { sky, anchorId } = $props();
+  let { sky, anchorId, type = "essay" } = $props();
 
   let open = $state(false);
   let pos = $state({ left: 0, top: 0 });
-  let cardEl;
+  let cardEl = $state(null);
   let closeTimer = 0;
 
   function placeNear(anchor) {
     // Card is position: fixed, so we work entirely in viewport coords.
+    // Height is content-driven now, so we measure the card after open
+    // when we can; for the first paint we fall back to a conservative
+    // estimate so the placement doesn't jump.
     const r = anchor.getBoundingClientRect();
-    const cardW = 320;
-    const cardH = Math.round(320 * 1.618);
+    const cardW = 280;
+    const cardH = cardEl?.offsetHeight ?? 360;
     let left = r.right + 12;
     let top = r.top - 4;
     if (left + cardW > window.innerWidth - 16) {
@@ -80,21 +83,25 @@
 
 {#if open}
   <div
-    class="atlas"
+    class={`atlas atlas--${type}`}
     class:atlas--open={open}
     style={`left:${pos.left}px; top:${pos.top}px;`}
     bind:this={cardEl}
     onmouseenter={onCardEnter}
     onmouseleave={onCardLeave}
     role="dialog"
+    tabindex="-1"
     aria-label={sky.named ? sky.name : sky.designation}
   >
     <div class="status">
-      <span><span class="pip" class:pip--alt={!sky.named}></span>Sky &middot; Seattle</span>
+      <span><span class="pip"></span>Sky &middot; Seattle</span>
       <span>22 : 14 PT</span>
     </div>
 
     <div class="diagram">
+      <!-- Drawing coords are 0–200. The catalog projection now uses a
+           tight 12px margin so the constellation fills the canvas; the
+           sky is densified with ~22 field stars. -->
       <svg viewBox="0 0 200 200" preserveAspectRatio="xMidYMid meet">
         <g filter="url(#rubber-ink-solid)" fill="var(--ink)" stroke="var(--ink)">
           {#each sky.fieldStars as s}
@@ -131,49 +138,16 @@
     </div>
 
     <div class="name-plate">
-      <svg viewBox="0 0 250 70">
+      <svg viewBox="0 0 250 56">
         <g filter="url(#rubber-ink-solid)" fill="var(--ink)" stroke="var(--ink)">
-          <line x1="20" y1="14" x2="230" y2="14" stroke="var(--ink)" stroke-width="1.3" />
-          <text x="125" y="46" text-anchor="middle"
-                style="font-family: var(--font-serif); font-style: italic; font-variation-settings: 'opsz' 60, 'SOFT' 70, 'wght' 700; font-size: 30px; letter-spacing: 0.18em; fill: var(--ink);">
+          <line x1="22" y1="11" x2="228" y2="11" stroke="var(--ink)" stroke-width="1.1" />
+          <text x="125" y="36" text-anchor="middle"
+                style="font-family: var(--font-serif); font-style: italic; font-variation-settings: 'opsz' 60, 'SOFT' 70, 'wght' 700; font-size: 20px; letter-spacing: 0.18em; fill: var(--ink);">
             {sky.named ? sky.name?.toUpperCase() : sky.designation}
           </text>
-          <line x1="20" y1="58" x2="230" y2="58" stroke="var(--ink)" stroke-width="1.3" />
+          <line x1="22" y1="46" x2="228" y2="46" stroke="var(--ink)" stroke-width="1.1" />
         </g>
       </svg>
-    </div>
-
-    <dl class="data">
-      <div class="cell">
-        <dt>RA &middot; DEC</dt>
-        <dd>
-          <span class="stack">
-            <span>{String(sky.raHours).padStart(2, "0")}<sup>h</sup>{" "}{String(sky.raMinutes).padStart(2, "0")}<sup>m</sup></span>
-            <span>{sky.decDegrees >= 0 ? "+" : "−"}{Math.abs(sky.decDegrees)}<sup>°</sup>{" "}{sky.decMinutes}<sup>′</sup></span>
-          </span>
-        </dd>
-      </div>
-      {#if sky.named}
-        <div class="cell">
-          <dt>Stars</dt>
-          <dd>{sky.starsInPatch}</dd>
-        </div>
-      {:else}
-        <div class="cell">
-          <dt>Span</dt>
-          <dd>{sky.spanDegrees}<sup>°</sup></dd>
-        </div>
-      {/if}
-      <div class="cell">
-        <dt>Brightest</dt>
-        <dd>{sky.brightest.display}</dd>
-        <div class="mag">{sky.brightest.magnitude.toFixed(2)}<sup>m</sup></div>
-      </div>
-    </dl>
-
-    <div class="foot">
-      <span>Frozen sky</span>
-      <span>Recorded</span>
     </div>
   </div>
 {/if}
@@ -181,14 +155,15 @@
 <style>
   .atlas {
     position: fixed;
-    width: 320px;
-    aspect-ratio: 1 / var(--phi);
+    width: 280px;
     background: var(--bg-raised);
     border: 2px solid var(--rule);
     box-shadow: 5px 5px 0 var(--rule);
-    padding: 18px 20px;
+    padding: 14px 14px 16px;
     color: var(--ink);
-    z-index: 60;
+    /* Above the footer (which sits in the body's main z-index: 2 layer)
+       and above the sticky nav (z-index: 50). */
+    z-index: 100;
     display: flex;
     flex-direction: column;
     opacity: 0;
@@ -204,80 +179,39 @@
 
   .status {
     display: flex; justify-content: space-between; align-items: center;
-    padding-bottom: 9px;
+    padding-bottom: 8px;
     border-bottom: 1px solid var(--rule-soft);
     font-family: var(--font-pixel);
     font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
     color: var(--ink-muted);
-    margin-bottom: 14px;
+    margin-bottom: 12px;
   }
   .status .pip {
     display: inline-block; width: 7px; height: 7px;
     box-shadow: 0 0 0 1px var(--rule);
     margin-right: 8px; vertical-align: middle;
-    background: var(--green);
+    background: var(--ink);
   }
-  .status .pip--alt { background: var(--red); }
+  /* Match the ledger row's accent. The four post types match the
+     four canonical accents (essay=red, prototype=yellow, note=blue,
+     photo=green). */
+  .atlas--essay     .status .pip { background: var(--type-essay); }
+  .atlas--prototype .status .pip { background: var(--type-prototype); }
+  .atlas--note      .status .pip { background: var(--type-note); }
+  .atlas--photo     .status .pip { background: var(--type-photo); }
 
   .diagram {
     width: 100%; aspect-ratio: 1 / 1;
-    margin-bottom: 14px;
+    margin-bottom: 8px;
   }
   .diagram svg { width: 100%; height: 100%; display: block; }
 
   .name-plate {
-    width: 86%;
-    aspect-ratio: 5 / 1.4;
-    margin: 0 auto 14px;
+    width: 84%;
+    aspect-ratio: 250 / 56;
+    margin: 0 auto;
     transform: rotate(-1.6deg);
     filter: drop-shadow(1px 1.5px 0 rgba(28,24,20,0.10));
   }
   .name-plate svg { width: 100%; height: 100%; display: block; }
-
-  .data {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    padding-top: 12px;
-    border-top: 1px solid var(--rule-soft);
-    margin: auto 0 0; /* push to bottom of phi frame */
-  }
-  .data .cell {
-    padding: 8px;
-    border-right: 1px solid var(--rule-xsoft);
-    text-align: center;
-    display: flex; flex-direction: column; align-items: center;
-  }
-  .data .cell:last-child { border-right: 0; }
-  .data dt {
-    font-family: var(--font-pixel);
-    font-size: 8px; letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--ink-muted);
-    margin: 0 0 4px;
-  }
-  .data dd {
-    margin: 0;
-    font-family: var(--font-serif);
-    font-variation-settings: 'opsz' 18, 'SOFT' 50, 'wght' 500;
-    font-size: 14px; color: var(--ink);
-    line-height: 1.2;
-    font-feature-settings: "tnum" 1, "lnum" 1;
-  }
-  .data sup {
-    font-size: 0.62em; color: var(--ink-muted);
-    margin-left: 1px; margin-right: 2px;
-    vertical-align: 0.32em; letter-spacing: 0.05em;
-  }
-  .data .stack { display: grid; gap: 1px; line-height: 1.05; font-size: 13px; }
-  .data .mag { font-size: 11.5px; color: var(--ink-muted); margin-top: 2px; }
-
-  .foot {
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid var(--rule-soft);
-    font-family: var(--font-pixel);
-    font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
-    color: var(--ink-muted);
-    display: flex; justify-content: space-between;
-  }
 </style>

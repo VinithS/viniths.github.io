@@ -1,7 +1,7 @@
 ---
 /*
-  Ledger — the wrapping list of LedgerRow. Applies .paper-crease so
-  a faint horizontal fold runs across the rows.
+  Ledger — the wrapping list of LedgerRow. Each row carries its own
+  engraved-crease separator on its top border (see LedgerRow).
 */
 
 import LedgerRow from "./LedgerRow.astro";
@@ -24,7 +24,7 @@ interface Props {
 const { entries } = Astro.props;
 ---
 
-<ul class="ledger paper-crease">
+<ul class="ledger">
   {entries.map((e) => <LedgerRow {...e} />)}
 </ul>
 

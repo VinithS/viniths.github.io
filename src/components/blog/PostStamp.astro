@@ -1,0 +1,71 @@
+---
+/*
+  PostStamp — a constellation stamp pressed across the post header.
+
+  Sits absolutely positioned over the title's leading area at low
+  opacity, slightly rotated and offset so it reads like a librarian
+  pressed a sky-mark onto the journal page. Inherits the post-type ink
+  colour. The post chrome (title, meta) stacks above it via z-index.
+
+  Rendered as a stamp-only "mark" variant (square, no name plate) — the
+  page's own h1 carries the title.
+
+  Wrap a header in `<div class="stamped-head">` and place this component
+  + the existing header inside; the stamp becomes the page's first ink.
+*/
+
+import ConstellationStamp from "./ConstellationStamp.astro";
+import { skyFor } from "../../lib/sky";
+import type { PostType } from "../../lib/post-types";
+
+interface Props {
+  slug: string;
+  date: Date;
+  type: PostType;
+  /** size in px; default 240 */
+  size?: number;
+}
+
+const { slug, date, type, size = 240 } = Astro.props;
+const sky = skyFor(slug, date);
+
+let h = 0;
+for (let i = 0; i < slug.length; i++) h = (h * 31 + slug.charCodeAt(i)) >>> 0;
+const rotation = (((h % 60) - 30) / 6).toFixed(1); // -5.0 .. +4.9 deg
+const offsetX = ((h >> 8) % 30) - 15; // small horizontal jitter
+---
+
+<div
+  class="page-stamp"
+  aria-hidden="true"
+  style={`--stamp-size:${size}px; --stamp-rotation:${rotation}deg; --stamp-offset-x:${offsetX}px;`}
+>
+  <ConstellationStamp sky={sky} variant="mark" type={type} />
+</div>
+
+<style>
+  .page-stamp {
+    position: absolute;
+    width: var(--stamp-size);
+    height: var(--stamp-size);
+    top: -32px;
+    left: var(--stamp-offset-x);
+    transform: rotate(var(--stamp-rotation));
+    opacity: 0.34;
+    pointer-events: none;
+    z-index: 0;
+  }
+  @media (max-width: 720px) {
+    .page-stamp {
+      width: calc(var(--stamp-size) * 0.7);
+      height: calc(var(--stamp-size) * 0.7);
+      top: -20px;
+      opacity: 0.28;
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .page-stamp {
+      transition: opacity 0.6s ease;
+    }
+  }
+</style>

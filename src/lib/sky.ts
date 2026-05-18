@@ -34,7 +34,9 @@ function projectInto(
   star: { ra: number; dec: number },
   bounds: Pick<CatalogEntry, "raMin" | "raMax" | "decMin" | "decMax">,
 ): { x: number; y: number } {
-  const margin = 30; // leave room for borders + labels
+  // 12px ≈ 6% on each side. Bayer labels are placed at +8/+4 from the
+  // star, which leaves room before they collide with the canvas edge.
+  const margin = 12;
   const usable = VIEWBOX - 2 * margin;
   const fx = (star.ra - bounds.raMin) / Math.max(0.0001, bounds.raMax - bounds.raMin);
   const fy = 1 - (star.dec - bounds.decMin) / Math.max(0.0001, bounds.decMax - bounds.decMin);
@@ -48,9 +50,9 @@ function pickFieldStars(rng: () => number, count: number) {
   const stars: { x: number; y: number; r: number }[] = [];
   for (let i = 0; i < count; i++) {
     stars.push({
-      x: 16 + rng() * (VIEWBOX - 32),
-      y: 16 + rng() * (VIEWBOX - 32),
-      r: 0.4 + rng() * 0.5,
+      x: 6 + rng() * (VIEWBOX - 12),
+      y: 6 + rng() * (VIEWBOX - 12),
+      r: 0.35 + rng() * 0.7,
     });
   }
   return stars;
@@ -69,7 +71,7 @@ function namedSky(c: CatalogEntry, _date: Date, rng: () => number): Sky {
   const decMinutes = Math.abs(Math.round((center.dec - decDegrees) * 60));
   return {
     stars,
-    fieldStars: pickFieldStars(rng, 9),
+    fieldStars: pickFieldStars(rng, 22),
     lines: c.lines as [number, number][],
     anchor,
     named: true,
@@ -91,7 +93,7 @@ function namedSky(c: CatalogEntry, _date: Date, rng: () => number): Sky {
 function anomalousSky(rng: () => number, raHours: number, decDegrees: number): Sky {
   const count = 6 + Math.floor(rng() * 4); // 6..9 visible stars
   const stars: Star[] = [];
-  const margin = 36;
+  const margin = 18;
   for (let i = 0; i < count; i++) {
     stars.push({
       x: margin + rng() * (VIEWBOX - 2 * margin),
@@ -117,7 +119,7 @@ function anomalousSky(rng: () => number, raHours: number, decDegrees: number): S
 
   return {
     stars,
-    fieldStars: pickFieldStars(rng, 9),
+    fieldStars: pickFieldStars(rng, 22),
     lines,
     anchor,
     named: false,

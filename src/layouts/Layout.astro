@@ -287,6 +287,11 @@ const showSandbox = import.meta.env.DEV;
     margin: 0 auto;
     padding: 48px 32px 72px;
     min-height: calc(100vh - var(--nav-height) - 100px);
+    /* Lift main above .foot. Both inherit z-index:2 from the
+       body > * rule in global.css, so without this the footer wins
+       on source order and overlays fixed/absolute children of main
+       (e.g. the AtlasCard popover). */
+    z-index: 3;
   }
 
   .foot {

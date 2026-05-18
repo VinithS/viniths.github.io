@@ -63,7 +63,7 @@ const dateLabel = date
   </div>
 </li>
 
-<AtlasCard sky={sky} anchorId={anchorId} client:idle />
+<AtlasCard sky={sky} anchorId={anchorId} type={type} client:idle />
 
 <style>
   .row {
@@ -74,10 +74,46 @@ const dateLabel = date
     gap: 22px;
     align-items: start;
     padding: 18px 4px;
-    border-top: 1px solid var(--rule-soft);
     list-style: none;
   }
-  .row:last-of-type { border-bottom: 1px solid var(--rule-soft); }
+  /* Engraved separator: shadow line + highlight line stacked, fading
+     out toward each end. Lives on the row's top edge so every entry
+     carries one; :first-child is suppressed so the first row doesn't
+     pick up a separator at the top. The :last-of-type rule mirrors
+     the same crease at the bottom of the final row. */
+  .row::before,
+  .row::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    pointer-events: none;
+  }
+  .row::before {
+    top: 0;
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      var(--crease-shadow) 12%,
+      var(--crease-shadow) 88%,
+      transparent 100%
+    );
+  }
+  .row::after {
+    top: 1px;
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      var(--crease-highlight) 12%,
+      var(--crease-highlight) 88%,
+      transparent 100%
+    );
+  }
+  .row:first-child::before,
+  .row:first-child::after {
+    display: none;
+  }
 
   .anchor {
     display: block;
