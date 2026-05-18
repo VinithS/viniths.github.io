@@ -61,11 +61,13 @@ Pushes to `main` trigger `.github/workflows/deploy.yml`, which runs `npm ci && n
 
 Defined in `src/content.config.ts` with Zod schemas enforced at build time:
 
-- **`blog`** — Markdown under `src/content/blog/*.md` (glob loader). Frontmatter: `title`, `date`, `description`, `tags?`. Rendered via `render(entry)` on `[slug].astro`.
+- **`blog`** — Markdown under `src/content/blog/*.md` (glob loader). Frontmatter: `title`, `date`, `description`, `tags?`, `type?` (`"essay" | "prototype" | "note"`, default `"essay"`). The `type` field drives the per-row accent color on the ledger via `--type-essay/--type-prototype/--type-note` tokens — see `src/lib/post-types.ts`. Rendered via `render(entry)` on `[slug].astro`.
 - **`tweets`** — `src/content/tweets.json` (file loader). `{ date, text }`, `text` max 250 chars. Listed on `/tweets`.
 - **`photos`** — `src/content/photos.json` (file loader). Each album: `{ title, description, cover, images: [{src, alt}] }`. `/photos` shows album tiles; `/photos/[album]` renders via the `PhotoViewer` Svelte island.
 
 Adding content: drop the file into the right `src/content/` path; schema and existing routes pick it up. Adding a new collection type: register it in `src/content.config.ts` and re-export from `collections`.
+
+**Prototype pages (interactive demos) appear in the ledger alongside markdown posts.** Any `src/pages/blog/*-prototypes.astro` page that exports a `meta` const (matching `FeaturedEntry` in `src/content/_data/featured.ts`) is auto-discovered via `import.meta.glob` and merged with the `blog` collection on `/blog`. There is no manual registry — adding a new prototype means creating the page and exporting `meta`. Don't hand-edit `featured.ts` to add entries.
 
 ### Components
 
@@ -74,6 +76,16 @@ Adding content: drop the file into the right `src/content/` path; schema and exi
 - `src/components/primitives/` and `src/components/crests/` hold small building blocks (ornamental SVGs, shared UI primitives) — reuse these before inventing new ones.
 - `crests/CrestBlackHole.astro` is the **crest** — only use it where an institutional seal belongs (identity pages, mastheads). Don't scatter decoratively. See `DESIGN.md` → "Scale: the emergent-observer frame."
 - `src/lib/` — Plain TypeScript utilities (e.g. `obfuscate.ts`). Not Svelte/Astro; importable from anywhere. Add new pure helpers here rather than co-locating with a single component.
+
+### Tag atlas (`/blog`)
+
+The "sky atlas" pane on `/blog` is a deterministic 2D tag-graph chart:
+
+- `src/lib/cosmos.ts` — `tagGraphFrom(posts)` builds nodes (one per tag, with `magnitude` and `halo` buckets driven by post count and recency) and edges (co-tag weights).
+- `src/lib/atlas/layout.ts` — force-directed layout (Coulomb repulsion + Hooke springs along edges + weak central drift). Seeded from `src/lib/sky/seed.ts`, so positions are **stable across builds** — the atlas does not jitter between renders.
+- `src/components/atlas/AtlasPane.svelte` — the island. Dispatches `cosmos:select` on `document` with `detail.slug = string | null` when the user picks a tag. The inline `<script>` in `src/pages/blog/index.astro` listens and shows/hides ledger rows by reading their `.tag-pixel` children.
+
+If you change the layout algorithm or seeding, expect every tag to move — verify the chart still reads as filaments-with-clusters and the seed remains deterministic.
 
 ### Styling & tokens
 
