@@ -3,6 +3,7 @@ title: From scripts to toolbox
 date: 2026-05-12
 description: Scripts used to be the ceiling of what a weekend of tooling work bought you. Now it's a keyboard-driven terminal app.
 tags: [vibe-coding, rust, tui, tools]
+type: essay
 ---
 
 I work on AWS's Agent Registry. And like every AWS console, ours is no differe. To inspect a registry, tweak a record, or kick off a lifecycle action, I federate, wait, click, wait, click, and click some more. Fifteen clicks to do the thing I just built. I spend twelve hours a day in a terminal why not more?
