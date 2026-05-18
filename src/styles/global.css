@@ -41,6 +41,10 @@
   --signal:        var(--green);
   --toggle-dot:    var(--yellow);
 
+  /* --- Crease (subtle paper fold) --- */
+  --crease-shadow:    rgba(28,24,20,0.10);
+  --crease-highlight: rgba(255,250,234,0.45);
+
   /* --- Grain overlay tuning --- */
   --grain-blend:   multiply;
   --grain-opacity: 0.32;
@@ -79,6 +83,10 @@
   --signal:        var(--green);
   --toggle-dot:    var(--blue);
 
+  /* --- Crease (subtle paper fold) --- */
+  --crease-shadow:    rgba(0,0,0,0.30);
+  --crease-highlight: rgba(237,228,206,0.18);
+
   /* --- Grain overlay tuning --- */
   --grain-blend:   screen;
   --grain-opacity: 0.22;
@@ -93,6 +101,17 @@
   --max-width: 1080px;
   --nav-height: 64px;
   --radius: 0;
+
+  /* Proportion (DESIGN.md → Proportion: golden ratio) */
+  --phi: 1.618;
+
+  /* Post-type → accent (semantic aliases of the existing accent palette).
+     Themes inherit automatically because --red/--yellow/--blue/--green
+     are rebound per theme in the blocks above. */
+  --type-essay:     var(--red);
+  --type-prototype: var(--yellow);
+  --type-note:      var(--blue);
+  --type-photo:     var(--green);
 }
 
 /* --- Reset --- */
@@ -262,4 +281,40 @@ img { display: block; max-width: 100%; }
 }
 @media (prefers-reduced-motion: reduce) {
   .reveal { animation: none !important; opacity: 1 !important; transform: none !important; }
+}
+
+/* Paper-crease: a faint horizontal fold across an element's midline.
+   Applied to the ledger so a row of entries reads like one folded page. */
+.paper-crease {
+  position: relative;
+}
+.paper-crease::before,
+.paper-crease::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  pointer-events: none;
+  z-index: 0;
+}
+.paper-crease::before {
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    var(--crease-shadow) 12%,
+    var(--crease-shadow) 88%,
+    transparent 100%
+  );
+  transform: translateY(-1px);
+}
+.paper-crease::after {
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    var(--crease-highlight) 12%,
+    var(--crease-highlight) 88%,
+    transparent 100%
+  );
 }
