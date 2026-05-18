@@ -381,9 +381,6 @@
     letter-spacing: 0.1em;
     color: var(--red);
   }
-  .chip--mystery .chip-thumb {
-    background: var(--bg-inset);
-  }
   .chip-glyph {
     font-family: var(--font-serif);
     font-variation-settings: "wght" 700;
