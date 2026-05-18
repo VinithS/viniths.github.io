@@ -13,6 +13,7 @@ import Layout from "../../layouts/Layout.astro";
 import PrototypeMasthead from "../../components/crests/PrototypeMasthead.astro";
 import PostStamp from "../../components/blog/PostStamp.astro";
 import { featured } from "../../content/_data/featured";
+import { formatPostDate } from "../../lib/format-date";
 
 const SLUG = "crest-prototypes";
 const META = featured.find((f) => f.slug === SLUG)!;
@@ -23,11 +24,7 @@ import CrestObserver from "../../components/crests/CrestObserver.astro";
 import CrestSidereal from "../../components/crests/CrestSidereal.astro";
 
 const POST_DATE = new Date("2026-04-30");
-const POST_DATE_LABEL = POST_DATE.toLocaleDateString("en-US", {
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-});
+const POST_DATE_LABEL = formatPostDate(POST_DATE);
 
 const ACCENTS = ["red", "yellow", "blue", "green"] as const;
 
