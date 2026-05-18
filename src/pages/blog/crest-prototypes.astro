@@ -11,9 +11,8 @@
 
 import Layout from "../../layouts/Layout.astro";
 import PrototypeMasthead from "../../components/crests/PrototypeMasthead.astro";
-import PostStamp from "../../components/blog/PostStamp.astro";
+import PrototypePostShell from "../../components/blog/PrototypePostShell.astro";
 import type { FeaturedEntry } from "../../content/_data/featured";
-import { formatPostDate } from "../../lib/format-date";
 
 import CrestBlackHole from "../../components/crests/CrestBlackHole.astro";
 import CrestLagrangian from "../../components/crests/CrestLagrangian.astro";
@@ -30,8 +29,6 @@ export const meta: FeaturedEntry = {
   type: "prototype",
   tags: ["design", "svg", "css"],
 };
-
-const POST_DATE_LABEL = formatPostDate(meta.date);
 
 const ACCENTS = ["red", "yellow", "blue", "green"] as const;
 
@@ -93,38 +90,19 @@ const crests = [
 ---
 
 <Layout title="Crest prototypes — Vinith">
-  <article class="post">
-    <a href="/blog" class="back">&larr; BACK</a>
-
-    <header class="post-head">
-      <PostStamp slug={meta.slug} date={meta.date} type={meta.type} />
-      <div class="post-kicker">
-        <span class="post-kicker-tag">Specimen</span>
-        <span class="post-kicker-dot">·</span>
-        <span>Four crests</span>
-      </div>
-      <h1 class="post-title">
-        Crest <em>prototypes</em>
-      </h1>
-      <div class="post-meta">
-        <span class="post-date">{POST_DATE_LABEL}</span>
-        <span class="tag-pixel">design</span>
-        <span class="tag-pixel">svg</span>
-        <span class="tag-pixel">css</span>
-      </div>
-    </header>
-
-    <div class="post-lede">
+  <PrototypePostShell meta={meta} kickerTag="Specimen" kickerTrail="Four crests">
+    <Fragment slot="title">Crest <em>prototypes</em></Fragment>
+    <Fragment slot="lede">
       <p>
         Four crests for four made-up bureaus. Each is a 40×40 SVG drawn as
         <code>&lt;rect&gt;</code> primitives with <code>shape-rendering:&nbsp;crispEdges</code>,
         every fill pinned to a theme token — three ink tiers (<code>--ink</code>,
         <code>--ink-soft</code>, <code>--ink-muted</code>) plus one accent slot. No per-theme
         overrides: each crest tracks light/dark via the tokens it inherits, and the
-        <code>accent</code> prop swaps <code>--red/--yellow/--blue/--green</code> for the
-        institution it serves.
+        <code>accent</code> prop swaps <code>--red/--yellow/--blue/--green</code> for the institution
+        it serves.
       </p>
-    </div>
+    </Fragment>
 
     <nav class="post-nav" aria-label="Crest index">
       {
@@ -164,12 +142,8 @@ const crests = [
                 {c.id === "lagrangian" && (
                   <CrestLagrangian slot="crest" size={44} accent={c.accent!} />
                 )}
-                {c.id === "observer" && (
-                  <CrestObserver slot="crest" size={44} accent={c.accent!} />
-                )}
-                {c.id === "sidereal" && (
-                  <CrestSidereal slot="crest" size={44} accent={c.accent!} />
-                )}
+                {c.id === "observer" && <CrestObserver slot="crest" size={44} accent={c.accent!} />}
+                {c.id === "sidereal" && <CrestSidereal slot="crest" size={44} accent={c.accent!} />}
 
                 <div class="serial">
                   <span class="serial-k">Doc</span>
@@ -185,9 +159,7 @@ const crests = [
               <figure class="specimen-hero">
                 <div class="specimen-plate">
                   {c.id === "blackhole" && <CrestBlackHole size={96} />}
-                  {c.id === "lagrangian" && (
-                    <CrestLagrangian size={96} accent={c.accent!} />
-                  )}
+                  {c.id === "lagrangian" && <CrestLagrangian size={96} accent={c.accent!} />}
                   {c.id === "observer" && <CrestObserver size={96} accent={c.accent!} />}
                   {c.id === "sidereal" && <CrestSidereal size={96} accent={c.accent!} />}
                 </div>
@@ -197,7 +169,9 @@ const crests = [
                 <div class="palette" data-palette={c.id}>
                   <div class="palette-label">
                     <span class="palette-label-k">Accent</span>
-                    <span class="palette-label-v" data-palette-current>{c.accent}</span>
+                    <span class="palette-label-v" data-palette-current>
+                      {c.accent}
+                    </span>
                   </div>
                   <div class="palette-row">
                     {ACCENTS.map((a) => (
@@ -225,8 +199,8 @@ const crests = [
                   </div>
                   <p class="palette-note">
                     Hand-tuned tiers — <code>bh-core</code>, <code>bh-ring</code>,
-                    <code>bh-disk</code>, <code>bh-halo</code> — rather than a single
-                    accent slot. This is the crest that shipped on the live about card.
+                    <code>bh-disk</code>, <code>bh-halo</code> — rather than a single accent slot.
+                    This is the crest that shipped on the live about card.
                   </p>
                 </div>
               )}
@@ -235,11 +209,7 @@ const crests = [
         </section>
       ))
     }
-
-    <footer class="post-foot">
-      <a href="/blog" class="post-foot-back">&larr; BACK TO BLOG</a>
-    </footer>
-  </article>
+  </PrototypePostShell>
 </Layout>
 
 <script>
@@ -259,195 +229,37 @@ const crests = [
   type Accent = "red" | "yellow" | "blue" | "green";
   const ACCENT_CLASSES = ["crest--red", "crest--yellow", "crest--blue", "crest--green"];
 
-  document
-    .querySelectorAll<HTMLElement>("[data-proto-section]")
-    .forEach((section) => {
-      const cells = Array.from(
-        section.querySelectorAll<HTMLButtonElement>("[data-set-accent]"),
-      );
-      const labelEl = section.querySelector<HTMLElement>(
-        "[data-palette-current]",
-      );
+  document.querySelectorAll<HTMLElement>("[data-proto-section]").forEach((section) => {
+    const cells = Array.from(section.querySelectorAll<HTMLButtonElement>("[data-set-accent]"));
+    const labelEl = section.querySelector<HTMLElement>("[data-palette-current]");
 
-      // Repaint targets: the masthead crest + the 96px specimen plate
-      // only. Swatches inside .palette-row are reference samples and
-      // must stay fixed at their own colors.
-      const targets = Array.from(
-        section.querySelectorAll<HTMLElement>(
-          ".proto-card-stage > * .crest, .specimen-plate .crest",
-        ),
-      );
+    // Repaint targets: the masthead crest + the 96px specimen plate
+    // only. Swatches inside .palette-row are reference samples and
+    // must stay fixed at their own colors.
+    const targets = Array.from(
+      section.querySelectorAll<HTMLElement>(".proto-card-stage > * .crest, .specimen-plate .crest")
+    );
 
-      const setAccent = (next: Accent) => {
-        section.dataset.accent = next;
-        targets.forEach((el) => {
-          ACCENT_CLASSES.forEach((c) => el.classList.remove(c));
-          el.classList.add(`crest--${next}`);
-        });
-        cells.forEach((c) =>
-          c.classList.toggle("is-current", c.dataset.setAccent === next),
-        );
-        if (labelEl) labelEl.textContent = next;
-      };
+    const setAccent = (next: Accent) => {
+      section.dataset.accent = next;
+      targets.forEach((el) => {
+        ACCENT_CLASSES.forEach((c) => el.classList.remove(c));
+        el.classList.add(`crest--${next}`);
+      });
+      cells.forEach((c) => c.classList.toggle("is-current", c.dataset.setAccent === next));
+      if (labelEl) labelEl.textContent = next;
+    };
 
-      cells.forEach((cell) => {
-        cell.addEventListener("click", () => {
-          const next = cell.dataset.setAccent as Accent | undefined;
-          if (next) setAccent(next);
-        });
+    cells.forEach((cell) => {
+      cell.addEventListener("click", () => {
+        const next = cell.dataset.setAccent as Accent | undefined;
+        if (next) setAccent(next);
       });
     });
+  });
 </script>
 
 <style>
-  /* =========================================================
-     Post chrome — matches the other interactive /blog entries.
-     ========================================================= */
-  .post {
-    max-width: 720px;
-    margin: 0 auto;
-    padding: 20px 0 40px;
-  }
-  .back,
-  .post-foot-back {
-    font-family: var(--font-pixel);
-    font-size: 10px;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--ink-muted);
-    display: inline-block;
-    margin-bottom: 32px;
-  }
-  .back:hover,
-  .post-foot-back:hover {
-    color: var(--ink);
-  }
-  .post-head {
-    position: relative;
-    isolation: isolate;
-    margin-bottom: 28px;
-  }
-  .post-head > .post-kicker,
-  .post-head > .post-title,
-  .post-head > .post-lede,
-  .post-head > .post-meta {
-    position: relative;
-    z-index: 1;
-  }
-  .post-kicker {
-    font-family: var(--font-pixel);
-    font-size: 10px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--ink-muted);
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 14px;
-  }
-  .post-kicker-tag {
-    background: var(--yellow);
-    color: var(--on-yellow);
-    padding: 3px 7px 2px;
-    letter-spacing: 0.14em;
-  }
-  .post-kicker-dot {
-    color: var(--ink-muted);
-    opacity: 0.6;
-  }
-  .post-title {
-    font-family: var(--font-serif);
-    font-variation-settings:
-      "opsz" 72,
-      "SOFT" 60,
-      "wght" 500;
-    font-size: clamp(34px, 5vw, 52px);
-    line-height: 1.02;
-    letter-spacing: -0.025em;
-    margin-bottom: 18px;
-  }
-  .post-title em {
-    font-style: italic;
-    color: var(--em);
-  }
-  .post-meta {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-    padding-bottom: 28px;
-    border-bottom: 1px solid var(--rule-soft);
-  }
-  .post-date {
-    font-family: var(--font-pixel);
-    font-size: 11px;
-    color: var(--ink-muted);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
-  .post-lede {
-    font-family: var(--font-serif);
-    font-variation-settings:
-      "opsz" 18,
-      "SOFT" 70,
-      "wght" 400;
-    font-size: 18px;
-    line-height: 1.7;
-    color: var(--ink-soft);
-    margin: 32px 0 40px;
-  }
-  .post-lede code {
-    font-family: var(--font-pixel);
-    font-size: 13px;
-    padding: 1px 5px;
-    background: var(--bg-inset);
-    border: 1px solid var(--rule-soft);
-  }
-  .post-nav {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    margin-bottom: 48px;
-  }
-  .post-nav-item {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding: 10px 12px;
-    background: var(--bg-card);
-    border: 1px solid var(--rule);
-    color: var(--ink-soft);
-    text-decoration: none;
-    transition:
-      transform 0.08s ease,
-      background 0.15s ease;
-  }
-  .post-nav-item:hover {
-    transform: translateY(-2px);
-    background: var(--bg-raised);
-    color: var(--ink);
-  }
-  .post-nav-num {
-    font-family: var(--font-pixel);
-    font-size: 9px;
-    letter-spacing: 0.18em;
-    color: var(--ink-muted);
-  }
-  .post-nav-title {
-    font-family: var(--font-serif);
-    font-variation-settings:
-      "opsz" 14,
-      "SOFT" 60,
-      "wght" 500;
-    font-size: 14px;
-    line-height: 1.15;
-  }
-  @media (max-width: 760px) {
-    .post-nav {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-
   .proto {
     margin: 56px 0;
     scroll-margin-top: 80px;
@@ -479,10 +291,18 @@ const crests = [
   /* When a section has a live accent, the heading takes on that
      color. The accent picker writes data-accent on the section, so
      clicking a swatch repaints the title in the same beat. */
-  .proto[data-accent="red"]    .proto-title { color: var(--red); }
-  .proto[data-accent="yellow"] .proto-title { color: var(--yellow); }
-  .proto[data-accent="blue"]   .proto-title { color: var(--blue); }
-  .proto[data-accent="green"]  .proto-title { color: var(--green); }
+  .proto[data-accent="red"] .proto-title {
+    color: var(--red);
+  }
+  .proto[data-accent="yellow"] .proto-title {
+    color: var(--yellow);
+  }
+  .proto[data-accent="blue"] .proto-title {
+    color: var(--blue);
+  }
+  .proto[data-accent="green"] .proto-title {
+    color: var(--green);
+  }
   .proto-blurb {
     font-family: var(--font-serif);
     font-variation-settings:
@@ -648,10 +468,5 @@ const crests = [
   .serial-sep {
     color: var(--ink-muted);
     opacity: 0.6;
-  }
-
-  .post-foot {
-    padding-top: 32px;
-    border-top: 1px solid var(--rule-soft);
   }
 </style>

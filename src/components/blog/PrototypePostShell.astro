@@ -1,0 +1,231 @@
+---
+/*
+  PrototypePostShell — outer chrome shared by interactive prototype
+  posts under /blog. Renders the back link, post-head (stamp + kicker
+  + title + meta), the lede, page-unique content via the default slot,
+  and a footer back link. Each page provides only the dynamic bits:
+  title via the `title` slot, lede via the `lede` slot, page sections
+  via the default slot.
+
+  Markdown blog posts use `[slug].astro` directly and do not share
+  this shell — its chrome is markdown-tuned.
+*/
+
+import PostStamp from "./PostStamp.astro";
+import type { FeaturedEntry } from "../../content/_data/featured";
+import { formatPostDate } from "../../lib/format-date";
+
+interface Props {
+  meta: FeaturedEntry;
+  kickerTag: string;
+  kickerTrail: string;
+  /** Outer .post max-width; defaults to 720px (the crest layout). */
+  maxWidth?: string;
+  /** Footer back-link text; pages can override the default tone. */
+  footerText?: string;
+}
+
+const {
+  meta,
+  kickerTag,
+  kickerTrail,
+  maxWidth = "720px",
+  footerText = "BACK TO BLOG",
+} = Astro.props;
+---
+
+<article class="post" style={`--post-max-width:${maxWidth};`}>
+  <a href="/blog" class="back">&larr; BACK</a>
+
+  <header class="post-head">
+    <PostStamp slug={meta.slug} date={meta.date} type={meta.type} />
+    <div class="post-kicker">
+      <span class="post-kicker-tag">{kickerTag}</span>
+      <span class="post-kicker-dot">·</span>
+      <span>{kickerTrail}</span>
+    </div>
+    <h1 class="post-title">
+      <slot name="title" />
+    </h1>
+    <div class="post-meta">
+      <span class="post-date">{formatPostDate(meta.date)}</span>
+      {meta.tags.map((tag) => <span class="tag-pixel">{tag}</span>)}
+    </div>
+  </header>
+
+  <div class="post-lede">
+    <slot name="lede" />
+  </div>
+
+  <slot />
+
+  <footer class="post-foot">
+    <a href="/blog" class="post-foot-back">&larr; {footerText}</a>
+  </footer>
+</article>
+
+<style>
+  .post {
+    max-width: var(--post-max-width, 720px);
+    margin: 0 auto;
+    padding: 20px 0 40px;
+  }
+
+  .back,
+  .post-foot-back {
+    font-family: var(--font-pixel);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    display: inline-block;
+    margin-bottom: 32px;
+  }
+  .back:hover,
+  .post-foot-back:hover {
+    color: var(--ink);
+  }
+
+  .post-head {
+    position: relative;
+    isolation: isolate;
+    margin-bottom: 28px;
+  }
+  .post-head > .post-kicker,
+  .post-head > .post-title,
+  .post-head > .post-meta {
+    position: relative;
+    z-index: 1;
+  }
+
+  .post-kicker {
+    font-family: var(--font-pixel);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .post-kicker-tag {
+    background: var(--yellow);
+    color: var(--on-yellow);
+    padding: 3px 7px 2px;
+    letter-spacing: 0.14em;
+  }
+  .post-kicker-dot {
+    color: var(--ink-muted);
+    opacity: 0.6;
+  }
+
+  .post-title {
+    font-family: var(--font-serif);
+    font-variation-settings:
+      "opsz" 72,
+      "SOFT" 60,
+      "wght" 500;
+    font-size: clamp(34px, 5vw, 52px);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    margin-bottom: 18px;
+  }
+  .post-title :global(em) {
+    font-style: italic;
+    color: var(--em);
+  }
+
+  .post-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .post-date {
+    font-family: var(--font-pixel);
+    font-size: 11px;
+    color: var(--ink-muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .post-lede {
+    font-family: var(--font-serif);
+    font-variation-settings:
+      "opsz" 18,
+      "SOFT" 70,
+      "wght" 400;
+    font-size: 18px;
+    line-height: 1.7;
+    color: var(--ink-soft);
+    margin: 32px 0 40px;
+  }
+  .post-lede :global(p + p) {
+    margin-top: 16px;
+  }
+  .post-lede :global(code) {
+    font-family: var(--font-pixel);
+    font-size: 13px;
+    padding: 1px 5px;
+    background: var(--bg-inset);
+    border: 1px solid var(--rule-soft);
+  }
+
+  .post-foot {
+    padding-top: 32px;
+    border-top: 1px solid var(--rule-soft);
+  }
+
+  /* Optional section index — pages opt in by including a
+     `<nav class="post-nav">` of `.post-nav-item` tiles in the
+     default slot. Lives on the shell because the chrome around it
+     (border colors, hover lift) is identical across prototype
+     posts. */
+  :global(.post-nav) {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 48px;
+  }
+  :global(.post-nav-item) {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--rule);
+    color: var(--ink-soft);
+    text-decoration: none;
+    transition:
+      transform 0.08s ease,
+      background 0.15s ease;
+  }
+  :global(.post-nav-item:hover) {
+    transform: translateY(-2px);
+    background: var(--bg-raised);
+    color: var(--ink);
+  }
+  :global(.post-nav-num) {
+    font-family: var(--font-pixel);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    color: var(--ink-muted);
+  }
+  :global(.post-nav-title) {
+    font-family: var(--font-serif);
+    font-variation-settings:
+      "opsz" 14,
+      "SOFT" 60,
+      "wght" 500;
+    font-size: 14px;
+    line-height: 1.15;
+  }
+  @media (max-width: 760px) {
+    :global(.post-nav) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>
