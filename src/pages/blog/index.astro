@@ -2,8 +2,10 @@
 import Layout from "../../layouts/Layout.astro";
 import Ledger from "../../components/blog/Ledger.astro";
 import SectionTag from "../../components/SectionTag.astro";
+import AtlasPane from "../../components/atlas/AtlasPane.svelte";
 import { getCollection } from "astro:content";
 import { featured } from "../../content/_data/featured";
+import { tagGraphFrom } from "../../lib/cosmos";
 
 const posts = (await getCollection("blog")).map((p) => ({
   slug: p.id,
@@ -18,6 +20,8 @@ const posts = (await getCollection("blog")).map((p) => ({
 const entries = [...featured, ...posts].sort(
   (a, b) => b.date.getTime() - a.date.getTime(),
 );
+
+const graph = tagGraphFrom(entries);
 ---
 
 <Layout title="Blog - Vinith">
@@ -27,9 +31,44 @@ const entries = [...featured, ...posts].sort(
       <h1>Recent posts.</h1>
     </header>
 
-    <Ledger entries={entries} />
+    <div class="atlas-mount">
+      <AtlasPane graph={graph} title="Sky · Tag Atlas" client:load />
+    </div>
+
+    <div id="filter-region">
+      <Ledger entries={entries} />
+    </div>
   </section>
 </Layout>
+
+<script>
+  /*
+    Filter the ledger when AtlasPane dispatches `cosmos:select`.
+
+    AtlasPane fires `cosmos:select` on document with detail.slug =
+    string | null. We toggle a class on the filter region and show /
+    hide each ledger row by reading its .tag-pixel children.
+  */
+  const region = document.getElementById("filter-region");
+  if (region) {
+    const rows = Array.from(region.querySelectorAll(".ledger > li"));
+    document.addEventListener("cosmos:select", (e) => {
+      const slug = (e as CustomEvent).detail?.slug ?? null;
+      if (!slug) {
+        region.classList.remove("filtered");
+        rows.forEach((li) => ((li as HTMLElement).style.display = ""));
+        return;
+      }
+      region.classList.add("filtered");
+      rows.forEach((li) => {
+        const tags = Array.from(li.querySelectorAll(".tag-pixel")).map(
+          (t) => t.textContent?.trim().toLowerCase() ?? "",
+        );
+        (li as HTMLElement).style.display = tags.includes(slug) ? "" : "none";
+      });
+    });
+  }
+</script>
 
 <style>
   .band {
@@ -41,12 +80,19 @@ const entries = [...featured, ...posts].sort(
     align-items: baseline;
     justify-content: space-between;
     gap: 32px;
-    margin-bottom: 36px;
+    margin-bottom: 24px;
   }
   .section-head h1 {
     font-variation-settings: "opsz" 72, "SOFT" 60, "wght" 500;
     font-size: clamp(32px, 4.5vw, 54px);
     letter-spacing: -0.025em;
     line-height: 1;
+  }
+
+  /* AtlasPane lays out as: small button row up top, then a fold-out
+     pane below that grows to phi-landscape when expanded. We just
+     give it a small block-level breath above the ledger. */
+  .atlas-mount {
+    margin-bottom: 28px;
   }
 </style>

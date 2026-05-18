@@ -1,11 +1,18 @@
 import { test, expect } from "@playwright/test";
 
-test("cosmos page renders the chart with tag stars and labels", async ({ page }) => {
-  await page.goto("/cosmos");
+test("blog page exposes the Atlas pane and unfolds on click", async ({ page }) => {
+  await page.goto("/blog");
 
-  await expect(page.getByRole("heading", { name: /a sky of tags/i })).toBeVisible();
+  // Pane starts collapsed; the Atlas button is always present.
+  const atlasBtn = page.getByRole("button", { name: /^atlas/i });
+  await expect(atlasBtn).toBeVisible();
+  await expect(atlasBtn).toHaveAttribute("aria-expanded", "false");
 
-  // Chart contains hit-circles (one per tag) and at least one label
+  // Open the pane.
+  await atlasBtn.click();
+  await expect(atlasBtn).toHaveAttribute("aria-expanded", "true");
+
+  // Chart contains hit-circles (one per tag) and at least one label.
   const hits = page.locator("svg .hit[role='button']");
   expect(await hits.count()).toBeGreaterThan(0);
 
@@ -14,27 +21,26 @@ test("cosmos page renders the chart with tag stars and labels", async ({ page })
 });
 
 test("clicking a tag star filters the ledger", async ({ page }) => {
-  await page.goto("/cosmos");
+  await page.goto("/blog");
 
-  // Capture the visible row count before filtering
+  // Open the pane first.
+  await page.getByRole("button", { name: /^atlas/i }).click();
+
   const allRows = page.locator(".ledger > li");
   const totalRows = await allRows.count();
 
-  // Click the hit-circle whose aria-label contains "design"
   const designStar = page.locator("svg .hit[aria-label*='design']").first();
   await designStar.click();
 
-  // Filter region should mark itself filtered
   await expect(page.locator("#filter-region.filtered")).toBeVisible();
 
-  // At least one row remains visible (display !== "none"); fewer than total
   const visibleAfter = await allRows.evaluateAll((els) =>
     els.filter((el) => getComputedStyle(el).display !== "none").length,
   );
   expect(visibleAfter).toBeGreaterThan(0);
   expect(visibleAfter).toBeLessThanOrEqual(totalRows);
 
-  // Click again to clear
+  // Click again to clear.
   await designStar.click();
   await expect(page.locator("#filter-region")).not.toHaveClass(/filtered/);
 });
