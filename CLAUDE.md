@@ -72,7 +72,7 @@ Adding content: drop the file into the right `src/content/` path; schema and exi
 - `src/components/` — Mix of `.astro` (server-rendered) and `.svelte` (interactive islands).
 - Islands are hydrated explicitly with `client:load` / `client:visible` / `client:idle` from the Astro page and receive data as props. `PhotoViewer.svelte` is the reference example.
 - `src/components/primitives/` and `src/components/crests/` hold small building blocks (ornamental SVGs, shared UI primitives) — reuse these before inventing new ones.
-- `UniverseLogo.astro` is the **crest** — only use it where an institutional seal belongs (identity pages, mastheads). Don't scatter decoratively. See `DESIGN.md` → "Scale: the emergent-observer frame."
+- `crests/CrestBlackHole.astro` is the **crest** — only use it where an institutional seal belongs (identity pages, mastheads). Don't scatter decoratively. See `DESIGN.md` → "Scale: the emergent-observer frame."
 - `src/lib/` — Plain TypeScript utilities (e.g. `obfuscate.ts`). Not Svelte/Astro; importable from anywhere. Add new pure helpers here rather than co-locating with a single component.
 
 ### Styling & tokens
