@@ -18,8 +18,6 @@
           * brightness scales with size; opacity floor lifted so even
             the tiny pinpricks register against paper
           * the brightest few pick up tiny 0.5px 4-point cross "glints"
-          * the brighter half twinkle slowly with stable per-star phase
-            and period — never in unison
       - Warm-brown vignette (not black) for paper feel.
 
     Theme parity falls out of using `--ink`, `--ink-muted`, `--em`, and
@@ -73,8 +71,7 @@
 
   /* Star-field: power-law sizes, biased accent tints, occasional
      glints on the brightest few. Seeded so the field is identical
-     between renders. The brighter half (r > 0.7) get twinkle params
-     so the eye picks up shimmer without distraction. */
+     between renders. */
   const stars = (() => {
     const rng = seededRandom(0x57a25);
     const out = [];
@@ -90,11 +87,6 @@
       }
       const glint = r > 1.4 && rng() > 0.45;
       const opacity = Math.min(0.92, 0.42 + r * 0.30);
-      // Twinkle on brighter half. 3-7s period, 0-period delay so they
-      // are out of phase. Faint stars stay still — no "vibrating field".
-      const twinkles = r > 0.7;
-      const period = 3 + rng() * 4;
-      const delay = -rng() * period; // negative so the cycle is mid-flight at t=0
       out.push({
         cx: rng() * W,
         cy: rng() * H,
@@ -102,9 +94,6 @@
         tint,
         glint,
         opacity,
-        twinkles,
-        period,
-        delay,
       });
     }
     return out;
@@ -166,11 +155,7 @@
       {#each stars as s}
         <circle cx={s.cx} cy={s.cy} r={s.r}
                 fill={tintColor(s.tint)}
-                opacity={s.opacity}
-                class:twinkle={s.twinkles}
-                style={s.twinkles
-                  ? `--twinkle-base: ${s.opacity}; animation-duration: ${s.period}s; animation-delay: ${s.delay}s;`
-                  : null}/>
+                opacity={s.opacity}/>
         {#if s.glint}
           <line x1={s.cx - s.r * 2.3} y1={s.cy} x2={s.cx + s.r * 2.3} y2={s.cy}
                 stroke={tintColor(s.tint)} stroke-opacity={s.opacity * 0.55}
@@ -193,25 +178,5 @@
     width: 100%;
     height: 100%;
     z-index: 1;
-  }
-  .stars circle.twinkle {
-    /* Slow opacity oscillation between full base and ~50% base.
-       Ease-in-out so the star spends more time at peak/trough than
-       in transit — feels like real atmospheric scintillation rather
-       than a sine-wave pulse. */
-    animation-name: atlas-twinkle;
-    animation-iteration-count: infinite;
-    animation-timing-function: ease-in-out;
-    animation-direction: alternate;
-  }
-  @keyframes atlas-twinkle {
-    from { opacity: var(--twinkle-base, 0.6); }
-    to   { opacity: calc(var(--twinkle-base, 0.6) * 0.42); }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .stars circle.twinkle {
-      animation: none;
-      opacity: var(--twinkle-base, 0.6);
-    }
   }
 </style>
