@@ -1,16 +1,17 @@
 <script>
   /*
-    Untilted legend for the Atlas pane.
+    Atlas legend.
 
-    - Lives at the lower-left of the plate.
-    - Documents what each visual element means: disc size, halo,
-      and the trace dash weight.
-    - No `transform: rotate(...)` — sits flush with the plate edge.
+    Default state is collapsed: a small title bar with the pip and
+    `LEGEND · N = …` count. Hovering (or focusing) expands it to
+    reveal the disc / halo / trace rows. This keeps the legend out
+    of the way of the star-field underneath when the user just wants
+    to look at the atlas, but it's one hover away when they need it.
   */
   let { count = 0 } = $props();
 </script>
 
-<div class="legend" role="note" aria-label="Atlas legend">
+<div class="legend" role="note" aria-label="Atlas legend" tabindex="0">
   <header class="legend-head">
     <span class="legend-pip" aria-hidden="true"></span>
     <span class="legend-title">Atlas · Legend</span>
@@ -63,18 +64,39 @@
     background: var(--bg-raised);
     border: 1px solid var(--rule);
     box-shadow: 3px 3px 0 var(--rule);
-    padding: 10px 14px 10px 12px;
+    padding: 8px 12px;
     color: var(--ink);
     transform: none;
     min-width: 180px;
+    /* Collapsed by default; rows reveal on hover/focus below. */
+    transition: padding 0.18s ease;
   }
+  .legend:hover,
+  .legend:focus-visible {
+    padding-bottom: 10px;
+  }
+  .legend:focus-visible {
+    outline: 2px solid var(--em);
+    outline-offset: 2px;
+  }
+
   .legend-head {
     display: flex;
     align-items: center;
     gap: 8px;
+    padding-bottom: 0;
+    margin-bottom: 0;
+    border-bottom: 1px solid transparent;
+    transition:
+      padding-bottom 0.18s ease,
+      margin-bottom 0.18s ease,
+      border-color 0.18s ease;
+  }
+  .legend:hover .legend-head,
+  .legend:focus-visible .legend-head {
     padding-bottom: 6px;
     margin-bottom: 6px;
-    border-bottom: 1px solid var(--rule-soft);
+    border-bottom-color: var(--rule-soft);
   }
   .legend-pip {
     display: inline-block;
@@ -97,12 +119,24 @@
     color: var(--ink-muted);
     text-transform: uppercase;
   }
+
   .legend-rows {
     list-style: none;
     margin: 0;
     padding: 0;
     display: grid;
     gap: 5px;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition:
+      max-height 0.22s ease,
+      opacity 0.16s ease;
+  }
+  .legend:hover .legend-rows,
+  .legend:focus-visible .legend-rows {
+    max-height: 80px;
+    opacity: 1;
   }
   .legend-rows li {
     display: grid;
@@ -128,5 +162,13 @@
     font-size: 11px;
     color: var(--ink-muted);
     font-style: italic;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .legend,
+    .legend-head,
+    .legend-rows {
+      transition: none;
+    }
   }
 </style>

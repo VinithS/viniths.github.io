@@ -7,20 +7,19 @@
       - Cluster centroids extracted via a tiny seeded k-means pass on
         the settled tag positions. Up to 5 clusters; deterministic.
       - Soft warm-brown clouds at each centroid, painted with a radial
-        gradient whose color comes from `currentColor: var(--ink-muted)`
-        — both themes already define a brown-ish --ink-muted, so the
+        gradient whose color comes from `currentColor: var(--ink-muted)`.
+        Both themes already define a brown-ish --ink-muted, so the
         cloud reads as warm dusk in both light and dark.
-      - Filaments between adjacent centroids: gently-sagging quadratic
-        Bezier curves suggesting cosmic-web large-scale structure.
       - Sparse halo dust around centroids (cream pinpricks).
       - Background star-field with real variation:
           * power-law size distribution (most are tiny, a few bright)
           * tint buckets — 88% ink, ~8% warm (`--em`), ~4% cool
-            (`--blue`); accent stars biased toward larger sizes so the
-            variation actually reads
+            (`--blue`); accent stars biased toward larger sizes
           * brightness scales with size; opacity floor lifted so even
             the tiny pinpricks register against paper
           * the brightest few pick up tiny 0.5px 4-point cross "glints"
+          * the brighter half twinkle slowly with stable per-star phase
+            and period — never in unison
       - Warm-brown vignette (not black) for paper feel.
 
     Theme parity falls out of using `--ink`, `--ink-muted`, `--em`, and
@@ -65,35 +64,6 @@
     return centroids;
   }
 
-  /* For each centroid, draw a sagging Bezier to its 2 nearest peers.
-     Skip duplicates by only emitting (i,j) where j > i. The sag
-     direction alternates so they don't all curve the same way. */
-  function filaments(centroids) {
-    const out = [];
-    for (let i = 0; i < centroids.length; i++) {
-      const dists = centroids
-        .map((c, j) => ({ j, d: (c.x - centroids[i].x) ** 2 + (c.y - centroids[i].y) ** 2 }))
-        .filter((c) => c.j !== i)
-        .sort((a, b) => a.d - b.d)
-        .slice(0, 2);
-      for (const { j } of dists) {
-        if (j <= i) continue;
-        const a = centroids[i];
-        const b = centroids[j];
-        const mx = (a.x + b.x) / 2;
-        const my = (a.y + b.y) / 2;
-        const dx = b.x - a.x;
-        const dy = b.y - a.y;
-        const len = Math.sqrt(dx * dx + dy * dy) || 1;
-        const px = -dy / len;
-        const py = dx / len;
-        const sag = ((i + j) % 2 === 0 ? 1 : -1) * len * 0.18;
-        out.push(`M${a.x.toFixed(1)} ${a.y.toFixed(1)} Q${(mx + px*sag).toFixed(1)} ${(my + py*sag).toFixed(1)} ${b.x.toFixed(1)} ${b.y.toFixed(1)}`);
-      }
-    }
-    return out;
-  }
-
   const centroids = $derived(
     kmeansCentroids(graph.tags.map((t) => ({
       x: positions[t.slug].x * W,
@@ -101,11 +71,10 @@
     })), Math.min(5, Math.max(2, Math.floor(graph.tags.length / 4))))
   );
 
-  const filamentPaths = $derived(filaments(centroids));
-
   /* Star-field: power-law sizes, biased accent tints, occasional
      glints on the brightest few. Seeded so the field is identical
-     between renders. */
+     between renders. The brighter half (r > 0.7) get twinkle params
+     so the eye picks up shimmer without distraction. */
   const stars = (() => {
     const rng = seededRandom(0x57a25);
     const out = [];
@@ -114,21 +83,28 @@
       const u = rng();
       const r = Math.pow(1 - u, 3.4) * 1.8 + 0.25;
       const tintRoll = rng();
-      // Bigger stars more often pick up an accent tint so the variation
-      // is actually visible to the eye.
       const accentChance = r > 1.0 ? 0.18 : r > 0.6 ? 0.07 : 0.02;
       let tint = "ink";
       if (tintRoll < accentChance) {
         tint = tintRoll < accentChance * 0.65 ? "warm" : "cool";
       }
       const glint = r > 1.4 && rng() > 0.45;
+      const opacity = Math.min(0.92, 0.42 + r * 0.30);
+      // Twinkle on brighter half. 3-7s period, 0-period delay so they
+      // are out of phase. Faint stars stay still — no "vibrating field".
+      const twinkles = r > 0.7;
+      const period = 3 + rng() * 4;
+      const delay = -rng() * period; // negative so the cycle is mid-flight at t=0
       out.push({
         cx: rng() * W,
         cy: rng() * H,
         r,
         tint,
         glint,
-        opacity: Math.min(0.92, 0.42 + r * 0.30),
+        opacity,
+        twinkles,
+        period,
+        delay,
       });
     }
     return out;
@@ -163,15 +139,12 @@
 <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true">
   <defs>
     <!-- Cloud gradient uses currentColor so the surrounding
-         `color: var(--ink-muted)` controls the brown/dusk tone.
-         Both themes have a brown-ish --ink-muted. -->
+         `color: var(--ink-muted)` controls the brown/dusk tone. -->
     <radialGradient id="atlas-cloud" cx="50%" cy="50%" r="50%">
       <stop offset="0%"  stop-color="currentColor" stop-opacity="0.16"/>
       <stop offset="60%" stop-color="currentColor" stop-opacity="0.05"/>
       <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
     </radialGradient>
-    <!-- Vignette: warm-brown corners, clear center. Replaces the
-         near-black fall-off you'd get from a hardcoded rgba(28,…). -->
     <radialGradient id="atlas-vignette" cx="50%" cy="50%" r="62%">
       <stop offset="0%"  stop-color="currentColor" stop-opacity="0"/>
       <stop offset="78%" stop-color="currentColor" stop-opacity="0"/>
@@ -184,12 +157,6 @@
       <circle cx={c.x} cy={c.y} r="170" fill="url(#atlas-cloud)"/>
     {/each}
 
-    <g class="filaments">
-      {#each filamentPaths as d}
-        <path d={d}/>
-      {/each}
-    </g>
-
     {#each haloStars as s}
       <circle cx={s.cx} cy={s.cy} r={s.r}
               fill="var(--ink)" opacity={s.opacity}/>
@@ -198,7 +165,12 @@
     <g class="stars">
       {#each stars as s}
         <circle cx={s.cx} cy={s.cy} r={s.r}
-                fill={tintColor(s.tint)} opacity={s.opacity}/>
+                fill={tintColor(s.tint)}
+                opacity={s.opacity}
+                class:twinkle={s.twinkles}
+                style={s.twinkles
+                  ? `--twinkle-base: ${s.opacity}; animation-duration: ${s.period}s; animation-delay: ${s.delay}s;`
+                  : null}/>
         {#if s.glint}
           <line x1={s.cx - s.r * 2.3} y1={s.cy} x2={s.cx + s.r * 2.3} y2={s.cy}
                 stroke={tintColor(s.tint)} stroke-opacity={s.opacity * 0.55}
@@ -222,11 +194,24 @@
     height: 100%;
     z-index: 1;
   }
-  .filaments path {
-    fill: none;
-    stroke: var(--ink);
-    stroke-opacity: 0.10;
-    stroke-width: 1.4;
-    vector-effect: non-scaling-stroke;
+  .stars circle.twinkle {
+    /* Slow opacity oscillation between full base and ~50% base.
+       Ease-in-out so the star spends more time at peak/trough than
+       in transit — feels like real atmospheric scintillation rather
+       than a sine-wave pulse. */
+    animation-name: atlas-twinkle;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+    animation-direction: alternate;
+  }
+  @keyframes atlas-twinkle {
+    from { opacity: var(--twinkle-base, 0.6); }
+    to   { opacity: calc(var(--twinkle-base, 0.6) * 0.42); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .stars circle.twinkle {
+      animation: none;
+      opacity: var(--twinkle-base, 0.6);
+    }
   }
 </style>

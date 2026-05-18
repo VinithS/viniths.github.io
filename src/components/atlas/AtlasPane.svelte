@@ -178,15 +178,20 @@
   }
 
   .atlas-pane {
+    /* Clip the pane during the fold-out so the inner card doesn't
+       overflow upward, but leave room on the right + bottom edges
+       for the hard-offset shadow on .atlas-pane-inner. */
     overflow: hidden;
     max-height: 0;
     margin-top: 0;
+    /* Add 6px below to fit the 4px shadow + 1px border. */
+    padding: 0 6px 6px 0;
     transition:
       max-height 0.45s cubic-bezier(0.2, 0.8, 0.2, 1),
       margin-top 0.3s ease;
   }
   .atlas-pane.open {
-    max-height: 720px;
+    max-height: 740px;
     margin-top: 18px;
   }
   .atlas-pane-inner {
