@@ -1,0 +1,156 @@
+---
+/*
+  ConstellationStamp — single SVG, two variants.
+
+  - variant="mark": 1:1 square. Just the dashed double border + diagram.
+    No name, no coordinates. Ink colour = post-type accent.
+  - variant="plate": 1:phi portrait. Same diagram + a name plate at the
+    bottom (the constellation name or J-designation, pressed in ink).
+
+  In both variants the entire stamp group is wrapped in the existing
+  #rubber-ink-solid filter from Layout.astro so border + lines + stars
+  + label all displace and bleed identically (one press, not stacked
+  layers).
+*/
+
+import type { Sky } from "../../lib/sky";
+import { POST_TYPE_ACCENT_VAR, type PostType } from "../../lib/post-types";
+
+interface Props {
+  sky: Sky;
+  variant: "mark" | "plate";
+  type?: PostType; // only used by mark; plate uses --ink
+  rotation?: number; // degrees; default 0
+  ariaLabel?: string;
+}
+
+const {
+  sky,
+  variant,
+  type = "essay",
+  rotation = 0,
+  ariaLabel = sky.named ? sky.name : sky.designation,
+} = Astro.props;
+
+const inkVar = variant === "plate" ? "var(--ink)" : POST_TYPE_ACCENT_VAR[type];
+
+// In the mark variant the diagram covers the whole 200x200 box; in plate
+// variant the box is 200 wide by 324 tall (=200*phi) and the diagram is
+// scaled+translated into the upper region with the name plate below.
+const isPlate = variant === "plate";
+const viewBox = isPlate ? "0 0 200 324" : "0 0 200 200";
+
+// Plate name label: e.g. CASSIOPEIA or J0412+3841.
+const nameLabel = sky.named ? sky.name?.toUpperCase() : sky.designation;
+
+const anchor = sky.stars[sky.anchor];
+const decSign = sky.decDegrees >= 0 ? "+" : "";
+---
+
+<div
+  class={`stamp stamp--${variant}`}
+  style={`color: ${inkVar}; transform: rotate(${rotation}deg);`}
+  role="img"
+  aria-label={ariaLabel}
+>
+  <svg viewBox={viewBox} preserveAspectRatio="xMidYMid meet">
+    <g filter="url(#rubber-ink-solid)" fill="currentColor" stroke="currentColor">
+      {/* outer dashed border */}
+      <rect
+        x="14" y="14"
+        width="172" height={isPlate ? 296 : 172}
+        fill="none" stroke="currentColor" stroke-width="2.2" stroke-dasharray="4 3"
+      />
+      <rect
+        x="20" y="20"
+        width="160" height={isPlate ? 284 : 160}
+        fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="3 3"
+      />
+
+      {isPlate && nameLabel && (
+        <>
+          <text
+            x="100" y="56" text-anchor="middle"
+            style="font-family: var(--font-serif); font-style: italic; font-variation-settings: 'opsz' 60, 'SOFT' 70, 'wght' 700; font-size: 20px; letter-spacing: 0.18em; fill: currentColor;"
+          >
+            {nameLabel}
+          </text>
+          <line x1="40" y1="68" x2="160" y2="68" stroke="currentColor" stroke-width="1.5" />
+        </>
+      )}
+
+      {/* diagram group: translate when plate variant so it sits under the headline */}
+      <g transform={isPlate ? "translate(0 80)" : ""}>
+        {/* dim field stars */}
+        {sky.fieldStars.map((s) => (
+          <circle cx={s.x} cy={s.y} r={s.r} fill="currentColor" opacity="0.4" />
+        ))}
+
+        {/* connecting lines */}
+        {sky.lines.map(([a, b]) => (
+          <line
+            x1={sky.stars[a].x} y1={sky.stars[a].y}
+            x2={sky.stars[b].x} y2={sky.stars[b].y}
+            stroke="currentColor" stroke-width="1.7" stroke-linecap="round"
+            fill="none"
+          />
+        ))}
+
+        {/* stars (size by magnitude: lower magnitude = bigger disc) */}
+        {sky.stars.map((s, i) => {
+          if (i === sky.anchor) return null;
+          const r = Math.max(2, 5 - s.magnitude * 0.5);
+          return <circle cx={s.x} cy={s.y} r={r} fill="currentColor" />;
+        })}
+
+        {/* anchor: filled disc + thin engraved ring + tapered cross */}
+        <circle cx={anchor.x} cy={anchor.y} r={5.6} fill="currentColor" />
+        <circle cx={anchor.x} cy={anchor.y} r={9} fill="none" stroke="currentColor" stroke-width="1.2" />
+        <line x1={anchor.x - 14} y1={anchor.y} x2={anchor.x + 14} y2={anchor.y} stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        <line x1={anchor.x} y1={anchor.y - 14} x2={anchor.x} y2={anchor.y + 14} stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+
+        {/* Bayer letters (plate only) */}
+        {isPlate && sky.stars.map((s) =>
+          s.bayer ? (
+            <text
+              x={s.x + 8} y={s.y + 4}
+              style="font-family: var(--font-serif); font-style: italic; font-size: 11px; fill: currentColor;"
+            >{s.bayer}</text>
+          ) : null,
+        )}
+      </g>
+
+      {isPlate && (
+        <>
+          <line x1="40" y1="282" x2="160" y2="282" stroke="currentColor" stroke-width="1.5" />
+          <text
+            x="100" y="298" text-anchor="middle"
+            style="font-family: var(--font-pixel); font-size: 8px; letter-spacing: 0.28em; fill: currentColor;"
+          >
+            {`${decSign}${sky.decDegrees}° · ${sky.raHours}h`}
+          </text>
+        </>
+      )}
+    </g>
+  </svg>
+</div>
+
+<style>
+  .stamp {
+    display: block;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.15s ease;
+  }
+  .stamp--mark {
+    aspect-ratio: 1 / 1;
+  }
+  .stamp--plate {
+    aspect-ratio: 1 / var(--phi);
+  }
+  .stamp svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+</style>
