@@ -245,6 +245,23 @@ img { display: block; max-width: 100%; }
 .btn--green  { background: var(--green);  color: var(--on-green); }
 .btn--green  .pip { background: var(--on-green); }
 
+/* Shared scaffolding for accent-able crest primitives — see src/components/crests/. */
+.crest {
+  display: inline-block;
+  width: var(--crest-size);
+  line-height: 0;
+  flex-shrink: 0;
+}
+.crest svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.crest--red    { --crest-accent: var(--red); }
+.crest--yellow { --crest-accent: var(--yellow); }
+.crest--blue   { --crest-accent: var(--blue); }
+.crest--green  { --crest-accent: var(--green); }
+
 /* Staggered page-load reveal. Respect reduced motion. */
 .reveal {
   opacity: 0;
