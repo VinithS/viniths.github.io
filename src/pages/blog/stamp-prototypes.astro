@@ -10,13 +10,21 @@
 import Layout from "../../layouts/Layout.astro";
 import Stamper from "../../components/Stamper.svelte";
 import PostStamp from "../../components/blog/PostStamp.astro";
-import { featured } from "../../content/_data/featured";
+import type { FeaturedEntry } from "../../content/_data/featured";
 import { formatPostDate } from "../../lib/format-date";
 
-const SLUG = "stamp-prototypes";
-const META = featured.find((f) => f.slug === SLUG)!;
-const POST_DATE = META.date;
-const POST_DATE_LABEL = formatPostDate(POST_DATE);
+export const meta: FeaturedEntry = {
+  slug: "stamp-prototypes",
+  href: "/blog/stamp-prototypes",
+  title: "Rubber-stamp prototypes",
+  description:
+    "Four takes on letting a visitor stamp a card with their cursor — wash-away, wet-ink smear, random surprise, and a permanent archival record that ages over time.",
+  date: new Date("2026-04-25"),
+  type: "prototype",
+  tags: ["design", "svelte", "interaction"],
+};
+
+const POST_DATE_LABEL = formatPostDate(meta.date);
 
 // Stamp pool shared across prototypes. "kind" drives which Svelte
 // rendering path is used: single-ink mask, native-color img, or the
@@ -69,7 +77,7 @@ const prototypes = [
     <a href="/blog" class="back">&larr; BACK</a>
 
     <header class="post-head">
-      <PostStamp slug={SLUG} date={POST_DATE} type={META.type} />
+      <PostStamp slug={meta.slug} date={meta.date} type={meta.type} />
       <div class="post-kicker">
         <span class="post-kicker-tag">Interactive</span>
         <span class="post-kicker-dot">·</span>

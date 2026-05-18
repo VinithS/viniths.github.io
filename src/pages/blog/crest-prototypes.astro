@@ -12,19 +12,26 @@
 import Layout from "../../layouts/Layout.astro";
 import PrototypeMasthead from "../../components/crests/PrototypeMasthead.astro";
 import PostStamp from "../../components/blog/PostStamp.astro";
-import { featured } from "../../content/_data/featured";
+import type { FeaturedEntry } from "../../content/_data/featured";
 import { formatPostDate } from "../../lib/format-date";
-
-const SLUG = "crest-prototypes";
-const META = featured.find((f) => f.slug === SLUG)!;
 
 import CrestBlackHole from "../../components/crests/CrestBlackHole.astro";
 import CrestLagrangian from "../../components/crests/CrestLagrangian.astro";
 import CrestObserver from "../../components/crests/CrestObserver.astro";
 import CrestSidereal from "../../components/crests/CrestSidereal.astro";
 
-const POST_DATE = new Date("2026-04-30");
-const POST_DATE_LABEL = formatPostDate(POST_DATE);
+export const meta: FeaturedEntry = {
+  slug: "crest-prototypes",
+  href: "/blog/crest-prototypes",
+  title: "Crest prototypes",
+  description:
+    "Four cosmic-bureau crests drawn as 40×40 pixel SVGs — black hole, Lagrangian, observer, sidereal — each with a four-accent palette and a specimen plate.",
+  date: new Date("2026-04-30"),
+  type: "prototype",
+  tags: ["design", "svg", "css"],
+};
+
+const POST_DATE_LABEL = formatPostDate(meta.date);
 
 const ACCENTS = ["red", "yellow", "blue", "green"] as const;
 
@@ -90,7 +97,7 @@ const crests = [
     <a href="/blog" class="back">&larr; BACK</a>
 
     <header class="post-head">
-      <PostStamp slug={SLUG} date={META.date} type={META.type} />
+      <PostStamp slug={meta.slug} date={meta.date} type={meta.type} />
       <div class="post-kicker">
         <span class="post-kicker-tag">Specimen</span>
         <span class="post-kicker-dot">·</span>
