@@ -1,6 +1,8 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import { getCollection, render } from "astro:content";
+import ConstellationStamp from "../../components/blog/ConstellationStamp.astro";
+import { skyFor } from "../../lib/sky";
 
 export async function getStaticPaths() {
   const posts = await getCollection("blog");
@@ -12,6 +14,7 @@ export async function getStaticPaths() {
 
 const { post } = Astro.props;
 const { Content } = await render(post);
+const sky = skyFor(post.id, post.data.date);
 ---
 
 <Layout title={`${post.data.title} - Vinith`}>
@@ -19,6 +22,9 @@ const { Content } = await render(post);
     <a href="/blog" class="back">&larr; BACK</a>
     <header>
       <h1>{post.data.title}</h1>
+      <div class="post-stamp" aria-hidden="true">
+        <ConstellationStamp sky={sky} variant="mark" type={post.data.type} />
+      </div>
       <div class="meta">
         <span class="writing-date">
           {
@@ -206,5 +212,11 @@ const { Content } = await render(post);
     border: none;
     border-top: 1px solid var(--rule-soft);
     margin: 40px 0;
+  }
+
+  .post-stamp {
+    width: 56px;
+    margin-bottom: 18px;
+    transform: rotate(-2deg);
   }
 </style>

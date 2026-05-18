@@ -1,46 +1,22 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import Ledger from "../../components/blog/Ledger.astro";
 import { getCollection } from "astro:content";
+import { featured } from "../../content/_data/featured";
 
-const posts = (await getCollection("blog")).sort(
-  (a, b) => b.data.date.getTime() - a.data.date.getTime(),
+const posts = (await getCollection("blog")).map((p) => ({
+  slug: p.id,
+  href: `/blog/${p.id}`,
+  title: p.data.title,
+  description: p.data.description,
+  tags: p.data.tags,
+  date: p.data.date,
+  type: p.data.type,
+}));
+
+const entries = [...featured, ...posts].sort(
+  (a, b) => b.date.getTime() - a.date.getTime(),
 );
-
-/*
-  Interactive/non-markdown posts that live as dedicated .astro pages.
-  They're surfaced on /blog as "featured" entries above the collection
-  list so they're discoverable without having to hand-craft markdown
-  wrappers for what are really interactive demos.
-*/
-const featured = [
-  {
-    href: "/blog/crest-prototypes",
-    title: "Crest prototypes",
-    description:
-      "Four cosmic-bureau crests drawn as 40×40 pixel SVGs — black hole, Lagrangian, observer, sidereal — each with a four-accent palette and a specimen plate.",
-    date: new Date("2026-04-30"),
-    tags: ["design", "svg", "css"],
-    kicker: "Specimen",
-  },
-  {
-    href: "/blog/stamp-prototypes",
-    title: "Rubber-stamp prototypes",
-    description:
-      "Four takes on letting a visitor stamp a card with their cursor — wash-away, wet-ink smear, random surprise, and a permanent archival record that ages over time.",
-    date: new Date("2026-04-25"),
-    tags: ["design", "svelte", "interaction"],
-    kicker: "Interactive",
-  },
-  {
-    href: "/blog/display-prototypes",
-    title: "Digital display prototypes",
-    description:
-      "Four takes on a thin futuristic display strip — split-flap, VFD, LED dot-matrix, CRT terminal — plus a scraper-resistant email treatment.",
-    date: new Date("2026-04-25"),
-    tags: ["design", "css", "astro"],
-    kicker: "Interactive",
-  },
-];
 ---
 
 <Layout title="Blog - Vinith">
@@ -53,69 +29,7 @@ const featured = [
       <h1>Recent posts.</h1>
     </header>
 
-    {
-      featured.length > 0 && (
-        <ul class="featured-list">
-          {featured.map((f) => (
-            <li>
-              <a href={f.href} class="featured-card">
-                <span class="featured-kicker">
-                  <span class="featured-pip" />
-                  {f.kicker}
-                </span>
-                <span class="featured-title">{f.title}</span>
-                <span class="featured-desc">{f.description}</span>
-                <span class="featured-meta">
-                  <span class="featured-date">
-                    {f.date
-                      .toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "2-digit",
-                        day: "2-digit",
-                      })
-                      .replace(/\//g, "·")}
-                  </span>
-                  {f.tags.map((tag) => (
-                    <span class="tag-pixel">{tag}</span>
-                  ))}
-                </span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      )
-    }
-
-    <ul class="writing-list">
-      {
-        posts.map((post) => (
-          <li>
-            <span class="writing-date">
-              {post.data.date
-                .toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
-                })
-                .replace(/\//g, "·")}
-            </span>
-            <div>
-              <a href={`/blog/${post.id}`} class="writing-title">
-                {post.data.title}
-              </a>
-              <span class="writing-desc">{post.data.description}</span>
-            </div>
-            {post.data.tags && (
-              <div class="writing-tags">
-                {post.data.tags.map((tag) => (
-                  <span class="tag-pixel">{tag}</span>
-                ))}
-              </div>
-            )}
-          </li>
-        ))
-      }
-    </ul>
+    <Ledger entries={entries} />
   </section>
 </Layout>
 
@@ -132,10 +46,7 @@ const featured = [
     margin-bottom: 36px;
   }
   .section-head h1 {
-    font-variation-settings:
-      "opsz" 72,
-      "SOFT" 60,
-      "wght" 500;
+    font-variation-settings: "opsz" 72, "SOFT" 60, "wght" 500;
     font-size: clamp(32px, 4.5vw, 54px);
     letter-spacing: -0.025em;
     line-height: 1;
@@ -156,173 +67,5 @@ const featured = [
     height: 10px;
     background: var(--blue);
     box-shadow: 0 0 0 2px var(--rule);
-  }
-
-  /* Featured (non-markdown) posts sit above the collection list as a
-     single chunky card per entry. No accents that fight the posts below. */
-  .featured-list {
-    list-style: none;
-    margin: 0 0 36px;
-    padding: 0;
-    display: grid;
-    gap: 16px;
-  }
-  .featured-card {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 8px;
-    padding: 22px 24px 20px;
-    background: var(--bg-card);
-    border: 2px solid var(--rule);
-    box-shadow: 4px 4px 0 var(--rule);
-    text-decoration: none;
-    color: var(--ink);
-    transition:
-      transform 0.1s ease,
-      box-shadow 0.1s ease;
-  }
-  .featured-card:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 5px 5px 0 var(--rule);
-  }
-  .featured-card:active {
-    transform: translate(2px, 2px);
-    box-shadow: 1px 1px 0 var(--rule);
-  }
-  .featured-kicker {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-family: var(--font-pixel);
-    font-size: 10px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--ink-muted);
-  }
-  .featured-pip {
-    width: 8px;
-    height: 8px;
-    background: var(--yellow);
-    box-shadow: 0 0 0 2px var(--rule);
-  }
-  .featured-title {
-    font-family: var(--font-serif);
-    font-variation-settings:
-      "opsz" 32,
-      "SOFT" 60,
-      "wght" 500;
-    font-size: 26px;
-    line-height: 1.1;
-    letter-spacing: -0.02em;
-    color: var(--ink);
-  }
-  .featured-card:hover .featured-title {
-    color: var(--link-hover);
-  }
-  .featured-desc {
-    font-family: var(--font-serif);
-    font-variation-settings:
-      "opsz" 16,
-      "SOFT" 70,
-      "wght" 400;
-    font-size: 15px;
-    line-height: 1.5;
-    color: var(--ink-soft);
-    max-width: 62ch;
-  }
-  .featured-meta {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-top: 6px;
-  }
-  .featured-date {
-    font-family: var(--font-pixel);
-    font-size: 11px;
-    color: var(--ink-muted);
-    letter-spacing: 0.1em;
-  }
-
-  .writing-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-  .writing-list li {
-    display: grid;
-    grid-template-columns: 96px 1fr auto;
-    gap: 28px;
-    align-items: baseline;
-    padding: 22px 0;
-    border-top: 1px solid var(--rule-soft);
-    position: relative;
-    transition: padding 0.2s ease;
-  }
-  .writing-list li:last-child {
-    border-bottom: 1px solid var(--rule-soft);
-  }
-  .writing-list li::before {
-    content: "";
-    position: absolute;
-    left: -16px;
-    top: 50%;
-    width: 6px;
-    height: 6px;
-    background: var(--marker);
-    transform: translateY(-50%) scale(0);
-    transition: transform 0.2s ease;
-  }
-  .writing-list li:hover {
-    padding-left: 16px;
-  }
-  .writing-list li:hover::before {
-    transform: translateY(-50%) scale(1);
-  }
-
-  .writing-date {
-    font-family: var(--font-pixel);
-    font-size: 11px;
-    color: var(--ink-muted);
-    letter-spacing: 0.1em;
-  }
-  .writing-title {
-    font-family: var(--font-serif);
-    font-variation-settings:
-      "opsz" 32,
-      "SOFT" 60,
-      "wght" 500;
-    font-size: 22px;
-    color: var(--ink);
-    text-decoration: none;
-    letter-spacing: -0.015em;
-  }
-  .writing-title:hover {
-    color: var(--link-hover);
-  }
-  .writing-desc {
-    display: block;
-    font-variation-settings:
-      "opsz" 14,
-      "SOFT" 70,
-      "wght" 380;
-    font-size: 14px;
-    color: var(--ink-muted);
-    margin-top: 4px;
-    max-width: 58ch;
-  }
-  .writing-tags {
-    display: flex;
-    gap: 6px;
-  }
-
-  @media (max-width: 720px) {
-    .writing-list li {
-      grid-template-columns: 1fr;
-      gap: 6px;
-    }
-    .writing-tags {
-      margin-top: 10px;
-    }
   }
 </style>
