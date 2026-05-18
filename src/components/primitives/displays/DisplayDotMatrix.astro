@@ -21,6 +21,13 @@ interface Field {
   href?: string;
 }
 
+/*
+  Prototype-only component: this is a showcase used on
+  /blog/display-prototypes. Click handlers do not navigate. If you want
+  a working FIDS strip on a real page, fork this rather than wiring
+  real targets into the prototype.
+*/
+
 interface Props {
   fields: Field[];
   email: string;
@@ -53,19 +60,9 @@ const emailCipher = encodeContact(email);
               <span class="dot-row-label" data-dot-text>
                 {f.label.toUpperCase()}
               </span>
-              {f.href ? (
-                <a
-                  class="dot-row-value"
-                  href={f.href}
-                  data-dot-text
-                >
-                  {f.value.toUpperCase()}
-                </a>
-              ) : (
-                <span class="dot-row-value" data-dot-text>
-                  {f.value.toUpperCase()}
-                </span>
-              )}
+              <span class="dot-row-value" data-dot-text>
+                {f.value.toUpperCase()}
+              </span>
             </div>
           ))
         }
@@ -75,15 +72,14 @@ const emailCipher = encodeContact(email);
             {String(fields.length + 1).padStart(2, "0")}
           </span>
           <span class="dot-row-label" data-dot-text>TRANSMIT</span>
-          <a
+          <span
             class="dot-row-value dot-row-value--email"
-            href="#"
             data-dot-text
             data-cfe={emailCipher}
             data-placeholder="[ CLICK TO DECRYPT ]"
           >
             [ CLICK TO DECRYPT ]
-          </a>
+          </span>
         </div>
       </div>
     </div>
@@ -125,15 +121,13 @@ const emailCipher = encodeContact(email);
         if (e) e.preventDefault();
         revealed = true;
         const plain = decodeCfe(cipher);
-        // Reveal char-by-char for a decrypt feel
+        // Reveal char-by-char for a decrypt feel. No mailto: rewrite —
+        // this prototype is inert by construction.
         el.textContent = "";
         let i = 0;
         const iv = window.setInterval(() => {
           if (i >= plain.length) {
             window.clearInterval(iv);
-            if (el.tagName === "A") {
-              (el as HTMLAnchorElement).href = "mailto:" + plain;
-            }
             return;
           }
           el.textContent = plain.substring(0, i + 1).toUpperCase();

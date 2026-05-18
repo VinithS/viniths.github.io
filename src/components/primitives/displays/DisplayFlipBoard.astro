@@ -87,10 +87,18 @@ const {
 
 const standaloneCipher = email ? encodeContact(email) : "";
 const hasMrz = fused && !!mrz && mrz.length > 0;
+/* Standalone (non-fused) is the prototype showcase path used on
+   /blog/display-prototypes. Inert by construction: clicks never
+   navigate and field hrefs are ignored. The fused path stays live
+   for the /about passport. */
+const inert = !fused;
 const hasTelemetry = !!timezone;
 ---
 
-<div class:list={["flip-board", fused && "flip-board--fused"]} data-flip-board>
+<div
+  class:list={["flip-board", fused && "flip-board--fused"]}
+  data-flip-board
+>
   <div
     class:list={[
       "flip-bezel",
@@ -161,7 +169,7 @@ const hasTelemetry = !!timezone;
           {fields.map((f) => (
             <div class="flip-col">
               <div class="flip-label">{f.label}</div>
-              {f.href ? (
+              {f.href && !inert ? (
                 <a
                   class="flip-value"
                   href={f.href}
@@ -184,16 +192,28 @@ const hasTelemetry = !!timezone;
 
           <div class="flip-col flip-col--email">
             <div class="flip-label">Transmit</div>
-            <a
-              class="flip-value flip-value--email"
-              href="#"
-              data-flip
-              data-cfe={standaloneCipher}
-            >
-              {"[encrypted]".split("").map((ch) => (
-                <span class="flap">{ch}</span>
-              ))}
-            </a>
+            {inert ? (
+              <span
+                class="flip-value flip-value--email"
+                data-flip
+                data-cfe={standaloneCipher}
+              >
+                {"[encrypted]".split("").map((ch) => (
+                  <span class="flap">{ch}</span>
+                ))}
+              </span>
+            ) : (
+              <a
+                class="flip-value flip-value--email"
+                href="#"
+                data-flip
+                data-cfe={standaloneCipher}
+              >
+                {"[encrypted]".split("").map((ch) => (
+                  <span class="flap">{ch}</span>
+                ))}
+              </a>
+            )}
           </div>
         </div>
       )
@@ -334,12 +354,15 @@ const hasTelemetry = !!timezone;
 
   /* Kick off every cell at the same tick and resolve once all have
      settled. Used for whole-MRZ-block hover and reveal. */
-  function scrambleCellsInParallel(cells: HTMLElement[]): Promise<void> {
+  function scrambleCellsInParallel(
+    cells: HTMLElement[],
+    inert: boolean,
+  ): Promise<void> {
     return Promise.all(
       cells.map((cell) => {
         const cipher = cell.getAttribute("data-cfe");
         const target = resolveCellTarget(cell);
-        if (cipher && cell.tagName === "A") {
+        if (!inert && cipher && cell.tagName === "A") {
           cell.setAttribute("href", "mailto:" + target);
         }
         return scrambleSettleAsync(cell, target);
@@ -350,6 +373,9 @@ const hasTelemetry = !!timezone;
   const boards = document.querySelectorAll<HTMLElement>("[data-flip-board]");
 
   boards.forEach((board) => {
+    /* Standalone (non-fused) is the prototype showcase. No mailto:
+       rewrite. Fused embeds (e.g. /about) keep the live behavior. */
+    const inert = !board.classList.contains("flip-board--fused");
     const mrzBlock = board.querySelector<HTMLElement>("[data-mrz]");
     /* In fused/MRZ mode the whole block is a single hover unit:
        all characters scramble in parallel and a data-animating flag
@@ -362,14 +388,14 @@ const hasTelemetry = !!timezone;
       );
       mrzCells.forEach((cell) => {
         const cipher = cell.getAttribute("data-cfe");
-        if (cipher && cell.tagName === "A") {
+        if (!inert && cipher && cell.tagName === "A") {
           cell.setAttribute("href", "mailto:" + decodeCfe(cipher));
         }
       });
       mrzBlock.addEventListener("pointerenter", async () => {
         if (mrzBlock.dataset.animating === "1") return;
         mrzBlock.dataset.animating = "1";
-        await scrambleCellsInParallel(mrzCells);
+        await scrambleCellsInParallel(mrzCells, inert);
         delete mrzBlock.dataset.animating;
       });
     } else {
@@ -377,7 +403,7 @@ const hasTelemetry = !!timezone;
       cells.forEach((cell) => {
         const cipher = cell.getAttribute("data-cfe");
         const target = resolveCellTarget(cell);
-        if (cipher && cell.tagName === "A") {
+        if (!inert && cipher && cell.tagName === "A") {
           cell.setAttribute("href", "mailto:" + target);
         }
         cell.addEventListener("pointerenter", () => {
@@ -398,7 +424,7 @@ const hasTelemetry = !!timezone;
                 const cells = Array.from(
                   mrzBlock.querySelectorAll<HTMLElement>("[data-flip]"),
                 );
-                scrambleCellsInParallel(cells).then(() => {
+                scrambleCellsInParallel(cells, inert).then(() => {
                   delete mrzBlock.dataset.animating;
                 });
               }

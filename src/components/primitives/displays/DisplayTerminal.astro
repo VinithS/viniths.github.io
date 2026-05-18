@@ -21,6 +21,12 @@ interface Field {
   href?: string;
 }
 
+/*
+  Prototype-only component: this is a showcase used on
+  /blog/display-prototypes. Typed routes and the email line never
+  resolve to real targets — the prototype is inert by construction.
+*/
+
 interface Props {
   // Kept for interface-parity with the other Display* prototypes even
   // though this one composes its own lines. Makes sandbox swaps trivial.
@@ -85,7 +91,7 @@ const emailPreview = "░".repeat(
           >
             <span class="term-prompt">$</span>
             <span class="term-text"></span>
-            <a class="term-link" href={l.href} tabindex="-1"></a>
+            <span class="term-link"></span>
           </div>
         ))
       }
@@ -99,7 +105,7 @@ const emailPreview = "░".repeat(
       >
         <span class="term-prompt">$</span>
         <span class="term-text"></span>
-        <a class="term-link" href="#" tabindex="-1"></a>
+        <span class="term-link"></span>
       </div>
 
       <div class="term-line term-line--idle" data-term-idle>
@@ -164,28 +170,27 @@ const emailPreview = "░".repeat(
         await typeInto(textEl, head, 18);
       }
 
-      const linkHref = line.getAttribute("data-link");
       const linkText = line.getAttribute("data-link-text");
-      const anchor = line.querySelector<HTMLAnchorElement>(".term-link");
-      if (anchor && linkHref && linkText) {
+      const slot = line.querySelector<HTMLElement>(".term-link");
+      if (slot && linkText) {
         if (reduce) {
-          anchor.textContent = linkText;
+          slot.textContent = linkText;
         } else {
-          await typeInto(anchor, linkText, 14);
+          await typeInto(slot, linkText, 14);
         }
-        anchor.href = linkHref;
       }
 
       const cfe = line.getAttribute("data-cfe");
-      if (anchor && cfe) {
+      if (slot && cfe) {
         const preview = line.getAttribute("data-preview") || "";
-        anchor.textContent = preview;
-        anchor.dataset.cfe = cfe;
-        anchor.addEventListener("pointerenter", () => {
-          if (anchor.dataset.decrypted) return;
+        slot.textContent = preview;
+        slot.dataset.cfe = cfe;
+        slot.addEventListener("pointerenter", () => {
+          if (slot.dataset.decrypted) return;
           const real = decodeCfe(cfe);
-          anchor.dataset.decrypted = "1";
-          // Scramble-decrypt effect: random glyphs → real char
+          slot.dataset.decrypted = "1";
+          // Scramble-decrypt effect: random glyphs → real char.
+          // No mailto: rewrite — this prototype is inert by construction.
           const chars = "@#%&/<>*+░▒▓█?".split("");
           const steps = 10;
           let step = 0;
@@ -200,11 +205,10 @@ const emailPreview = "░".repeat(
                 out += chars[Math.floor(Math.random() * chars.length)];
               }
             }
-            anchor.textContent = out;
+            slot.textContent = out;
             if (step >= steps) {
               window.clearInterval(iv);
-              anchor.textContent = real;
-              anchor.href = "mailto:" + real;
+              slot.textContent = real;
             }
           }, 40);
         });

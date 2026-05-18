@@ -19,6 +19,13 @@ interface Field {
   href?: string;
 }
 
+/*
+  Prototype-only component: this is a showcase used on
+  /blog/display-prototypes. It is intentionally inert — clicks never
+  navigate. If you want a working VFD on a real page, fork this rather
+  than wiring real targets into the prototype.
+*/
+
 interface Props {
   fields: Field[];
   email: string;
@@ -320,10 +327,9 @@ const FONT: Record<string, SegKey[]> = {
       const decoded = decodeCfe(cipher);
 
       // Replace the [ENCRYPTED] placeholder with the real address once
-      // the page has mounted.
+      // the page has mounted. No click handler — this is a prototype.
       const valueHost = row.querySelector<HTMLElement>("[data-seg-value]");
       if (valueHost) {
-        // small delay so the decrypt feels like a handshake
         window.setTimeout(() => {
           valueHost.classList.add("seg-row-value--booting");
           renderValue(valueHost, decoded);
@@ -333,12 +339,6 @@ const FONT: Record<string, SegKey[]> = {
           );
         }, 600);
       }
-
-      // Wrap the row in an anchor-like click handler for mailto.
-      row.style.cursor = "pointer";
-      row.addEventListener("click", () => {
-        window.location.href = "mailto:" + decoded;
-      });
     });
   });
 </script>

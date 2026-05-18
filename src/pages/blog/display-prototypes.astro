@@ -28,10 +28,12 @@ const POST_DATE_LABEL = POST_DATE.toLocaleDateString("en-US", {
   day: "numeric",
 });
 
+/* Field hrefs are intentionally absent — the displays on this page
+   are inert showcases and don't navigate anywhere. */
 const FIELDS = [
-  { label: "Frequency", value: "/blog", href: "/blog" },
-  { label: "Broadcast", value: "/notes", href: "/tweets" },
-  { label: "Album", value: "/photos", href: "/photos" },
+  { label: "Frequency", value: "/blog" },
+  { label: "Broadcast", value: "/notes" },
+  { label: "Album", value: "/photos" },
   { label: "Coords", value: "Seattle, WA" },
 ];
 
@@ -57,14 +59,14 @@ const prototypes = [
     number: "03",
     title: "LED Dot-Matrix",
     blurb:
-      "Airport-FIDS strip - row numbers, a blinking status LED, a live clock, a slow vertical scan beam. Rows boot in with a staggered fade. The email row shows \"[ CLICK TO DECRYPT ]\"; click or hover and the real address streams in character-by-character, then the anchor's mailto: materialises.",
+      "Airport-FIDS strip - row numbers, a blinking status LED, a live clock, a slow vertical scan beam. Rows boot in with a staggered fade. The email row shows \"[ CLICK TO DECRYPT ]\"; click or hover and the real address streams in character-by-character.",
   },
   {
     id: "term",
     number: "04",
     title: "CRT Terminal",
     blurb:
-      "Amber-on-black console window with a chrome bar, scanlines, and a rare sync-roll that hints at a failing CRT. Lines type in sequentially with a persistent blinking caret. The email is a row of ░ blocks until you hover - then it runs a glyph-scramble decrypt for a PGP-handshake feel. I expect to use this for something else in the future maybe.",
+      "Amber-on-black console window with a chrome bar, scanlines, and a rare sync-roll that hints at a failing CRT. Lines type in sequentially with a persistent blinking caret. The email is a row of ░ blocks until you hover - then it runs a glyph-scramble decrypt for a PGP-handshake feel.",
   },
 ];
 ---
