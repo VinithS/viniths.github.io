@@ -1,0 +1,63 @@
+---
+/*
+  Reticle — pixel-grid four-corner-bracket selector.
+  Each corner has 8px arms with a 2px notch in the middle.
+  Animated with steps() so it stutters in the JRPG-cursor cadence.
+*/
+
+interface Props {
+  cx: number;
+  cy: number;
+  size?: number; // half-size of the reticle in svg units
+  colorVar?: string; // CSS variable, default --red
+}
+
+const { cx, cy, size = 22, colorVar = "var(--red)" } = Astro.props;
+---
+
+<g class="reticle" transform={`translate(${cx} ${cy})`} style={`color: ${colorVar};`}>
+  <g shape-rendering="crispEdges" fill="currentColor">
+    {/* TL */}
+    <rect x={-size} y={-size} width="6" height="2"/>
+    <rect x={-size + 10} y={-size} width="2" height="2"/>
+    <rect x={-size} y={-size} width="2" height="6"/>
+    <rect x={-size} y={-size + 10} width="2" height="2"/>
+    {/* TR */}
+    <rect x={size - 6} y={-size} width="6" height="2"/>
+    <rect x={size - 12} y={-size} width="2" height="2"/>
+    <rect x={size - 2} y={-size} width="2" height="6"/>
+    <rect x={size - 2} y={-size + 10} width="2" height="2"/>
+    {/* BL */}
+    <rect x={-size} y={size - 2} width="6" height="2"/>
+    <rect x={-size + 10} y={size - 2} width="2" height="2"/>
+    <rect x={-size} y={size - 6} width="2" height="6"/>
+    <rect x={-size} y={size - 12} width="2" height="2"/>
+    {/* BR */}
+    <rect x={size - 6} y={size - 2} width="6" height="2"/>
+    <rect x={size - 12} y={size - 2} width="2" height="2"/>
+    <rect x={size - 2} y={size - 6} width="2" height="6"/>
+    <rect x={size - 2} y={size - 12} width="2" height="2"/>
+  </g>
+</g>
+
+<style>
+  .reticle {
+    transform-origin: center;
+    transform-box: fill-box;
+    animation:
+      reticle-step 0.36s steps(4, end) 1,
+      reticle-blink 1s steps(2, end) 0.4s infinite;
+  }
+  @keyframes reticle-step {
+    0%   { transform: scale(1.6); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes reticle-blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .reticle { animation: none; opacity: 1; }
+  }
+</style>
