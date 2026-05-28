@@ -22,17 +22,17 @@ const showSandbox = import.meta.env.DEV;
     />
     <script is:inline>
       // Set the theme before first paint to avoid a flash.
+      // Dusk (dark) is the default for first-time visitors; a previously
+      // toggled choice in localStorage still wins.
       (function () {
         try {
           var stored = localStorage.getItem("theme");
           if (stored !== "light" && stored !== "dark") {
-            stored = window.matchMedia("(prefers-color-scheme: dark)").matches
-              ? "dark"
-              : "light";
+            stored = "dark";
           }
           document.documentElement.setAttribute("data-theme", stored);
         } catch (_) {
-          document.documentElement.setAttribute("data-theme", "light");
+          document.documentElement.setAttribute("data-theme", "dark");
         }
       })();
     </script>
