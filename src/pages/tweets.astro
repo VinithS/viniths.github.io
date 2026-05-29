@@ -18,18 +18,23 @@ const accents = ["red", "blue", "yellow", "green"] as const;
       <h1>Scraps &amp; thoughts.</h1>
     </header>
 
-    <div class="notes">
+    <!-- A compact vertical feed: each note hangs off a single timeline
+         spine (the hairline running down the gutter), newest first. The
+         spine is honest structure, not chrome — it's what makes the list
+         read as one continuous stream rather than a grid of boxes. -->
+    <ol class="feed">
       {
         tweets.map((t, i) => (
-          <article class={`note note--${accents[i % accents.length]}`}>
-            <div class="note-date">
+          <li class={`note note--${accents[i % accents.length]}`}>
+            <span class="note-mark" aria-hidden="true" />
+            <time class="note-date" datetime={t.data.date.toISOString()}>
               {formatPostDateCompact(t.data.date)}
-            </div>
-            <p>{t.data.text}</p>
-          </article>
+            </time>
+            <p class="note-text">{t.data.text}</p>
+          </li>
         ))
       }
-    </div>
+    </ol>
   </section>
 </Layout>
 
@@ -43,7 +48,7 @@ const accents = ["red", "blue", "yellow", "green"] as const;
     align-items: baseline;
     justify-content: space-between;
     gap: 32px;
-    margin-bottom: 36px;
+    margin-bottom: 32px;
   }
   .section-head h1 {
     font-variation-settings:
@@ -55,64 +60,79 @@ const accents = ["red", "blue", "yellow", "green"] as const;
     line-height: 1;
   }
 
-  .notes {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 18px;
+  /* ---- Feed ---- */
+  .feed {
+    list-style: none;
+    /* A readable single-column measure — a feed, not a grid. */
+    max-width: 60ch;
+    margin: 0;
+    padding: 0;
   }
 
+  /* Each note hangs off the gutter spine. The spine is a 1px rule drawn
+     down the left padding via a pseudo-element on each row; consecutive
+     rows stack their spines into one continuous line. */
   .note {
-    background: var(--bg-card);
-    border-left: 3px solid var(--ink);
-    padding: 20px 22px;
     position: relative;
+    padding: 4px 0 22px 26px;
   }
   .note::before {
     content: "";
     position: absolute;
-    top: -1px;
-    left: -3px;
-    width: 8px;
-    height: 8px;
+    left: 3px;
+    top: 6px;
+    bottom: 0;
+    width: 1px;
+    background: var(--rule-soft);
   }
-  .note--red::before {
+  /* The last note's spine stops at its mark (nothing below to connect). */
+  .note:last-child::before {
+    display: none;
+  }
+
+  /* The accent mark that pins each note to the spine. */
+  .note-mark {
+    position: absolute;
+    left: 0;
+    top: 6px;
+    width: 7px;
+    height: 7px;
+    box-shadow: 0 0 0 1px var(--rule);
+  }
+  .note--red .note-mark {
     background: var(--red);
   }
-  .note--blue::before {
+  .note--blue .note-mark {
     background: var(--blue);
   }
-  .note--yellow::before {
+  .note--yellow .note-mark {
     background: var(--yellow);
   }
-  .note--green::before {
+  .note--green .note-mark {
     background: var(--green);
   }
 
   .note-date {
+    display: block;
     font-family: var(--font-pixel);
-    font-size: 10px;
+    font-size: 9px;
     color: var(--ink-muted);
-    letter-spacing: 0.12em;
-    margin-bottom: 8px;
+    letter-spacing: 0.14em;
+    margin-bottom: 6px;
   }
-  .note p {
+  .note-text {
     font-family: var(--font-serif);
     font-variation-settings:
       "opsz" 16,
       "SOFT" 80,
       "wght" 400;
     font-size: 16px;
-    line-height: 1.55;
+    line-height: 1.5;
     color: var(--ink);
+    text-wrap: pretty;
   }
-  .note p em {
+  .note-text em {
     font-style: italic;
     color: var(--ink-soft);
-  }
-
-  @media (max-width: 720px) {
-    .notes {
-      grid-template-columns: 1fr;
-    }
   }
 </style>
