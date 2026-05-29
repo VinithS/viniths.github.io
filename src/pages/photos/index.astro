@@ -16,6 +16,7 @@ const albums = (await getCollection("photos"))
     count: album.data.images.length,
     aspect: album.data.aspect,
     cover: album.data.cover,
+    images: album.data.images,
   }));
 
 // Dev-only album creator. import.meta.env.DEV is statically false in a
