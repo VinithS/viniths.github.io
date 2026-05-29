@@ -12,22 +12,31 @@
          files under public/photos/<slug>/ and appends to photos.json.
       4. Reload so the new album renders through the content pipeline.
   */
+  // Default the month to the current one so the common path (title + images
+  // → CREATE) just works; the native <input type="month"> is easy to leave
+  // silently empty, which used to keep CREATE disabled with no explanation.
+  const thisMonth = new Date().toISOString().slice(0, 7); // "YYYY-MM"
+
   let open = $state(false);
   let title = $state("");
   let place = $state("");
-  let month = $state(""); // "YYYY-MM"
+  let month = $state(thisMonth); // "YYYY-MM"
   let files = $state([]); // { name, alt, dataUrl, aspect }
   let coverIndex = $state(0);
   let status = $state("idle"); // idle | reading | saving | error
   let error = $state("");
 
-  let canCreate = $derived(
-    title.trim().length > 0 &&
-      files.length > 0 &&
-      /^\d{4}-\d{2}$/.test(month) &&
-      status !== "saving" &&
-      status !== "reading",
+  // What still blocks CREATE, in human terms — shown beside the button so a
+  // disabled state always explains itself.
+  let missing = $derived(
+    [
+      title.trim().length === 0 && "a title",
+      files.length === 0 && "an image",
+      !/^\d{4}-\d{2}$/.test(month) && "a month",
+    ].filter(Boolean),
   );
+  let busy = $derived(status === "saving" || status === "reading");
+  let canCreate = $derived(missing.length === 0 && !busy);
 
   function readFile(file) {
     return new Promise((resolve, reject) => {
@@ -159,6 +168,8 @@
       <div class="creator-foot">
         {#if status === "error"}
           <span class="creator-error" role="alert">{error}</span>
+        {:else if missing.length > 0}
+          <span class="creator-hint">Add {missing.join(" + ")}</span>
         {/if}
         <button class="creator-create" onclick={create} disabled={!canCreate}>
           {status === "saving" ? "CREATING…" : "CREATE"}
@@ -364,6 +375,14 @@
     font-size: 10px;
     letter-spacing: 0.06em;
     color: var(--red);
+    margin-right: auto;
+  }
+  .creator-hint {
+    font-family: var(--font-pixel);
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
     margin-right: auto;
   }
   .creator-create {
