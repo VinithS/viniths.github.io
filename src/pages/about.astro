@@ -96,7 +96,7 @@ const mrz = [
         ]}
         holo
       >
-        <CrestBlackHole slot="crest" size={72} />
+        <CrestBlackHole slot="crest" size={82} />
       </MastheadFrame>
 
       <!-- Bio block: portrait + status on the left, passport field
@@ -124,14 +124,11 @@ const mrz = [
           <PassportField label="Classification">
             {BIO.classification}
           </PassportField>
-          <PassportField label="Seat / Place of Emergence">
+          <PassportField label="Plane of Emergence">
             {BIO.seat}
           </PassportField>
           <PassportField label="Vocation">
             {BIO.vocation}
-          </PassportField>
-          <PassportField label="Year of Issue" mono>
-            {BIO.issued}
           </PassportField>
         </PassportFields>
       </div>
@@ -166,6 +163,9 @@ const mrz = [
     justify-content: center;
     padding: 48px 0 32px;
     perspective: 1600px;
+  }
+  .about-page :global(.crest-slot) {
+    margin: -10px 0 0 -10px;
   }
 
   /* Bio block: passport photo stack + field grid. Left column is
