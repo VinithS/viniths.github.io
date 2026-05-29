@@ -1,6 +1,6 @@
 ---
 /*
-  /blog/stamp-prototypes - "Rubber-stamp the card" post.
+  /ledger/stamp-prototypes - "Rubber-stamp the card" post.
 
   Four interactive variations on a stamper island. Each prototype is a
   dummy card + tray. The same Svelte component handles all of them via
@@ -9,13 +9,13 @@
 
 import Layout from "../../layouts/Layout.astro";
 import Stamper from "../../components/Stamper.svelte";
-import PostStamp from "../../components/blog/PostStamp.astro";
+import PostStamp from "../../components/ledger/PostStamp.astro";
 import type { FeaturedEntry } from "../../content/_data/featured";
 import { formatPostDate } from "../../lib/format-date";
 
 export const meta: FeaturedEntry = {
   slug: "stamp-prototypes",
-  href: "/blog/stamp-prototypes",
+  href: "/ledger/stamp-prototypes",
   title: "Rubber-stamp prototypes",
   description:
     "Four takes on letting a visitor stamp a card with their cursor — wash-away, wet-ink smear, random surprise, and a permanent archival record that ages over time.",
@@ -74,7 +74,7 @@ const prototypes = [
 
 <Layout title="Rubber-stamp prototypes - Vinith">
   <article class="post">
-    <a href="/blog" class="back">&larr; BACK</a>
+    <a href="/ledger" class="back">&larr; BACK</a>
 
     <header class="post-head">
       <PostStamp slug={meta.slug} date={meta.date} type={meta.type} />
@@ -118,7 +118,7 @@ const prototypes = [
     }
 
     <footer class="post-foot">
-      <a href="/blog" class="back">&larr; BACK TO BLOG</a>
+      <a href="/ledger" class="back">&larr; BACK TO LEDGER</a>
     </footer>
   </article>
 </Layout>

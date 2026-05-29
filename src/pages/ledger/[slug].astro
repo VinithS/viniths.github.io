@@ -1,11 +1,11 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import { getCollection, render } from "astro:content";
-import PostStamp from "../../components/blog/PostStamp.astro";
+import PostStamp from "../../components/ledger/PostStamp.astro";
 import { formatPostDate } from "../../lib/format-date";
 
 export async function getStaticPaths() {
-  const posts = await getCollection("blog");
+  const posts = await getCollection("ledger");
   return posts.map((post) => ({
     params: { slug: post.id },
     props: { post },
@@ -18,7 +18,7 @@ const { Content } = await render(post);
 
 <Layout title={`${post.data.title} - Vinith`}>
   <article class="post">
-    <a href="/blog" class="back">&larr; BACK</a>
+    <a href="/ledger" class="back">&larr; BACK</a>
     <header class="post-head">
       <PostStamp slug={post.id} date={post.data.date} type={post.data.type} />
       <h1>{post.data.title}</h1>

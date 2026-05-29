@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
-test("blog page exposes the Atlas pane and unfolds on click", async ({ page }) => {
-  await page.goto("/blog");
+test("ledger page exposes the Atlas pane and unfolds on click", async ({ page }) => {
+  await page.goto("/ledger");
 
   // Pane starts collapsed; the Atlas button is always present.
   const atlasBtn = page.getByRole("button", { name: /^atlas/i });
@@ -21,7 +21,7 @@ test("blog page exposes the Atlas pane and unfolds on click", async ({ page }) =
 });
 
 test("clicking a tag star filters the ledger", async ({ page }) => {
-  await page.goto("/blog");
+  await page.goto("/ledger");
 
   // Open the pane first.
   await page.getByRole("button", { name: /^atlas/i }).click();

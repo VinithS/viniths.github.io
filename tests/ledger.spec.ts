@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 test("ledger shows all entries with stamps and kickers", async ({ page }) => {
-  await page.goto("/blog");
+  await page.goto("/ledger");
 
   // The ledger has at least the 3 featured prototypes + 2 markdown posts
   const rows = page.locator(".ledger > li");
@@ -16,7 +16,7 @@ test("ledger shows all entries with stamps and kickers", async ({ page }) => {
 });
 
 test("hovering a stamp opens the atlas card", async ({ page }) => {
-  await page.goto("/blog");
+  await page.goto("/ledger");
 
   const firstAnchor = page.locator(".ledger > li .anchor[data-atlas-anchor]").first();
   await firstAnchor.hover();

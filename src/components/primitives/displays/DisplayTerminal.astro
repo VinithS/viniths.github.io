@@ -23,7 +23,7 @@ interface Field {
 
 /*
   Prototype-only component: this is a showcase used on
-  /blog/display-prototypes. Typed routes and the email line never
+  /ledger/display-prototypes. Typed routes and the email line never
   resolve to real targets — the prototype is inert by construction.
 */
 
@@ -78,7 +78,7 @@ const emailPreview = "░".repeat(
 
       {
         [
-          { prompt: "get", key: "writing",  href: "/blog",   slug: "/WRITING" },
+          { prompt: "get", key: "writing",  href: "/ledger", slug: "/WRITING" },
           { prompt: "get", key: "photos",   href: "/photos", slug: "/PHOTOS" },
           { prompt: "get", key: "notes",    href: "/tweets", slug: "/NOTES"  },
         ].map((l) => (

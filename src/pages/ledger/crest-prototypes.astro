@@ -1,6 +1,6 @@
 ---
 /*
-  /blog/crest-prototypes — specimen catalog of the seven cosmic crests.
+  /ledger/crest-prototypes — specimen catalog of the seven cosmic crests.
 
   Each crest is a 40×40 pixel SVG rendered crispEdges, fills pinned to
   theme tokens (--ink / --ink-soft / --ink-muted + an accent slot), so
@@ -11,7 +11,7 @@
 
 import Layout from "../../layouts/Layout.astro";
 import PrototypeMasthead from "../../components/crests/PrototypeMasthead.astro";
-import PrototypePostShell from "../../components/blog/PrototypePostShell.astro";
+import PrototypePostShell from "../../components/ledger/PrototypePostShell.astro";
 import type { FeaturedEntry } from "../../content/_data/featured";
 
 import CrestBlackHole from "../../components/crests/CrestBlackHole.astro";
@@ -21,7 +21,7 @@ import CrestSidereal from "../../components/crests/CrestSidereal.astro";
 
 export const meta: FeaturedEntry = {
   slug: "crest-prototypes",
-  href: "/blog/crest-prototypes",
+  href: "/ledger/crest-prototypes",
   title: "Crest prototypes",
   description:
     "Four cosmic-bureau crests drawn as 40×40 pixel SVGs — black hole, Lagrangian, observer, sidereal — each with a four-accent palette and a specimen plate.",

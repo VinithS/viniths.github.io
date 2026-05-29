@@ -1,6 +1,6 @@
 <script>
   /*
-    AtlasPane — the fold-out cosmic-web tag-graph atlas at the top of /blog.
+    AtlasPane — the fold-out cosmic-web tag-graph atlas at the top of /ledger.
 
     The Atlas button sits inline with the section heading. Pressing it
     unfolds a paper-card panel in-flow (push, not overlay) that shows
@@ -35,7 +35,7 @@
       7. Selected-tag callout                          (.callout)
 
     Selection state lives here and is dispatched as a `cosmos:select`
-    DOM event with `detail.slug = string | null`. The parent /blog page
+    DOM event with `detail.slug = string | null`. The parent /ledger page
     listens and filters its ledger in response.
   */
 

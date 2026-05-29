@@ -1,15 +1,15 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import Ledger from "../../components/blog/Ledger.astro";
+import Ledger from "../../components/ledger/Ledger.astro";
 import SectionTag from "../../components/SectionTag.astro";
 import AtlasPane from "../../components/atlas/AtlasPane.svelte";
 import { getCollection } from "astro:content";
 import { featured } from "../../content/_data/featured";
 import { tagGraphFrom } from "../../lib/cosmos";
 
-const posts = (await getCollection("blog")).map((p) => ({
+const posts = (await getCollection("ledger")).map((p) => ({
   slug: p.id,
-  href: `/blog/${p.id}`,
+  href: `/ledger/${p.id}`,
   title: p.data.title,
   description: p.data.description,
   tags: p.data.tags,
@@ -24,10 +24,10 @@ const entries = [...featured, ...posts].sort(
 const graph = tagGraphFrom(entries);
 ---
 
-<Layout title="Blog - Vinith">
+<Layout title="Ledger - Vinith">
   <section class="band">
     <header class="section-head">
-      <SectionTag number="01" label="Blog" accent="red" />
+      <SectionTag number="01" label="Ledger" accent="red" />
       <h1>Recent posts.</h1>
     </header>
 
