@@ -1,9 +1,21 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import SectionTag from "../../components/SectionTag.astro";
+import PhotoAlbumGrid from "../../components/PhotoAlbumGrid.svelte";
 import { getCollection } from "astro:content";
 
-const albums = await getCollection("photos");
+// One continuous mosaic, newest first. `date` is "YYYY-MM" so a lexical
+// sort is chronological; descending = newest at the top.
+const albums = (await getCollection("photos"))
+  .sort((a, b) => b.data.date.localeCompare(a.data.date))
+  .map((album) => ({
+    id: album.id,
+    title: album.data.title,
+    place: album.data.description,
+    count: album.data.images.length,
+    aspect: album.data.aspect,
+    cover: album.data.cover,
+  }));
 ---
 
 <Layout title="Photos - Vinith">
@@ -13,32 +25,7 @@ const albums = await getCollection("photos");
       <h1>Albums.</h1>
     </header>
 
-    <div class="albums">
-      {
-        albums.map((album) => (
-          <a href={`/photos/${album.id}`} class="album">
-            <div class="album-thumb">
-              <img
-                src={album.data.cover}
-                alt={album.data.title}
-                loading="lazy"
-              />
-              <div class="scanlines" />
-            </div>
-            <div class="album-body">
-              <div class="album-title">{album.data.title}</div>
-              <div class="album-sub">
-                <span>{album.data.description}</span>
-                <span class="album-count">
-                  <span class="sq-mini" />
-                  {album.data.images.length} PHOTOS
-                </span>
-              </div>
-            </div>
-          </a>
-        ))
-      }
-    </div>
+    <PhotoAlbumGrid client:load albums={albums} />
   </section>
 </Layout>
 
@@ -62,109 +49,5 @@ const albums = await getCollection("photos");
     font-size: clamp(32px, 4.5vw, 54px);
     letter-spacing: -0.025em;
     line-height: 1;
-  }
-
-  .albums {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-  }
-
-  .album {
-    background: var(--bg-card);
-    border: 2px solid var(--rule);
-    box-shadow: 4px 4px 0 var(--rule);
-    overflow: hidden;
-    text-decoration: none;
-    color: var(--ink);
-    display: flex;
-    flex-direction: column;
-    transition:
-      transform 0.15s ease,
-      box-shadow 0.15s ease;
-  }
-  .album:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 7px 7px 0 var(--rule);
-  }
-
-  .album-thumb {
-    position: relative;
-    aspect-ratio: 4 / 3;
-    background: var(--bg-inset);
-    border-bottom: 2px solid var(--rule);
-    overflow: hidden;
-  }
-  .album-thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-  .scanlines {
-    position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(
-      to bottom,
-      transparent 0px,
-      transparent 3px,
-      rgba(0, 0, 0, 0.12) 3px,
-      rgba(0, 0, 0, 0.12) 4px
-    );
-    pointer-events: none;
-  }
-
-  .album-body {
-    padding: 14px 16px 16px;
-  }
-  .album-title {
-    font-family: var(--font-serif);
-    font-variation-settings:
-      "opsz" 24,
-      "SOFT" 60,
-      "wght" 600;
-    font-size: 18px;
-    letter-spacing: -0.01em;
-    color: var(--ink);
-  }
-  .album-sub {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    font-family: var(--font-pixel);
-    font-size: 10px;
-    color: var(--ink-muted);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    margin-top: 6px;
-  }
-  .album-sub > span:first-child {
-    flex: 1;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-  .album-count {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
-  }
-  .album-count .sq-mini {
-    width: 6px;
-    height: 6px;
-    background: var(--signal);
-  }
-
-  @media (max-width: 860px) {
-    .albums {
-      grid-template-columns: 1fr 1fr;
-    }
-  }
-  @media (max-width: 560px) {
-    .albums {
-      grid-template-columns: 1fr;
-    }
   }
 </style>

@@ -1,9 +1,48 @@
 [
   {
+    "id": "phone-diary",
+    "title": "Phone diary",
+    "description": "Everywhere",
+    "date": "2025-05",
+    "cover": "/photos/jlp-m87.png",
+    "aspect": 2.0,
+    "images": [
+      { "src": "/photos/jlp-m87.png", "alt": "M87, in false color" },
+      { "src": "/photos/spinning-blackhole.webp", "alt": "A spinning black hole" },
+      { "src": "/photos/nostalgia/spiderman-2.jpg", "alt": "Webslinging, paused" }
+    ]
+  },
+  {
+    "id": "harbor-nights",
+    "title": "Harbor, after dark",
+    "description": "Lisbon",
+    "date": "2025-02",
+    "cover": "/photos/spinning-blackhole.webp",
+    "aspect": 1.778,
+    "images": [
+      { "src": "/photos/spinning-blackhole.webp", "alt": "Quay lights on the water" },
+      { "src": "/photos/nostalgia/far-cry-1.jpg", "alt": "A tiled doorway" }
+    ]
+  },
+  {
+    "id": "first-frost",
+    "title": "First frost",
+    "description": "Höfn",
+    "date": "2025-01",
+    "cover": "/photos/nostalgia/far-cry-1.jpg",
+    "aspect": 0.667,
+    "images": [
+      { "src": "/photos/nostalgia/far-cry-1.jpg", "alt": "Ice on the window" },
+      { "src": "/photos/nostalgia/delta-ops.jpg", "alt": "Frozen reeds" }
+    ]
+  },
+  {
     "id": "nostalgia",
     "title": "Nostalgia",
-    "description": "Games that defined the early 2000s.",
+    "description": "Games that defined the early 2000s",
+    "date": "2024-11",
     "cover": "/photos/nostalgia/spiderman-2.jpg",
+    "aspect": 1.333,
     "images": [
       { "src": "/photos/nostalgia/spiderman-2.jpg", "alt": "Spider-Man 2" },
       {
@@ -11,6 +50,66 @@
         "alt": "Delta Ops: Army Special Forces"
       },
       { "src": "/photos/nostalgia/far-cry-1.jpg", "alt": "Far Cry" }
+    ]
+  },
+  {
+    "id": "cascades",
+    "title": "Cascades, slow",
+    "description": "Pacific Northwest",
+    "date": "2024-07",
+    "cover": "/photos/nostalgia/delta-ops.jpg",
+    "aspect": 0.705,
+    "images": [
+      { "src": "/photos/nostalgia/delta-ops.jpg", "alt": "A trail through ferns" },
+      { "src": "/photos/nostalgia/far-cry-1.jpg", "alt": "The lake at hour six" }
+    ]
+  },
+  {
+    "id": "long-exposures",
+    "title": "Long exposures",
+    "description": "Atacama",
+    "date": "2024-04",
+    "cover": "/photos/jlp-m87.png",
+    "aspect": 2.0,
+    "images": [
+      { "src": "/photos/jlp-m87.png", "alt": "Star trails over the salt flat" },
+      { "src": "/photos/spinning-blackhole.webp", "alt": "The observatory dome" }
+    ]
+  },
+  {
+    "id": "kyoto",
+    "title": "Kyoto, on film",
+    "description": "Kyoto",
+    "date": "2023-10",
+    "cover": "/photos/nostalgia/far-cry-1.jpg",
+    "aspect": 0.667,
+    "images": [
+      { "src": "/photos/nostalgia/far-cry-1.jpg", "alt": "A cobblestone alley at dusk" },
+      { "src": "/photos/nostalgia/spiderman-2.jpg", "alt": "A sodium-vapor doorway" }
+    ]
+  },
+  {
+    "id": "rooftop",
+    "title": "Rooftop, on tape",
+    "description": "Seoul",
+    "date": "2023-03",
+    "cover": "/photos/spinning-blackhole.webp",
+    "aspect": 1.778,
+    "images": [
+      { "src": "/photos/spinning-blackhole.webp", "alt": "Neon over the block" },
+      { "src": "/photos/jlp-m87.png", "alt": "An antenna field" }
+    ]
+  },
+  {
+    "id": "first-roll",
+    "title": "First roll",
+    "description": "Backyard",
+    "date": "2022-03",
+    "cover": "/photos/nostalgia/spiderman-2.jpg",
+    "aspect": 1.333,
+    "images": [
+      { "src": "/photos/nostalgia/spiderman-2.jpg", "alt": "An overexposed sky" },
+      { "src": "/photos/nostalgia/delta-ops.jpg", "alt": "The dog, blurred" }
     ]
   }
 ]
