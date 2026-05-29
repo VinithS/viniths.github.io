@@ -72,6 +72,14 @@
 
   let { verbMs = 2400, spinMs = 90 } = $props();
 
+  // Pick a random verb index, avoiding the one currently shown so a
+  // tick never lands on the same word (which would read as a stall).
+  function nextVerb(current) {
+    if (VERBS.length < 2) return 0;
+    const i = Math.floor(Math.random() * (VERBS.length - 1));
+    return i >= current ? i + 1 : i;
+  }
+
   // Start on a random verb so two visits in a row don't look identical.
   let verbIdx = $state(Math.floor(Math.random() * VERBS.length));
   let spinIdx = $state(0);
@@ -81,7 +89,7 @@
     reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const verbIv = setInterval(() => {
-      verbIdx = (verbIdx + 1) % VERBS.length;
+      verbIdx = nextVerb(verbIdx);
     }, verbMs);
 
     let spinIv;
