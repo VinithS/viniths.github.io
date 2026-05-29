@@ -1,8 +1,14 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import Critters from "../components/home/Critters.svelte";
 ---
 
 <Layout title="Vinith">
+  <!-- Ambient pixel creatures roaming the far background, drawn behind the
+       hero and drifting toward the cursor. client:idle so it never blocks
+       first paint; the island self-disables under prefers-reduced-motion. -->
+  <Critters client:idle />
+
   <section class="hero">
     <div class="hero-text">
       <div class="eyebrow reveal" data-delay="1">
