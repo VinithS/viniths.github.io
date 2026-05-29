@@ -2,6 +2,7 @@
 import Layout from "../../layouts/Layout.astro";
 import SectionTag from "../../components/SectionTag.astro";
 import PhotoAlbumGrid from "../../components/PhotoAlbumGrid.svelte";
+import AlbumCreator from "../../components/dev/AlbumCreator.svelte";
 import { getCollection } from "astro:content";
 
 // One continuous mosaic, newest first. `date` is "YYYY-MM" so a lexical
@@ -16,6 +17,10 @@ const albums = (await getCollection("photos"))
     aspect: album.data.aspect,
     cover: album.data.cover,
   }));
+
+// Dev-only album creator. import.meta.env.DEV is statically false in a
+// build, so the island import and this block are dead-code-stripped.
+const showCreator = import.meta.env.DEV;
 ---
 
 <Layout title="Photos - Vinith">
@@ -24,6 +29,8 @@ const albums = (await getCollection("photos"))
       <SectionTag number="02" label="Photos" accent="green" />
       <h1>Albums.</h1>
     </header>
+
+    {showCreator && <AlbumCreator client:load />}
 
     <PhotoAlbumGrid client:load albums={albums} />
   </section>
