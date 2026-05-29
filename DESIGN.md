@@ -15,14 +15,17 @@ When in doubt: more serif, less chrome.
 
 ## Scale: the emergent-observer frame
 
-The conceptual frame underneath the visual direction is _cosmological_. The site owner treats the self as an emergent observer — an entity born in and of the universe, registering what it sees. This scale should quietly inform design choices on pages that introduce or identify the person.
+The conceptual frame underneath the visual direction is _cosmological_, and it spans the whole site. The site owner treats the self as an emergent observer — an entity born in and of the universe, registering what it sees. Every page is a view from that observer, so this scale quietly informs design choices everywhere: most explicitly on pages that introduce or identify the person, but also in the shared **sky vocabulary** that threads through the rest of the site (the tag atlas, constellation marks, star-charts, designations, the photo constellation timeline).
 
 - **The Cosmos is the institution.** When a page presents identity (e.g. `/about`), treat it as a document _issued by_ the universe rather than a self-promotional bio. Mastheads carry a universe crest; the person is the entry, not the headline.
 - **The `<CrestBlackHole>` component is the crest.** A dithered three-tone black hole (event horizon + accretion disk + pixel dither halo) rendered via `src/components/crests/CrestBlackHole.astro`. Use it where an institutional seal, passport crest, or university mark would sit — top-left of an identity card, masthead banners, authority marks on formal documents. Don't scatter it decoratively elsewhere.
 - **Hierarchy flips on identity pages.** The crest sits above, bigger-in-authority-if-not-in-pixels, than the person's portrait. The portrait is an entry in a registry, not the hero image.
 - **Language at the margins leans cosmological — sparingly.** Labels like _specimen_, _entry_, _observer_, _registry_, _designation_ signal the frame without becoming sci-fi cosplay. One or two per page is the limit; the serif voice stays grounded and human.
 
-Do not extend this frame to every page. Blog posts, photo albums, and notes are _transmissions from the observer_ — they don't need crests or cosmological framing. The frame surfaces only where the observer is being identified or situated.
+The frame has two registers, and they extend differently:
+
+- **The institutional / identity register stays reserved.** Crests (`<CrestBlackHole>` and friends), masthead seals, and registry language (_specimen_, _entry_, _designation_) belong where the observer is being *identified or situated* — chiefly `/about`. Don't scatter crests decoratively or stamp every page with passport chrome. Blog posts, photo albums, and notes are _transmissions from the observer_; they don't carry crests.
+- **The sky-vocabulary register is site-wide.** Constellations, star-charts, star-fields, magnitude, and coordinate ornament are the observer's _way of seeing_, so they're welcome anywhere they do real navigational or organizing work — the tag atlas on `/blog`, the constellation timeline on `/photos`, a star-field behind a hero. Used this way they are illustrated navigation ornament (see the atlas), not an institutional seal. The same discipline still applies: every star must map to real data, labels stay sparse, and language at the margins leans cosmological only one or two notes per page — enough to signal the frame, never sci-fi cosplay.
 
 ## Color: token layers and the four rules
 

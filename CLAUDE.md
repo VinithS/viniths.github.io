@@ -8,7 +8,7 @@ Retro-themed personal website (blog/photo album/portfolio) with a "warm arcade p
 
 **[`DESIGN.md`](./DESIGN.md) is the source of truth for visual decisions and you must read it every time you read this file.** Before any CSS, component, or visual change, open `DESIGN.md` and read it end-to-end. It defines:
 - The direction ("warm arcade paper") and what the site explicitly is *not*.
-- The "emergent observer" cosmological frame for identity pages.
+- The "emergent observer" cosmological frame — site-wide, in two registers: the reserved institutional/identity layer (crests, registry language) and the site-wide sky vocabulary (constellations, star-charts, designations) used as navigation ornament.
 - The **four color rules** — layer separation, theme symmetry, semantic roles, paired fg/bg tokens.
 - **Proportion** — golden ratio (`--phi: 1.618`) is the default for rectangular surfaces.
 - **Illustrated voice (with stamped exceptions)** — clean illustrated artwork is the default; rubber-ink stamps are the deliberate counterpoint, used only for the system's "press marks" (constellation marks, name plates, classification marks). Don't stamp things that aren't press marks.
@@ -74,7 +74,7 @@ Adding content: drop the file into the right `src/content/` path; schema and exi
 - `src/components/` — Mix of `.astro` (server-rendered) and `.svelte` (interactive islands).
 - Islands are hydrated explicitly with `client:load` / `client:visible` / `client:idle` from the Astro page and receive data as props. `PhotoViewer.svelte` is the reference example.
 - `src/components/primitives/` and `src/components/crests/` hold small building blocks (ornamental SVGs, shared UI primitives) — reuse these before inventing new ones.
-- `crests/CrestBlackHole.astro` is the **crest** — only use it where an institutional seal belongs (identity pages, mastheads). Don't scatter decoratively. See `DESIGN.md` → "Scale: the emergent-observer frame."
+- `crests/CrestBlackHole.astro` is the **crest** — only use it where an institutional seal belongs (identity pages, mastheads). Don't scatter decoratively. This is the *reserved* register of the cosmological frame; the *sky vocabulary* (constellations, star-charts) is the site-wide register and is fine as navigation ornament. See `DESIGN.md` → "Scale: the emergent-observer frame."
 - `src/lib/` — Plain TypeScript utilities (e.g. `obfuscate.ts`). Not Svelte/Astro; importable from anywhere. Add new pure helpers here rather than co-locating with a single component.
 
 ### Tag atlas (`/blog`)
