@@ -235,11 +235,22 @@ const {
       0 0 6px color-mix(in oklab, var(--bg-card), transparent 40%);
   }
 
-  /* Barcode watermark. A rainbow band (same stops as the wisteria
-     shine in FoilCard) masked by an irregular barcode SVG tile.
-     --mxn/--myn are inherited from the parent FoilCard, so one
-     cursor drives both the wisteria stamp shine and this pill —
-     no extra pointer handlers on the page. */
+  /* Barcode watermark — brushed metal.
+
+     THE ONE SANCTIONED DESIGN.md DIVERGENCE. Everywhere else the site is
+     warm-arcade-paper with token-only color and no per-theme component
+     overrides; here the serial bars are deliberately rendered as polished
+     chrome — an achromatic steel sheen with fine brushed striations that
+     catches the light as the cursor moves. The barcode SVG still masks the
+     band into irregular bars, and --mxn/--myn (inherited from the parent
+     FoilCard) still pan the highlight, so one cursor drives both the
+     wisteria stamp shine and this metal strip.
+
+     Metal needs both a bright highlight AND a dark groove to read, which a
+     single blend mode can't deliver across both papers (multiply only
+     darkens, screen only lightens). So the bars are painted at full opacity
+     (mix-blend-mode: normal) and the steel ramp itself is redefined per
+     theme below — the deliberate exception to "no [data-theme] overrides." */
   .serial-barcode {
     position: absolute;
     inset: 0;
@@ -248,33 +259,59 @@ const {
     z-index: 0;
     -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 20' preserveAspectRatio='none'><g fill='%23000'><rect x='1' width='1' height='20'/><rect x='5' width='3' height='20'/><rect x='12' width='1' height='20'/><rect x='16' width='2' height='20'/><rect x='22' width='4' height='20'/><rect x='30' width='1' height='20'/><rect x='34' width='2' height='20'/><rect x='40' width='3' height='20'/><rect x='46' width='1' height='20'/></g></svg>") repeat-x center / 48px 100%;
             mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 20' preserveAspectRatio='none'><g fill='%23000'><rect x='1' width='1' height='20'/><rect x='5' width='3' height='20'/><rect x='12' width='1' height='20'/><rect x='16' width='2' height='20'/><rect x='22' width='4' height='20'/><rect x='30' width='1' height='20'/><rect x='34' width='2' height='20'/><rect x='40' width='3' height='20'/><rect x='46' width='1' height='20'/></g></svg>") repeat-x center / 48px 100%;
-    opacity: 0.3;
-    mix-blend-mode: multiply;
+    /* Steel default (light theme): cool silver with a hot specular band.
+       --steel-* are redefined for dark below. */
+    --steel-low: #6b7178;
+    --steel-mid: #aeb6bd;
+    --steel-hi: #fdfefe;
+    --steel-shadow: #3c4045;
+
+    opacity: 0.85;
+    mix-blend-mode: normal;
   }
+  /* The metal face: a diagonal steel ramp (shadow → mid → specular highlight
+     → mid → low) that the cursor pans, with a fine brushed striation layer
+     over it so it reads as machined metal rather than a smooth gradient. */
   .serial-barcode-band {
     position: absolute;
     inset: -30% -100%;
-    background: linear-gradient(
-      100deg,
-      var(--red) 0%,
-      var(--yellow) 18%,
-      var(--green) 36%,
-      var(--blue) 54%,
-      var(--red) 72%,
-      var(--yellow) 90%,
-      var(--red) 100%
-    );
+    background:
+      /* brushed-metal striations (very fine vertical lines) */
+      repeating-linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.1) 0,
+        rgba(255, 255, 255, 0.1) 0.5px,
+        rgba(0, 0, 0, 0.08) 0.5px,
+        rgba(0, 0, 0, 0.08) 1.5px
+      ),
+      /* the steel sheen ramp */
+      linear-gradient(
+        100deg,
+        var(--steel-shadow) 0%,
+        var(--steel-low) 16%,
+        var(--steel-mid) 34%,
+        var(--steel-hi) 50%,
+        var(--steel-mid) 62%,
+        var(--steel-low) 80%,
+        var(--steel-shadow) 100%
+      );
     transform: translate3d(
       calc((var(--mxn, 50) - 50) * -0.5%),
       calc((var(--myn, 50) - 50) * -0.3%),
       0
     );
-    filter: saturate(1.4);
     will-change: transform;
   }
+  /* Dark theme: warmer gunmetal so the chrome sits inside the dusk instead
+     of glaring. Specular highlight stays bright (metal catches light), but
+     the body is darker steel. (Deliberate per-theme override — see above.) */
   :root[data-theme="dark"] .serial-barcode {
-    mix-blend-mode: screen;
-    opacity: 0.55;
+    --steel-low: #4a4e54;
+    --steel-mid: #878d94;
+    --steel-hi: #e8ecef;
+    --steel-shadow: #25282c;
+
+    opacity: 0.92;
   }
 
   /* Responsive: collapse serial under text on medium, stack on small. */
