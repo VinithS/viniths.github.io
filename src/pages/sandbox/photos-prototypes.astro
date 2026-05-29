@@ -1,111 +1,220 @@
 ---
 /*
-  /sandbox/photos-prototypes — Direction E.
+  /sandbox/photos-prototypes — Direction E (mosaic + left scrubber).
 
-  Spec the user confirmed:
-   - Audience: friend/stranger > self > curious reader
-   - Albums grouped by year
-   - Card metadata: title, place, year, count (camera/stock only on album page)
-   - Vocabulary + behavioral homage to film (no overt sprockets/grease pencil)
-   - One Pentax mark, used once as a fleuron next to the title
-   - Masonry, native aspects (no forced crop)
-   - Accordion expand inline, dim background, prev/next + thumb strip
-   - Sprocket-style timeline rail at the bottom, one tooth per album,
-     click-to-jump, all years marked
+  Spec the user confirmed (see docs/superpowers/specs/2026-05-28-photos-mosaic-scrubber-design.md):
+   - Albums tile as justified rows (mixed aspect ratios fit together, no crop),
+     reading as a magazine spread of prints on paper.
+   - Each card: serif title + a pressed-in "printed index" strip (place · year)
+     — a contact-sheet label, not a floating white box, not a stamp.
+   - A vertical year/month scrubber down the LEFT margin, separated from the
+     mosaic by a brutalist crease (paper-fold spine). Bidirectional: drag to
+     glide the mosaic; scrolling moves the marker.
+   - The old bottom sprocket timeline is removed.
 
-  Album shape used here mirrors what the real content collection will need
-  to add (place, year, count). The schema change goes in
-  src/content.config.ts when this is promoted.
+  Album shape here mirrors what the real content collection will need to add
+  (place, date, count, aspect). The schema change goes in
+  src/content.config.ts when this is promoted; `aspect` is the cover's
+  intrinsic width/height (measured from the asset).
 */
 import Layout from "../../layouts/Layout.astro";
 import PhotoAlbumGrid from "../../components/PhotoAlbumGrid.svelte";
+import YearScrubber from "../../components/photos/YearScrubber.svelte";
 
 type Album = {
   id: string;
   title: string;
   place: string;
-  year: number;
+  date: string; // YYYY-MM
   count: number;
   cover: string;
+  aspect: number; // cover width / height
   frames: { src: string; alt: string }[];
+};
+
+// Cover assets + their measured aspect ratios:
+//   spiderman-2.jpg 1.333 · far-cry-1.jpg 0.667 · delta-ops.jpg 0.705
+//   jlp-m87.png 2.000 · spinning-blackhole.webp 1.778
+const IMG = {
+  spiderman: { src: "/photos/nostalgia/spiderman-2.jpg", aspect: 1.333 },
+  farcry: { src: "/photos/nostalgia/far-cry-1.jpg", aspect: 0.667 },
+  delta: { src: "/photos/nostalgia/delta-ops.jpg", aspect: 0.705 },
+  m87: { src: "/photos/jlp-m87.png", aspect: 2.0 },
+  blackhole: { src: "/photos/spinning-blackhole.webp", aspect: 1.778 },
 };
 
 const albums: Album[] = [
   {
-    id: "nostalgia",
-    title: "Nostalgia",
-    place: "Home",
-    year: 2024,
-    count: 3,
-    cover: "/photos/nostalgia/spiderman-2.jpg",
+    id: "phone-diary",
+    title: "Phone diary",
+    place: "Everywhere",
+    date: "2025-05",
+    count: 41,
+    cover: IMG.m87.src,
+    aspect: IMG.m87.aspect,
     frames: [
-      { src: "/photos/nostalgia/spiderman-2.jpg", alt: "Spider-Man 2" },
-      { src: "/photos/nostalgia/far-cry-1.jpg", alt: "Far Cry" },
-      { src: "/photos/nostalgia/delta-ops.jpg", alt: "Delta Ops" },
+      { src: IMG.m87.src, alt: "M87 still" },
+      { src: IMG.blackhole.src, alt: "Spinning black hole" },
+      { src: IMG.spiderman.src, alt: "Spider-Man 2" },
     ],
   },
   {
-    id: "kyoto-portra",
-    title: "Kyoto, on Portra",
-    place: "Kyoto, JP",
-    year: 2023,
-    count: 24,
-    cover: "/photos/nostalgia/far-cry-1.jpg",
+    id: "harbor-nights",
+    title: "Harbor, after dark",
+    place: "Lisbon, PT",
+    date: "2025-02",
+    count: 16,
+    cover: IMG.blackhole.src,
+    aspect: IMG.blackhole.aspect,
     frames: [
-      { src: "/photos/nostalgia/far-cry-1.jpg", alt: "Cobblestone alley, dusk" },
-      { src: "/photos/nostalgia/spiderman-2.jpg", alt: "Sodium-vapor doorway" },
-      { src: "/photos/nostalgia/delta-ops.jpg", alt: "Bamboo, with rain" },
+      { src: IMG.blackhole.src, alt: "Quay lights on water" },
+      { src: IMG.farcry.src, alt: "Tiled doorway" },
+    ],
+  },
+  {
+    id: "first-frost",
+    title: "First frost",
+    place: "Höfn, IS",
+    date: "2025-01",
+    count: 9,
+    cover: IMG.farcry.src,
+    aspect: IMG.farcry.aspect,
+    frames: [
+      { src: IMG.farcry.src, alt: "Ice on the window" },
+      { src: IMG.delta.src, alt: "Frozen reeds" },
+    ],
+  },
+  {
+    id: "nostalgia",
+    title: "Nostalgia",
+    place: "Home",
+    date: "2024-11",
+    count: 3,
+    cover: IMG.spiderman.src,
+    aspect: IMG.spiderman.aspect,
+    frames: [
+      { src: IMG.spiderman.src, alt: "Spider-Man 2" },
+      { src: IMG.farcry.src, alt: "Far Cry" },
+      { src: IMG.delta.src, alt: "Delta Ops" },
     ],
   },
   {
     id: "cascades",
     title: "Cascades, slow",
     place: "PNW",
-    year: 2024,
+    date: "2024-07",
     count: 18,
-    cover: "/photos/nostalgia/delta-ops.jpg",
+    cover: IMG.delta.src,
+    aspect: IMG.delta.aspect,
     frames: [
-      { src: "/photos/nostalgia/delta-ops.jpg", alt: "Trail through ferns" },
-      { src: "/photos/nostalgia/far-cry-1.jpg", alt: "Lake at hour 6" },
-      { src: "/photos/nostalgia/spiderman-2.jpg", alt: "Tent line, morning" },
+      { src: IMG.delta.src, alt: "Trail through ferns" },
+      { src: IMG.farcry.src, alt: "Lake at hour 6" },
+      { src: IMG.spiderman.src, alt: "Tent line, morning" },
     ],
   },
   {
-    id: "phone-diary",
-    title: "Phone diary",
-    place: "Everywhere",
-    year: 2025,
-    count: 41,
-    cover: "/photos/jlp-m87.png",
+    id: "long-exposures",
+    title: "Long exposures",
+    place: "Atacama, CL",
+    date: "2024-04",
+    count: 22,
+    cover: IMG.m87.src,
+    aspect: IMG.m87.aspect,
     frames: [
-      { src: "/photos/jlp-m87.png", alt: "M87 still" },
-      { src: "/photos/spinning-blackhole.webp", alt: "Spinning black hole" },
-      { src: "/photos/nostalgia/spiderman-2.jpg", alt: "Spider-Man 2" },
+      { src: IMG.m87.src, alt: "Star trails over the salt flat" },
+      { src: IMG.blackhole.src, alt: "Observatory dome" },
+    ],
+  },
+  {
+    id: "kyoto-portra",
+    title: "Kyoto, on Portra",
+    place: "Kyoto, JP",
+    date: "2023-10",
+    count: 24,
+    cover: IMG.farcry.src,
+    aspect: IMG.farcry.aspect,
+    frames: [
+      { src: IMG.farcry.src, alt: "Cobblestone alley, dusk" },
+      { src: IMG.spiderman.src, alt: "Sodium-vapor doorway" },
+      { src: IMG.delta.src, alt: "Bamboo, with rain" },
+    ],
+  },
+  {
+    id: "market-mornings",
+    title: "Market mornings",
+    place: "Oaxaca, MX",
+    date: "2023-06",
+    count: 31,
+    cover: IMG.spiderman.src,
+    aspect: IMG.spiderman.aspect,
+    frames: [
+      { src: IMG.spiderman.src, alt: "Crates of chiles" },
+      { src: IMG.delta.src, alt: "Steam off the comal" },
+    ],
+  },
+  {
+    id: "rooftop-tape",
+    title: "Rooftop, on tape",
+    place: "Seoul, KR",
+    date: "2023-03",
+    count: 12,
+    cover: IMG.blackhole.src,
+    aspect: IMG.blackhole.aspect,
+    frames: [
+      { src: IMG.blackhole.src, alt: "Neon over the block" },
+      { src: IMG.m87.src, alt: "Antenna field" },
     ],
   },
   {
     id: "study",
     title: "Quiet rooms",
     place: "—",
-    year: 2022,
+    date: "2022-09",
     count: 11,
-    cover: "/photos/nostalgia/spiderman-2.jpg",
+    cover: IMG.delta.src,
+    aspect: IMG.delta.aspect,
     frames: [
-      { src: "/photos/nostalgia/spiderman-2.jpg", alt: "Window light" },
-      { src: "/photos/nostalgia/far-cry-1.jpg", alt: "Empty hall" },
+      { src: IMG.delta.src, alt: "Window light" },
+      { src: IMG.farcry.src, alt: "Empty hall" },
+    ],
+  },
+  {
+    id: "first-roll",
+    title: "First roll",
+    place: "Backyard",
+    date: "2022-03",
+    count: 8,
+    cover: IMG.farcry.src,
+    aspect: IMG.farcry.aspect,
+    frames: [
+      { src: IMG.farcry.src, alt: "Overexposed sky" },
+      { src: IMG.spiderman.src, alt: "The dog, blurred" },
     ],
   },
 ];
 
-// Group by year, descending
-const byYear: Record<number, Album[]> = {};
-for (const a of albums) (byYear[a.year] ??= []).push(a);
+// Derive year from date and attach for display.
+type AlbumView = Album & { year: number; month: number };
+const view: AlbumView[] = albums.map((a) => {
+  const [y, m] = a.date.split("-").map(Number);
+  return { ...a, year: y, month: m };
+});
+
+// Group by year descending; within a year, newest month first (matches the
+// scrubber's top→bottom = newest→oldest reading).
+const byYear: Record<number, AlbumView[]> = {};
+for (const a of view) (byYear[a.year] ??= []).push(a);
+for (const y of Object.keys(byYear)) byYear[+y].sort((a, b) => b.month - a.month);
 const years = Object.keys(byYear)
   .map(Number)
   .sort((a, b) => b - a);
 
-// Timeline: one tooth per album, oldest → newest (left → right)
-const timeline = [...albums].sort((a, b) => a.year - b.year);
+// Scrubber range: years descending, with the set of months (1–12) that hold
+// an album in each.
+const range = years.map((year) => ({
+  year,
+  months: byYear[year].map((a) => a.month),
+}));
 ---
 
 <Layout title="Photos — prototypes">
@@ -118,74 +227,49 @@ const timeline = [...albums].sort((a, b) => a.year - b.year);
       <span class="ph-fleuron" aria-hidden="true">
         <!-- One Pentax silhouette, used once. Lives in title leading. -->
         <svg viewBox="0 0 64 40" class="fleuron-svg">
-          <!-- pentaprism -->
-          <path d="M22 10 L28 4 L36 4 L42 10 Z" fill="currentColor"/>
-          <rect x="30" y="2" width="4" height="2" fill="currentColor"/>
-          <!-- top plate -->
-          <rect x="10" y="10" width="44" height="6" fill="currentColor"/>
-          <!-- body -->
-          <rect x="6" y="16" width="52" height="20" fill="currentColor"/>
-          <!-- grip notch -->
-          <rect x="6" y="16" width="6" height="20" fill="currentColor" opacity="0.55"/>
-          <!-- lens -->
-          <circle cx="32" cy="26" r="9" fill="var(--bg)"/>
-          <circle cx="32" cy="26" r="6" fill="currentColor"/>
-          <!-- shutter dot -->
-          <circle cx="50" cy="13" r="1.6" fill="var(--em)"/>
+          <path d="M22 10 L28 4 L36 4 L42 10 Z" fill="currentColor" />
+          <rect x="30" y="2" width="4" height="2" fill="currentColor" />
+          <rect x="10" y="10" width="44" height="6" fill="currentColor" />
+          <rect x="6" y="16" width="52" height="20" fill="currentColor" />
+          <rect x="6" y="16" width="6" height="20" fill="currentColor" opacity="0.55" />
+          <circle cx="32" cy="26" r="9" fill="var(--bg)" />
+          <circle cx="32" cy="26" r="6" fill="currentColor" />
+          <circle cx="50" cy="13" r="1.6" fill="var(--em)" />
         </svg>
       </span>
       Albums.
     </h1>
     <p class="ph-lede">
       Rolls and frames I've kept worth keeping. Click a card to read the roll;
-      use the rail at the bottom to jump back through the years.
+      use the rail on the left to travel back through the years and months.
     </p>
   </section>
 
-  {years.map((year) => (
-    <section class="ph-year" id={`y-${year}`}>
-      <header class="year-strip">
-        <span class="year-num">{year}</span>
-        <span class="year-rule"></span>
-        <span class="year-count">
-          {byYear[year].length} {byYear[year].length === 1 ? "roll" : "rolls"}
-          &nbsp;·&nbsp;
-          {byYear[year].reduce((s, a) => s + a.count, 0)} frames
-        </span>
-      </header>
+  <div class="ph-layout">
+    <aside class="ph-rail">
+      <YearScrubber client:load range={range} />
+    </aside>
 
-      <PhotoAlbumGrid client:load albums={byYear[year]} />
-    </section>
-  ))}
-
-  <!-- Timeline rail: sprocket teeth, one per album, oldest → newest.
-       Hover a tooth highlights it; click jumps to the album.
-       This is the one place sprockets earn their keep — they ARE the rail. -->
-  <section class="ph-timeline" aria-label="Album timeline">
-    <header class="tl-head">
-      <span class="tl-kicker">Timeline</span>
-      <span class="tl-range">
-        {timeline[0].year} — {timeline[timeline.length - 1].year}
-      </span>
-    </header>
-    <div class="tl-rail">
-      <span class="tl-line" aria-hidden="true"></span>
-      <ul class="tl-teeth">
-        {timeline.map((a) => (
-          <li class="tl-tooth-li">
-            <a class="tl-tooth" href={`#album-${a.id}`} aria-label={`Jump to ${a.title}, ${a.year}`}>
-              <span class="tl-perf"></span>
-              <span class="tl-tip">
-                <span class="tl-tip-title">{a.title}</span>
-                <span class="tl-tip-meta">{a.place} · {a.year} · {a.count}</span>
+    <div class="ph-stream">
+      {
+        years.map((year) => (
+          <section class="ph-year" id={`y-${year}`}>
+            <header class="year-strip">
+              <span class="year-num">{year}</span>
+              <span class="year-rule" />
+              <span class="year-count">
+                {byYear[year].length} {byYear[year].length === 1 ? "roll" : "rolls"}
+                &nbsp;·&nbsp;
+                {byYear[year].reduce((s, a) => s + a.count, 0)} frames
               </span>
-            </a>
-            <span class="tl-year">{String(a.year).slice(2)}</span>
-          </li>
-        ))}
-      </ul>
+            </header>
+
+            <PhotoAlbumGrid client:load albums={byYear[year]} />
+          </section>
+        ))
+      }
     </div>
-  </section>
+  </div>
 </Layout>
 
 <style>
@@ -232,7 +316,11 @@ const timeline = [...albums].sort((a, b) => a.year - b.year);
     color: var(--ink);
     transform: translateY(-0.05em);
   }
-  .fleuron-svg { width: 100%; height: 100%; display: block; }
+  .fleuron-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
   .ph-lede {
     font-size: 17px;
     line-height: 1.6;
@@ -241,16 +329,70 @@ const timeline = [...albums].sort((a, b) => a.year - b.year);
   }
 
   /* ============================================================
+     Layout: [ rail ] ┊crease┊ [ mosaic stream ]
+     ============================================================ */
+  .ph-layout {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    column-gap: 0;
+    align-items: start;
+  }
+  .ph-rail {
+    /* the scrubber inside is position: sticky, so this column just reserves
+       the gutter and lets the rail track the viewport. */
+    position: relative;
+    height: 100%;
+  }
+
+  /* The crease: a crisp full-height paper-fold spine on the LEFT edge of the
+     mosaic stream — a brutalist valley fold / exposed column rule, not a soft
+     3D page-curl. Read left→right it's a hard-edged section: a lit page edge
+     lifting, a shadowed wall diving into the valley, a hard structural rule
+     at the fold floor, then the mirror back out. All hard stops (no blur), so
+     it reads as honest structure. Built from the --crease-* token pair plus
+     the --rule structural hairline at the apex, so it works in both themes
+     with no per-theme override. */
+  .ph-stream {
+    position: relative;
+    padding-left: 30px;
+  }
+  .ph-stream::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 0;
+    bottom: 0;
+    width: 8px;
+    background: linear-gradient(
+      to right,
+      var(--crease-highlight) 0,
+      var(--crease-highlight) 1px,
+      var(--crease-shadow) 1px,
+      var(--crease-shadow) 3px,
+      var(--rule) 3px,
+      var(--rule) 4px,
+      var(--crease-shadow) 4px,
+      var(--crease-shadow) 6px,
+      var(--crease-highlight) 6px,
+      var(--crease-highlight) 7px,
+      transparent 7px
+    );
+  }
+
+  /* ============================================================
      Year sections
      ============================================================ */
   .ph-year {
-    margin: 0 0 56px;
+    margin: 0 0 52px;
+  }
+  .ph-year:last-child {
+    margin-bottom: 8px;
   }
   .year-strip {
     display: flex;
     align-items: baseline;
     gap: 14px;
-    margin-bottom: 22px;
+    margin-bottom: 20px;
   }
   .year-num {
     font-family: var(--font-serif);
@@ -273,130 +415,20 @@ const timeline = [...albums].sort((a, b) => a.year - b.year);
     color: var(--ink-muted);
   }
 
-  /* ============================================================
-     Timeline rail (sprockets)
-     ============================================================ */
-  .ph-timeline {
-    margin: 64px 0 8px;
-    padding: 18px 0 22px;
-    border-top: 1px dashed var(--rule-soft);
-    border-bottom: 1px dashed var(--rule-soft);
-  }
-  .tl-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 14px;
-    font-family: var(--font-pixel);
-    font-size: 10px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--ink-muted);
-  }
-  .tl-rail {
-    position: relative;
-    padding: 14px 0 8px;
-  }
-  .tl-line {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 50%;
-    height: 2px;
-    background: var(--ink);
-    opacity: 0.18;
-    transform: translateY(-50%);
-  }
-  .tl-teeth {
-    list-style: none;
-    display: flex;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 0;
-    margin: 0;
-    position: relative;
-  }
-  .tl-tooth-li {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    min-width: 0;
-  }
-  .tl-tooth {
-    position: relative;
-    display: block;
-    width: 100%;
-    max-width: 28px;
-    height: 28px;
-  }
-  /* The "sprocket" — square hole punched in a paper strip, white inside. */
-  .tl-perf {
-    display: block;
-    width: 100%;
-    height: 100%;
-    background: var(--bg);
-    border: 2px solid var(--ink);
-    transition:
-      background 0.15s ease,
-      border-color 0.15s ease,
-      transform 0.1s ease;
-  }
-  .tl-tooth:hover .tl-perf,
-  .tl-tooth:focus-visible .tl-perf {
-    background: var(--em);
-    border-color: var(--ink);
-    transform: translateY(-2px);
-  }
-  .tl-tooth:focus-visible {
-    outline: none;
-  }
-  .tl-tip {
-    position: absolute;
-    bottom: calc(100% + 10px);
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--bg-card);
-    border: 1.5px solid var(--rule);
-    box-shadow: 3px 3px 0 var(--rule);
-    padding: 6px 9px;
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.12s ease;
-    z-index: 5;
-  }
-  .tl-tooth:hover .tl-tip,
-  .tl-tooth:focus-visible .tl-tip {
-    opacity: 1;
-  }
-  .tl-tip-title {
-    display: block;
-    font-family: var(--font-serif);
-    font-variation-settings: "opsz" 18, "SOFT" 60, "wght" 600;
-    font-size: 13px;
-    color: var(--ink);
-    letter-spacing: -0.005em;
-  }
-  .tl-tip-meta {
-    display: block;
-    font-family: var(--font-pixel);
-    font-size: 9px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--ink-muted);
-    margin-top: 2px;
-  }
-  .tl-year {
-    font-family: var(--font-pixel);
-    font-size: 9px;
-    letter-spacing: 0.12em;
-    color: var(--ink-muted);
-  }
-
-  @media (max-width: 560px) {
-    .ph-head { padding-top: 12px; }
-    .tl-tip { display: none; }
+  /* Below 700px the gutter is too tight: collapse to one column, hide the
+     rail + crease, mosaic goes full width. */
+  @media (max-width: 700px) {
+    .ph-layout {
+      grid-template-columns: 1fr;
+    }
+    .ph-rail {
+      display: none;
+    }
+    .ph-stream {
+      padding-left: 0;
+    }
+    .ph-stream::before {
+      display: none;
+    }
   }
 </style>

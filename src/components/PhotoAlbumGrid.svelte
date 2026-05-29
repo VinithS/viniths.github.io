@@ -1,31 +1,79 @@
 <script>
   /*
-    PhotoAlbumGrid — masonry grid of album cards with inline accordion expand.
+    PhotoAlbumGrid — justified-rows "wall of prints" with inline accordion expand.
+
+    Layout:
+     - Covers of mixed aspect ratio are packed into justified rows (see
+       src/lib/photos/justify.ts): each full row fills the container width
+       exactly, scaled to a shared height, with no crop. The trailing row
+       keeps its target height, left-aligned. A ResizeObserver feeds the
+       container width into a $derived layout pass, so rows reflow on resize.
+     - Each cover is a captioned plate: photo flush to the card edges, a
+       serif title and a pressed-in "printed index" strip (place · year)
+       below — the polaroid character without the floating-white-box feel.
 
     Behavior:
-     - Click a card → expands inline (in document flow) with all album frames.
-       The rest of the page dims (overlay above page content but below the
-       expanded card). Click anywhere outside, press Escape, or click the
-       close pill to collapse.
-     - Native aspect ratios. Layout uses CSS columns for masonry.
-     - Sharp paper aesthetic: hard rules, no rounded corners, no rotation.
+     - Click a card → expands inline with all album frames; the rest of the
+       page dims. Click outside, Escape, or the close pill to collapse.
+     - On open/close the grid dispatches a document `photos:album` event so
+       sibling chrome (the year scrubber) can collapse while a card is open.
+     - Cards carry data-album-date / data-album-id so the scrubber can
+       scroll-spy them without coupling to this component's internals.
 
     Props:
      - albums: Album[]
-       { id, title, place, year, count, cover, frames: {src, alt}[] }
+       { id, title, place, year, date:"YYYY-MM", count, aspect, cover,
+         frames: {src, alt}[] }
   */
+  import { justifyRows } from "../lib/photos/justify.js";
+
   let { albums = [] } = $props();
+
+  // Justified-rows tuning. GAP is shared between the JS layout pass and the
+  // CSS gap (applied inline) so the two never drift.
+  const GAP = 14;
+  const TARGET_H = 240;
+
+  let gridEl = $state(null);
+  let containerWidth = $state(0);
 
   let openId = $state(null);
   let openIndex = $state(0);
+
+  // Measure the grid synchronously on mount (avoids a first-paint flash),
+  // then track resizes.
+  $effect(() => {
+    if (!gridEl) return;
+    containerWidth = gridEl.clientWidth;
+    const ro = new ResizeObserver((entries) => {
+      containerWidth = entries[0].contentRect.width;
+    });
+    ro.observe(gridEl);
+    return () => ro.disconnect();
+  });
+
+  const rows = $derived(
+    justifyRows(
+      albums.map((a) => ({ item: a, aspect: a.aspect })),
+      containerWidth,
+      GAP,
+      TARGET_H,
+    ),
+  );
 
   function open(album, e) {
     e?.preventDefault();
     openId = album.id;
     openIndex = 0;
+    document.dispatchEvent(
+      new CustomEvent("photos:album", { detail: { open: true } }),
+    );
   }
   function close() {
     openId = null;
+    document.dispatchEvent(
+      new CustomEvent("photos:album", { detail: { open: false } }),
+    );
   }
   function onKey(e) {
     if (openId && e.key === "Escape") close();
@@ -38,6 +86,9 @@
       if (a) openIndex = (openIndex + 1) % a.frames.length;
     }
   }
+
+  // Short, apostrophed year for the index strip: 2023 -> ʼ23
+  const shortYear = (y) => "ʼ" + String(y).slice(2);
 </script>
 
 <svelte:window onkeydown={onKey} />
@@ -46,80 +97,91 @@
   <button class="dim" aria-label="Close album" onclick={close}></button>
 {/if}
 
-<div class="grid" class:has-open={openId}>
-  {#each albums as album (album.id)}
-    <article class="card-wrap" id={`album-${album.id}`} class:open={openId === album.id}>
-      {#if openId === album.id}
-        <!-- Expanded accordion view, replaces the card in flow -->
-        <div class="expanded">
-          <header class="exp-head">
-            <div class="exp-meta">
-              <span class="exp-place">{album.place}</span>
-              <span class="exp-sep">·</span>
-              <span class="exp-year">{album.year}</span>
-              <span class="exp-sep">·</span>
-              <span class="exp-count">{album.count} frames</span>
-            </div>
-            <h2 class="exp-title">{album.title}</h2>
-            <button class="exp-close" onclick={close} aria-label="Close">
-              <span class="exp-close-x">×</span> CLOSE
-            </button>
-          </header>
-
-          <div class="exp-stage">
-            <figure class="exp-figure">
-              <img src={album.frames[openIndex].src} alt={album.frames[openIndex].alt} />
-            </figure>
-            <div class="exp-controls">
-              <button
-                class="exp-nav"
-                onclick={() => openIndex = (openIndex - 1 + album.frames.length) % album.frames.length}
-                aria-label="Previous frame"
-              >‹ PREV</button>
-              <span class="exp-counter">
-                {String(openIndex + 1).padStart(2, "0")} / {String(album.frames.length).padStart(2, "0")}
-              </span>
-              <button
-                class="exp-nav"
-                onclick={() => openIndex = (openIndex + 1) % album.frames.length}
-                aria-label="Next frame"
-              >NEXT ›</button>
-            </div>
-            <figcaption class="exp-caption">{album.frames[openIndex].alt}</figcaption>
-          </div>
-
-          <div class="exp-strip" role="list">
-            {#each album.frames as f, i}
-              <button
-                class="exp-thumb"
-                class:active={i === openIndex}
-                onclick={() => openIndex = i}
-                aria-label={`Frame ${i + 1}`}
-              >
-                <img src={f.src} alt="" loading="lazy" />
-              </button>
-            {/each}
-          </div>
-        </div>
-      {:else}
-        <!-- Collapsed polaroid card -->
-        <button class="card" onclick={(e) => open(album, e)} aria-label={`Open ${album.title}`}>
-          <span class="card-window">
-            <img src={album.cover} alt={album.title} loading="lazy" />
-          </span>
-          <span class="card-foot">
-            <span class="card-title">{album.title}</span>
-            <span class="card-sub">
-              <span class="card-place">{album.place}</span>
-              <span class="card-dot">·</span>
-              <span class="card-year">{album.year}</span>
-              <span class="card-spacer"></span>
-              <span class="card-count">{album.count}</span>
+<div class="grid" bind:this={gridEl}>
+  {#each rows as row}
+    <div class="row" style={`gap:${GAP}px; ${row.isLastPartial ? "justify-content:flex-start" : ""}`}>
+      {#each row.cells as cell (cell.item.id)}
+        {@const album = cell.item}
+        <article
+          class="card-wrap"
+          id={`album-${album.id}`}
+          data-album-id={album.id}
+          data-album-date={album.date}
+          style={`width:${cell.width}px`}
+        >
+          <button class="card" onclick={(e) => open(album, e)} aria-label={`Open ${album.title}`}>
+            <span class="card-window" style={`height:${row.height}px`}>
+              <img src={album.cover} alt={album.title} loading="lazy" />
+              <span class="scanlines" aria-hidden="true"></span>
             </span>
-          </span>
-        </button>
-      {/if}
-    </article>
+            <span class="card-foot">
+              <span class="card-title">{album.title}</span>
+              <span class="card-strip">
+                <span class="card-strip-place">{album.place}</span>
+                <span class="card-strip-leader" aria-hidden="true"></span>
+                <span class="card-strip-year">{shortYear(album.year)}</span>
+              </span>
+            </span>
+          </button>
+        </article>
+      {/each}
+    </div>
+
+    {#if row.cells.some((c) => c.item.id === openId)}
+      {@const album = albums.find((a) => a.id === openId)}
+      <!-- Expanded accordion view, full width, directly under the row that
+           contained the opened card. -->
+      <div class="expanded" id={`expanded-${album.id}`}>
+        <header class="exp-head">
+          <div class="exp-meta">
+            <span class="exp-place">{album.place}</span>
+            <span class="exp-sep">·</span>
+            <span class="exp-year">{album.year}</span>
+            <span class="exp-sep">·</span>
+            <span class="exp-count">{album.count} frames</span>
+          </div>
+          <h2 class="exp-title">{album.title}</h2>
+          <button class="exp-close" onclick={close} aria-label="Close">
+            <span class="exp-close-x">×</span> CLOSE
+          </button>
+        </header>
+
+        <div class="exp-stage">
+          <figure class="exp-figure">
+            <img src={album.frames[openIndex].src} alt={album.frames[openIndex].alt} />
+          </figure>
+          <div class="exp-controls">
+            <button
+              class="exp-nav"
+              onclick={() => (openIndex = (openIndex - 1 + album.frames.length) % album.frames.length)}
+              aria-label="Previous frame"
+            >‹ PREV</button>
+            <span class="exp-counter">
+              {String(openIndex + 1).padStart(2, "0")} / {String(album.frames.length).padStart(2, "0")}
+            </span>
+            <button
+              class="exp-nav"
+              onclick={() => (openIndex = (openIndex + 1) % album.frames.length)}
+              aria-label="Next frame"
+            >NEXT ›</button>
+          </div>
+          <figcaption class="exp-caption">{album.frames[openIndex].alt}</figcaption>
+        </div>
+
+        <div class="exp-strip" role="list">
+          {#each album.frames as f, i}
+            <button
+              class="exp-thumb"
+              class:active={i === openIndex}
+              onclick={() => (openIndex = i)}
+              aria-label={`Frame ${i + 1}`}
+            >
+              <img src={f.src} alt="" loading="lazy" />
+            </button>
+          {/each}
+        </div>
+      </div>
+    {/if}
   {/each}
 </div>
 
@@ -133,7 +195,6 @@
     cursor: pointer;
     border: none;
     padding: 0;
-    /* fade in */
     animation: dim-in 0.18s ease forwards;
   }
   :root[data-theme="light"] .dim {
@@ -144,41 +205,38 @@
     to   { opacity: 1; }
   }
 
-  /* ----------- Masonry grid ----------- */
+  /* ----------- Justified rows ----------- */
   .grid {
-    column-count: 3;
-    column-gap: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
   }
-  @media (max-width: 860px) { .grid { column-count: 2; } }
-  @media (max-width: 560px) { .grid { column-count: 1; } }
+  .row {
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+  }
 
   .card-wrap {
-    break-inside: avoid;
-    margin: 0 0 18px;
     position: relative;
-  }
-  /* When accordion is open, lift it above the dim */
-  .card-wrap.open {
-    z-index: 20;
-    column-span: all;
-    /* Not all browsers honor column-span perfectly; the parent will
-       still flow other items around it, which is the accordion effect
-       we want. */
+    flex: 0 0 auto;
   }
 
-  /* ----------- Polaroid card (collapsed) ----------- */
+  /* ----------- Plate card (collapsed) ----------- */
   .card {
     display: block;
     width: 100%;
     background: var(--bg-card);
     border: 1.5px solid var(--rule);
     box-shadow: 3px 3px 0 var(--rule);
-    padding: 8px 8px 0;
+    padding: 0;
     cursor: pointer;
     text-align: left;
     color: var(--ink);
     font: inherit;
-    transition: transform 0.12s ease, box-shadow 0.12s ease;
+    transition:
+      transform 0.12s ease,
+      box-shadow 0.12s ease;
   }
   .card:hover {
     transform: translate(-2px, -2px);
@@ -190,18 +248,34 @@
   }
   .card-window {
     display: block;
+    position: relative;
+    width: 100%;
     background: var(--bg-inset);
-    border-bottom: 1px solid var(--rule-soft);
+    border-bottom: 1.5px solid var(--rule);
     overflow: hidden;
   }
   .card-window img {
     width: 100%;
-    height: auto;
+    height: 100%;
+    object-fit: cover;
     display: block;
   }
+  .scanlines {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 3px,
+      rgba(0, 0, 0, 0.10) 3px,
+      rgba(0, 0, 0, 0.10) 4px
+    );
+    pointer-events: none;
+  }
+
   .card-foot {
     display: block;
-    padding: 10px 4px 12px;
+    padding: 9px 10px 10px;
   }
   .card-title {
     display: block;
@@ -209,36 +283,67 @@
     font-variation-settings: "opsz" 22, "SOFT" 60, "wght" 600;
     font-size: 16px;
     letter-spacing: -0.01em;
-    line-height: 1.2;
+    line-height: 1.15;
     color: var(--ink);
+    margin-bottom: 7px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-  .card-sub {
+
+  /* ----------- Printed index strip (caption) ----------- */
+  /* Inset, tinted, letterpressed — a contact-sheet index label pressed into
+     the card. --ink-soft on --bg-inset is AAA in both themes (don't soften
+     to --ink-muted). Inset shadow only — never the raised 3px card shadow. */
+  .card-strip {
     display: flex;
-    align-items: baseline;
-    gap: 6px;
-    margin-top: 4px;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 8px;
+    background: var(--bg-inset);
+    color: var(--ink-soft);
+    border-top: 1px solid var(--rule-soft);
+    border-bottom: 1px solid var(--rule-soft);
+    box-shadow: inset 0 1px 2px var(--crease-shadow);
+    border-radius: 0;
     font-family: var(--font-pixel);
     font-size: 9px;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--ink-muted);
   }
-  .card-dot { opacity: 0.5; }
-  .card-spacer { flex: 1; }
-  .card-count {
-    color: var(--ink);
-    background: var(--bg-inset);
-    padding: 1px 5px;
-    border: 1px solid var(--rule-soft);
+  .card-strip-place {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card-strip-leader {
+    flex: 1;
+    min-width: 10px;
+    height: 6px;
+    align-self: center;
+    /* faint dotted leader, like a printed index line */
+    background-image: radial-gradient(currentColor 0.6px, transparent 0.8px);
+    background-size: 4px 6px;
+    background-position: 0 center;
+    background-repeat: repeat-x;
+    opacity: 0.4;
+  }
+  .card-strip-year {
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.08em;
   }
 
   /* ----------- Expanded accordion ----------- */
   .expanded {
+    width: 100%;
+    position: relative;
+    z-index: 20;
     background: var(--bg-card);
     border: 2px solid var(--rule);
     box-shadow: 6px 6px 0 var(--rule);
     padding: 18px;
-    /* mild reveal */
+    margin-top: 14px;
     animation: exp-in 0.22s cubic-bezier(.2,.8,.2,1) forwards;
   }
   @keyframes exp-in {
@@ -398,6 +503,9 @@
   .exp-thumb.active img { opacity: 1; }
 
   @media (prefers-reduced-motion: reduce) {
-    .dim, .expanded, .card { animation: none !important; transition: none !important; }
+    .dim, .expanded, .card {
+      animation: none !important;
+      transition: none !important;
+    }
   }
 </style>
