@@ -2,17 +2,19 @@
   /*
     ObserverStatus — a cycling whimsical "present activity" label,
     mirroring Claude Code's thinking animation. Cycles the verb every
-    `verbMs`; cycles the asterisk spinner every `spinMs` — fast enough
-    to read as motion, slow enough that the paper doesn't feel noisy.
+    `verbMs`; the asterisk spinner twinkles at a *varying* cadence
+    between `spinMinMs` and `spinMaxMs` — sometimes a quick flicker,
+    sometimes a slow pulse, like a real star.
 
     Verb list and spinner glyphs taken from Claude Code's own
     thinking animation (184 verbs, 6-frame asterisk cycle).
     See: https://blog.alexbeals.com/posts/claude-codes-thinking-animation
 
-    Two independent setIntervals rather than a single coarser tick:
-    the spinner wants ~90ms cadence, the verb wants ~2.4s. Pinning
-    both to the same interval would either over-update the verb or
-    under-animate the spinner.
+    The verb runs on a steady setInterval, but the spinner is a self-
+    scheduling setTimeout: each frame picks the next delay by drifting
+    the current one via a small random walk (clamped to the bounds), so
+    the cadence wanders smoothly through fast and slow stretches rather
+    than jumping randomly frame-to-frame.
 
     Respects prefers-reduced-motion: the spinner holds on a single
     filled glyph and the verb becomes static (doesn't cycle).
@@ -70,7 +72,17 @@
   // a "pulsing bloom" rather than a rotating arc.
   const SPINNER = ["·", "✢", "✳", "✶", "✻", "✽"];
 
-  let { verbMs = 2400, spinMs = 90 } = $props();
+  let { verbMs = 2400, spinMinMs = 70, spinMaxMs = 520 } = $props();
+
+  // Next spinner delay: drift the current cadence by a random step
+  // (±55% of the span) and clamp to [min, max]. Drifting rather than
+  // re-rolling keeps fast runs and slow runs together, so the twinkle
+  // reads as accelerating/decelerating instead of strobing.
+  function nextSpinDelay(current) {
+    const span = spinMaxMs - spinMinMs;
+    const step = (Math.random() - 0.5) * span * 1.1;
+    return Math.min(spinMaxMs, Math.max(spinMinMs, current + step));
+  }
 
   // Pick a random verb index, avoiding the one currently shown so a
   // tick never lands on the same word (which would read as a stall).
@@ -92,16 +104,22 @@
       verbIdx = nextVerb(verbIdx);
     }, verbMs);
 
-    let spinIv;
+    // Spinner: self-scheduling timer with a wandering delay. Start
+    // mid-range and let nextSpinDelay drift it each frame.
+    let spinTo;
     if (!reduced) {
-      spinIv = setInterval(() => {
+      let delay = (spinMinMs + spinMaxMs) / 2;
+      const tick = () => {
         spinIdx = (spinIdx + 1) % SPINNER.length;
-      }, spinMs);
+        delay = nextSpinDelay(delay);
+        spinTo = setTimeout(tick, delay);
+      };
+      spinTo = setTimeout(tick, delay);
     }
 
     return () => {
       clearInterval(verbIv);
-      if (spinIv) clearInterval(spinIv);
+      if (spinTo) clearTimeout(spinTo);
     };
   });
 </script>

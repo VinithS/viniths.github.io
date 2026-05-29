@@ -44,7 +44,10 @@ const { label, mono = false, class: className = "" } = Astro.props;
   .pfield-label {
     font-family: var(--font-pixel);
     font-size: 9px;
-    color: var(--ink-muted);
+    /* --em matches the thinking-verb star (its spinner uses --em too):
+       terracotta orange in light, yellow-ish in dark. Semantic role,
+       so the per-theme hue swap happens in the token blocks. */
+    color: var(--em);
     letter-spacing: 0.18em;
     text-transform: uppercase;
     line-height: 1;
