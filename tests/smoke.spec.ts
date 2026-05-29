@@ -10,15 +10,15 @@ test.describe("home page smoke", () => {
   test("shows the four main nav links", async ({ page }) => {
     await page.goto("/");
     const nav = page.locator("nav.nav");
-    await expect(nav.getByRole("link", { name: "Blog" })).toBeVisible();
+    await expect(nav.getByRole("link", { name: "Ledger" })).toBeVisible();
     await expect(nav.getByRole("link", { name: "Photos" })).toBeVisible();
     await expect(nav.getByRole("link", { name: "Notes" })).toBeVisible();
     await expect(nav.getByRole("link", { name: "About" })).toBeVisible();
   });
 
-  test("clicking Blog navigates to /blog", async ({ page }) => {
+  test("clicking Ledger navigates to /ledger", async ({ page }) => {
     await page.goto("/");
-    await page.locator("nav.nav").getByRole("link", { name: "Blog" }).click();
-    await expect(page).toHaveURL(/\/blog\/?$/);
+    await page.locator("nav.nav").getByRole("link", { name: "Ledger" }).click();
+    await expect(page).toHaveURL(/\/ledger\/?$/);
   });
 });

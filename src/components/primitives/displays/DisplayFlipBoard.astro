@@ -2,9 +2,9 @@
 /*
   DisplayFlipBoard — two flavors of the same instrument panel.
 
-  STANDALONE (blog/display-prototypes): solari split-flap tiles with
+  STANDALONE (ledger/display-prototypes): solari split-flap tiles with
   heavy black cells, hinge-line seam, cream pixel glyphs. This is the
-  "mechanical departure board" showcase the blog post is about.
+  "mechanical departure board" showcase the ledger post is about.
 
   FUSED (/about passport): the whole dark strip reads as one typed
   telegram. The bezel is a sweep rail on top, a multi-line MRZ block
@@ -88,7 +88,7 @@ const {
 const standaloneCipher = email ? encodeContact(email) : "";
 const hasMrz = fused && !!mrz && mrz.length > 0;
 /* Standalone (non-fused) is the prototype showcase path used on
-   /blog/display-prototypes. Inert by construction: clicks never
+   /ledger/display-prototypes. Inert by construction: clicks never
    navigate and field hrefs are ignored. The fused path stays live
    for the /about passport. */
 const inert = !fused;

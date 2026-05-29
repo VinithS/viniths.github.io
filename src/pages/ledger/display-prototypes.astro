@@ -1,17 +1,17 @@
 ---
 /*
-  /blog/display-prototypes - "Digital display prototypes" post.
+  /ledger/display-prototypes - "Digital display prototypes" post.
 
   Four takes on a thin futuristic display I was building for the About
   card footer. Each prototype is a simple card with just the display
   itself - no ID card chrome - so the mechanics read clearly.
 
   This is an interactive .astro post that lives outside the content
-  collection; it's featured on /blog alongside the markdown entries.
+  collection; it's featured on /ledger alongside the markdown entries.
 */
 
 import Layout from "../../layouts/Layout.astro";
-import PrototypePostShell from "../../components/blog/PrototypePostShell.astro";
+import PrototypePostShell from "../../components/ledger/PrototypePostShell.astro";
 import type { FeaturedEntry } from "../../content/_data/featured";
 
 import DisplayFlipBoard from "../../components/primitives/displays/DisplayFlipBoard.astro";
@@ -21,7 +21,7 @@ import DisplayTerminal from "../../components/primitives/displays/DisplayTermina
 
 export const meta: FeaturedEntry = {
   slug: "display-prototypes",
-  href: "/blog/display-prototypes",
+  href: "/ledger/display-prototypes",
   title: "Digital display prototypes",
   description:
     "Four takes on a thin futuristic display strip — split-flap, VFD, LED dot-matrix, CRT terminal — plus a scraper-resistant email treatment.",
@@ -33,7 +33,7 @@ export const meta: FeaturedEntry = {
 /* Field hrefs are intentionally absent — the displays on this page
    are inert showcases and don't navigate anywhere. */
 const FIELDS = [
-  { label: "Frequency", value: "/blog" },
+  { label: "Frequency", value: "/ledger" },
   { label: "Broadcast", value: "/notes" },
   { label: "Album", value: "/photos" },
   { label: "Coords", value: "Seattle, WA" },

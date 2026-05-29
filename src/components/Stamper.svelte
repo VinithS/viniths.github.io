@@ -2,7 +2,7 @@
   /*
     Stamper — interactive stamp-the-card island.
 
-    One Svelte component with four `mode`s so the blog post can place
+    One Svelte component with four `mode`s so the ledger post can place
     variations side by side without duplicating chrome:
 
       press     — baseline. Pick from tray, click card to stamp. Each

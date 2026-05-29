@@ -1,5 +1,5 @@
 /*
-  Non-markdown blog routes — the interactive prototype demos. They
+  Non-markdown ledger routes — the interactive prototype demos. They
   appear in the ledger alongside markdown posts. Each prototype page
   exports its own `meta` const; this file collects them so adding a new
   prototype only requires creating the page.
@@ -17,7 +17,7 @@ export interface FeaturedEntry {
   tags: string[];
 }
 
-const modules = import.meta.glob<FeaturedEntry>("/src/pages/blog/*-prototypes.astro", {
+const modules = import.meta.glob<FeaturedEntry>("/src/pages/ledger/*-prototypes.astro", {
   eager: true,
   import: "meta",
 });

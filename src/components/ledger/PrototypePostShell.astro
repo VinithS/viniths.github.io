@@ -1,13 +1,13 @@
 ---
 /*
   PrototypePostShell — outer chrome shared by interactive prototype
-  posts under /blog. Renders the back link, post-head (stamp + kicker
+  posts under /ledger. Renders the back link, post-head (stamp + kicker
   + title + meta), the lede, page-unique content via the default slot,
   and a footer back link. Each page provides only the dynamic bits:
   title via the `title` slot, lede via the `lede` slot, page sections
   via the default slot.
 
-  Markdown blog posts use `[slug].astro` directly and do not share
+  Markdown ledger posts use `[slug].astro` directly and do not share
   this shell — its chrome is markdown-tuned.
 */
 
@@ -30,12 +30,12 @@ const {
   kickerTag,
   kickerTrail,
   maxWidth = "720px",
-  footerText = "BACK TO BLOG",
+  footerText = "BACK TO LEDGER",
 } = Astro.props;
 ---
 
 <article class="post" style={`--post-max-width:${maxWidth};`}>
-  <a href="/blog" class="back">&larr; BACK</a>
+  <a href="/ledger" class="back">&larr; BACK</a>
 
   <header class="post-head">
     <PostStamp slug={meta.slug} date={meta.date} type={meta.type} />
@@ -60,7 +60,7 @@ const {
   <slot />
 
   <footer class="post-foot">
-    <a href="/blog" class="post-foot-back">&larr; {footerText}</a>
+    <a href="/ledger" class="post-foot-back">&larr; {footerText}</a>
   </footer>
 </article>
 
