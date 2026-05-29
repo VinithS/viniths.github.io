@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 64" width="192" height="64" shape-rendering="crispEdges">
+  <!-- ============================================================
+       walk.svg — 4-frame right-facing PROFILE walk cycle.
+       Cell 48x64.  contact(arm back) → pass(R-leg lift) →
+       contact(arm fwd) → pass(L-leg lift) → loop.
+       Upper body is a single <use> per frame so head+torso are
+       pixel-identical across the cycle (only arms+legs move; body
+       bobs up 1px on the passing frames). Palette matches
+       portrait-placeholder.svg / idle.svg.
+       ============================================================ -->
+  <defs>
+    <!-- Upper body, profile facing right. Drawn at cell-local coords. -->
+    <g id="ub">
+      <!-- hair -->
+      <rect x="17" y="7"  width="13" height="2"  fill="#1c1814"/>
+      <rect x="16" y="9"  width="15" height="4"  fill="#1c1814"/>
+      <rect x="16" y="13" width="4"  height="10" fill="#1c1814"/>
+      <!-- face (profile) -->
+      <rect x="20" y="12" width="11" height="11" fill="#c99a6e"/>
+      <rect x="21" y="21" width="10" height="2"  fill="#a17a52"/>
+      <!-- brow + single eye + nose + mouth -->
+      <rect x="25" y="13" width="4"  height="1"  fill="#1c1814"/>
+      <rect x="26" y="15" width="2"  height="2"  fill="#1c1814"/>
+      <rect x="30" y="16" width="2"  height="2"  fill="#c99a6e"/>
+      <rect x="30" y="18" width="2"  height="1"  fill="#a17a52"/>
+      <rect x="27" y="20" width="3"  height="1"  fill="#6d3a2a"/>
+      <!-- neck -->
+      <rect x="22" y="23" width="6"  height="2"  fill="#c99a6e"/>
+      <rect x="22" y="24" width="6"  height="1"  fill="#a17a52"/>
+      <!-- shirt (profile torso) -->
+      <rect x="19" y="25" width="12" height="15" fill="#d64933"/>
+      <rect x="19" y="25" width="3"  height="15" fill="#b23a27"/>
+      <rect x="23" y="25" width="4"  height="2"  fill="#b23a27"/>
+    </g>
+  </defs>
+
+  <!-- ==== Frame 0 : CONTACT, near arm BACK ==== -->
+  <g transform="translate(0,0)">
+    <!-- back leg (trailing left, darker = far side) -->
+    <rect x="21" y="40" width="4" height="8"  fill="#2a251d"/>
+    <rect x="17" y="47" width="4" height="10" fill="#2a251d"/>
+    <rect x="13" y="57" width="8" height="3"  fill="#1c1814"/>
+    <!-- front leg (reaching right) -->
+    <rect x="25" y="40" width="4" height="8"  fill="#3a342a"/>
+    <rect x="28" y="47" width="4" height="10" fill="#3a342a"/>
+    <rect x="29" y="57" width="8" height="3"  fill="#1c1814"/>
+    <use href="#ub"/>
+    <!-- near arm swung back -->
+    <rect x="18" y="27" width="3" height="10" fill="#d64933"/>
+    <rect x="17" y="37" width="3" height="2"  fill="#c99a6e"/>
+  </g>
+
+  <!-- ==== Frame 1 : PASSING, body +1px up, R-leg lifted ==== -->
+  <g transform="translate(48,0)">
+    <!-- planted leg (vertical) -->
+    <rect x="22" y="40" width="4" height="17" fill="#3a342a"/>
+    <rect x="21" y="57" width="8" height="3"  fill="#1c1814"/>
+    <!-- lifted leg (bent, raised) -->
+    <rect x="26" y="40" width="4" height="7"  fill="#2a251d"/>
+    <rect x="27" y="46" width="4" height="7"  fill="#2a251d"/>
+    <rect x="27" y="53" width="7" height="3"  fill="#1c1814"/>
+    <use href="#ub" transform="translate(0,-1)"/>
+    <!-- near arm mid (raised with body) -->
+    <rect x="22" y="26" width="3" height="10" fill="#d64933"/>
+    <rect x="22" y="36" width="3" height="2"  fill="#c99a6e"/>
+  </g>
+
+  <!-- ==== Frame 2 : CONTACT, near arm FORWARD ==== -->
+  <g transform="translate(96,0)">
+    <rect x="21" y="40" width="4" height="8"  fill="#2a251d"/>
+    <rect x="17" y="47" width="4" height="10" fill="#2a251d"/>
+    <rect x="13" y="57" width="8" height="3"  fill="#1c1814"/>
+    <rect x="25" y="40" width="4" height="8"  fill="#3a342a"/>
+    <rect x="28" y="47" width="4" height="10" fill="#3a342a"/>
+    <rect x="29" y="57" width="8" height="3"  fill="#1c1814"/>
+    <use href="#ub"/>
+    <!-- near arm swung forward -->
+    <rect x="27" y="27" width="3" height="10" fill="#d64933"/>
+    <rect x="28" y="37" width="3" height="2"  fill="#c99a6e"/>
+  </g>
+
+  <!-- ==== Frame 3 : PASSING, body +1px up, L-leg lifted ==== -->
+  <g transform="translate(144,0)">
+    <!-- planted leg (vertical, shifted right this pass) -->
+    <rect x="24" y="40" width="4" height="17" fill="#3a342a"/>
+    <rect x="23" y="57" width="8" height="3"  fill="#1c1814"/>
+    <!-- lifted leg (bent, raised, trailing) -->
+    <rect x="20" y="40" width="4" height="7"  fill="#2a251d"/>
+    <rect x="19" y="46" width="4" height="7"  fill="#2a251d"/>
+    <rect x="16" y="53" width="7" height="3"  fill="#1c1814"/>
+    <use href="#ub" transform="translate(0,-1)"/>
+    <rect x="22" y="26" width="3" height="10" fill="#d64933"/>
+    <rect x="22" y="36" width="3" height="2"  fill="#c99a6e"/>
+  </g>
+</svg>

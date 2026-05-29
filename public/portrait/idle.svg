@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 64" width="96" height="64" shape-rendering="crispEdges">
+  <!-- ============================================================
+       idle.svg — 2-frame front-facing breathing loop.
+       Cell 48x64. Frame 0 = rest, Frame 1 = inhale (shoulders +
+       chest rise 1px; HEAD/EYES stay fixed so the component's
+       overlaid tracking pupils never drift off the sockets).
+       Eyes are baked as light sockets only — no pupils here.
+       Palette matches portrait-placeholder.svg.
+       ============================================================ -->
+
+  <!-- ==== Frame 0 : rest ==== -->
+  <g transform="translate(0,0)">
+    <!-- hair -->
+    <rect x="16" y="6"  width="16" height="3" fill="#1c1814"/>
+    <rect x="15" y="9"  width="18" height="3" fill="#1c1814"/>
+    <rect x="15" y="12" width="2"  height="8" fill="#1c1814"/>
+    <rect x="31" y="12" width="2"  height="8" fill="#1c1814"/>
+    <!-- face -->
+    <rect x="17" y="12" width="14" height="12" fill="#c99a6e"/>
+    <rect x="18" y="22" width="12" height="2"  fill="#a17a52"/>
+    <!-- brows -->
+    <rect x="18" y="15" width="4"  height="1"  fill="#1c1814"/>
+    <rect x="26" y="15" width="4"  height="1"  fill="#1c1814"/>
+    <!-- eye sockets (light; pupils overlaid by component) -->
+    <rect x="18" y="16" width="4"  height="3"  fill="#e3d4b0"/>
+    <rect x="26" y="16" width="4"  height="3"  fill="#e3d4b0"/>
+    <!-- nose + mouth -->
+    <rect x="23" y="19" width="2"  height="3"  fill="#a17a52"/>
+    <rect x="21" y="22" width="6"  height="1"  fill="#6d3a2a"/>
+    <!-- neck -->
+    <rect x="21" y="24" width="6"  height="2"  fill="#c99a6e"/>
+    <rect x="21" y="25" width="6"  height="1"  fill="#a17a52"/>
+    <!-- shirt -->
+    <rect x="14" y="26" width="20" height="3"  fill="#d64933"/>
+    <rect x="16" y="29" width="16" height="13" fill="#d64933"/>
+    <rect x="16" y="29" width="3"  height="13" fill="#b23a27"/>
+    <rect x="22" y="26" width="4"  height="2"  fill="#b23a27"/>
+    <!-- arms -->
+    <rect x="12" y="27" width="3"  height="12" fill="#d64933"/>
+    <rect x="12" y="39" width="3"  height="3"  fill="#c99a6e"/>
+    <rect x="33" y="27" width="3"  height="12" fill="#d64933"/>
+    <rect x="33" y="39" width="3"  height="3"  fill="#c99a6e"/>
+    <!-- pants -->
+    <rect x="16" y="42" width="16" height="2"  fill="#2a251d"/>
+    <rect x="17" y="44" width="6"  height="13" fill="#3a342a"/>
+    <rect x="25" y="44" width="6"  height="13" fill="#3a342a"/>
+    <rect x="17" y="44" width="2"  height="13" fill="#2a251d"/>
+    <rect x="25" y="44" width="2"  height="13" fill="#2a251d"/>
+    <!-- shoes -->
+    <rect x="16" y="57" width="7"  height="3"  fill="#1c1814"/>
+    <rect x="25" y="57" width="7"  height="3"  fill="#1c1814"/>
+  </g>
+
+  <!-- ==== Frame 1 : inhale (upper body +1px up) ==== -->
+  <g transform="translate(48,0)">
+    <!-- hair (unchanged) -->
+    <rect x="16" y="6"  width="16" height="3" fill="#1c1814"/>
+    <rect x="15" y="9"  width="18" height="3" fill="#1c1814"/>
+    <rect x="15" y="12" width="2"  height="8" fill="#1c1814"/>
+    <rect x="31" y="12" width="2"  height="8" fill="#1c1814"/>
+    <!-- face (unchanged — keeps sockets aligned with overlaid pupils) -->
+    <rect x="17" y="12" width="14" height="12" fill="#c99a6e"/>
+    <rect x="18" y="22" width="12" height="2"  fill="#a17a52"/>
+    <rect x="18" y="15" width="4"  height="1"  fill="#1c1814"/>
+    <rect x="26" y="15" width="4"  height="1"  fill="#1c1814"/>
+    <rect x="18" y="16" width="4"  height="3"  fill="#e3d4b0"/>
+    <rect x="26" y="16" width="4"  height="3"  fill="#e3d4b0"/>
+    <rect x="23" y="19" width="2"  height="3"  fill="#a17a52"/>
+    <rect x="21" y="22" width="6"  height="1"  fill="#6d3a2a"/>
+    <!-- neck -->
+    <rect x="21" y="24" width="6"  height="2"  fill="#c99a6e"/>
+    <rect x="21" y="25" width="6"  height="1"  fill="#a17a52"/>
+    <!-- shirt raised 1px (shoulders 26->25, torso 29->28 h+1) -->
+    <rect x="14" y="25" width="20" height="3"  fill="#d64933"/>
+    <rect x="16" y="28" width="16" height="14" fill="#d64933"/>
+    <rect x="16" y="28" width="3"  height="14" fill="#b23a27"/>
+    <rect x="22" y="25" width="4"  height="2"  fill="#b23a27"/>
+    <!-- arms raised 1px -->
+    <rect x="12" y="26" width="3"  height="12" fill="#d64933"/>
+    <rect x="12" y="38" width="3"  height="3"  fill="#c99a6e"/>
+    <rect x="33" y="26" width="3"  height="12" fill="#d64933"/>
+    <rect x="33" y="38" width="3"  height="3"  fill="#c99a6e"/>
+    <!-- pants + shoes (planted, unchanged) -->
+    <rect x="16" y="42" width="16" height="2"  fill="#2a251d"/>
+    <rect x="17" y="44" width="6"  height="13" fill="#3a342a"/>
+    <rect x="25" y="44" width="6"  height="13" fill="#3a342a"/>
+    <rect x="17" y="44" width="2"  height="13" fill="#2a251d"/>
+    <rect x="25" y="44" width="2"  height="13" fill="#2a251d"/>
+    <rect x="16" y="57" width="7"  height="3"  fill="#1c1814"/>
+    <rect x="25" y="57" width="7"  height="3"  fill="#1c1814"/>
+  </g>
+</svg>

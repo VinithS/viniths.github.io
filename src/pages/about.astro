@@ -26,6 +26,7 @@ import CrestBlackHole from "../components/crests/CrestBlackHole.astro";
 import PassportFields from "../components/primitives/PassportFields.astro";
 import PassportField from "../components/primitives/PassportField.astro";
 import ObserverStatus from "../components/ObserverStatus.svelte";
+import PortraitScene from "../components/PortraitScene.svelte";
 
 // Same four stamps as before. Passport theme — stamping fits.
 const STAMPS = [
@@ -80,7 +81,7 @@ const mrz = [
 
 <Layout title="About · Vinith">
   <section class="about-page">
-    <FoilCard maxWidth={880} stampSrc="/assets/wisteria.svg">
+    <FoilCard maxWidth={960} stampSrc="/assets/wisteria.svg">
       <!-- StampArea spans the whole card via negative insets that read
            FoilCard's exposed --foil-pad-* vars. Anything marked
            data-no-stamp (like the display) is skipped by hit-testing. -->
@@ -99,15 +100,15 @@ const mrz = [
         <CrestBlackHole slot="crest" size={82} />
       </MastheadFrame>
 
-      <!-- Bio block: portrait + status on the left, passport field
-           grid on the right. The portrait column sizes to content so
-           ObserverStatus can sit centered underneath without
-           overflowing or stretching the grid. -->
+      <!-- Bio block: the animated portrait stage + status on the left,
+           passport field grid on the right. PortraitScene owns its own
+           framed stage (the figure walks in, turns, idles + tracks the
+           cursor); it reads FoilCard's pointer vars for parallax/gaze.
+           The column is pinned to the stage width so a long status verb
+           wraps within the stack rather than shoving the fields right. -->
       <div class="bio">
         <div class="bio-portrait">
-          <figure class="portrait">
-            <img src="/portrait-placeholder.svg" alt="A pixelated portrait of Vinith." />
-          </figure>
+          <PortraitScene client:load />
           <ObserverStatus client:load />
         </div>
 
@@ -168,50 +169,33 @@ const mrz = [
     margin: -10px 0 0 -10px;
   }
 
-  /* Bio block: passport photo stack + field grid. Left column is
-     pinned to the portrait width so a long status verb can't grow
-     the column and shove the fields right. Anything wider than the
-     portrait wraps within the stack. */
+  /* Bio block: animated portrait stage + field grid. Left column is
+     pinned to the stage width so a long status verb can't grow the
+     column and shove the fields right. Anything wider than the stage
+     wraps within the stack. */
   .bio {
     display: grid;
-    grid-template-columns: 136px 1fr;
-    gap: 28px;
+    grid-template-columns: 256px 1fr;
+    gap: 32px;
     align-items: start;
     margin-top: 4px;
   }
-  /* Portrait stack: photo + status. justify-items:start pins both
+  /* Portrait stack: stage + status. justify-items:start pins both
      children to the stack's left edge so the status aligns with the
-     portrait's left edge. The stack is the column's full width; any
-     long verb wraps rather than pushing the grid. */
+     stage's left edge. The stack is the column's full width; any long
+     verb wraps rather than pushing the grid. */
   .bio-portrait {
     display: grid;
     justify-items: start;
-    gap: 10px;
+    gap: 12px;
     padding: 0 0 5px;
     min-width: 0;
   }
-  .portrait {
-    margin: 0;
-  }
-  .portrait img {
-    display: block;
-    width: 136px;
-    aspect-ratio: 3 / 4;
-    object-fit: cover;
-    image-rendering: pixelated;
-    background: var(--bg-inset);
-    border: 2px solid var(--rule);
-    /* Double rule: cream gutter + soft outer. Evokes the printed
-       frame around a passport photo. */
-    box-shadow:
-      0 0 0 3px var(--bg-card),
-      0 0 0 4px var(--rule-soft);
-  }
 
-  /* Tray: outside the card, bottom-right. */
+  /* Tray: outside the card, bottom-right. Tracks the card max-width. */
   .stamp-tray-wrap {
     width: 100%;
-    max-width: 880px;
+    max-width: 960px;
     margin-top: 12px;
     display: flex;
     justify-content: flex-end;
@@ -223,13 +207,12 @@ const mrz = [
     }
   }
 
+  /* Column widths track PortraitScene's responsive stage widths
+     (256 → 216 → 232) so the stage never overflows its column. */
   @media (max-width: 720px) {
     .bio {
-      grid-template-columns: 120px 1fr;
-      gap: 20px;
-    }
-    .portrait img {
-      width: 120px;
+      grid-template-columns: 216px 1fr;
+      gap: 22px;
     }
   }
   @media (max-width: 520px) {

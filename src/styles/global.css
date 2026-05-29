@@ -45,6 +45,16 @@
   --crease-shadow:    rgba(28,24,20,0.10);
   --crease-highlight: rgba(255,250,234,0.45);
 
+  /* --- Portrait stage atmosphere (/about PortraitScene).
+         Atmospheric fills like --crease-* / grain, so no --on-* pair.
+         sky = recessed back plane, floor = lit ground, shadow = cast
+         shadow under the figure, haze = foreground frame vignette. --- */
+  --stage-sky:    #e8dec1;
+  --stage-floor:  #dccfa6;
+  --stage-shadow: rgba(28, 24, 20, 0.24);
+  --stage-haze:   rgba(28, 24, 20, 0.10);
+  --stage-mark:   rgba(28, 24, 20, 0.18);
+
   /* --- Grain overlay tuning --- */
   --grain-blend:   multiply;
   --grain-opacity: 0.32;
@@ -86,6 +96,16 @@
   /* --- Crease (subtle paper fold) --- */
   --crease-shadow:    rgba(0,0,0,0.30);
   --crease-highlight: rgba(237,228,206,0.18);
+
+  /* --- Portrait stage atmosphere (/about PortraitScene).
+         Dusk paper lit by a warm lamp: the back plane recedes into
+         the dark, the floor catches a little light, and the cast
+         shadow goes near-black to read against the dusk surface. --- */
+  --stage-sky:    #221d16;
+  --stage-floor:  #2b251c;
+  --stage-shadow: rgba(0, 0, 0, 0.50);
+  --stage-haze:   rgba(0, 0, 0, 0.34);
+  --stage-mark:   rgba(237, 228, 206, 0.16);
 
   /* --- Grain overlay tuning --- */
   --grain-blend:   screen;
