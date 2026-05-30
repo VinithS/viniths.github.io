@@ -462,7 +462,16 @@
     left: 0;
     z-index: 0;
     pointer-events: none;
-    transform: translate3d(calc(var(--bx, 0px) - 8px), calc(var(--by, 0px) - 100%), 0);
+    /* Anchor the TAIL (at --tail-x across the box) to the creature, not the
+       box's left edge — otherwise a wide line pushes the tail far to the right
+       of the sprite. translateX % resolves against the wrapper's own width
+       (≈ box width), so subtracting --tail-x*100% lands the tail at --bx for
+       any line length. The -3px nudge centers the tail's widest pixel cell. */
+    transform: translate3d(
+      calc(var(--bx, 0px) - var(--tail-x) * 100% - 3px),
+      calc(var(--by, 0px) - 100%),
+      0
+    );
     will-change: transform;
     --tail-x: 0.24; /* 0..1, set per utterance */
   }
