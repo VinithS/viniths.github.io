@@ -454,26 +454,31 @@
 
   /* Pixel bubble — co-planar with the creatures (same z-index/plane), so a
      far-background creature gets a far-background thought. The wrapper is
-     translated to the speaker each frame; --bx/--by are set from JS. The
-     -100% Y lifts the box above the sprite so the tail points down at it. */
+     translated so the TAIL TIP lands on the creature; --bx/--by are set from
+     JS to the sprite's top-center. */
   .critter-bubble {
     position: fixed;
     top: 0;
     left: 0;
     z-index: 0;
     pointer-events: none;
-    /* Anchor the TAIL (at --tail-x across the box) to the creature, not the
-       box's left edge — otherwise a wide line pushes the tail far to the right
-       of the sprite. translateX % resolves against the wrapper's own width
-       (≈ box width), so subtracting --tail-x*100% lands the tail at --bx for
-       any line length. The -3px nudge centers the tail's widest pixel cell. */
+    --tail-x: 0.24; /* 0..1, horizontal anchor across the box; set per utterance */
+    /* Vertical lift of box-bottom above --by, tuned so the tail TIP just meets
+       the sprite's HEAD (--by is the sprite top). Measured tip-bottom vs --by:
+       tail-h -6px → +15px (sprite feet), +6px → -10px (above head), 0 → -4px
+       (right at the head). */
+    --tail-h: 0px;
+    /* X: anchor the TAIL (at --tail-x across the box width) to --bx, not the
+         box edge — else a wide line shoves the tail right of the sprite.
+         translateX % resolves against the wrapper's own width (≈ box width).
+       Y: box-bottom at (--by - tail-h) so the tail, which hangs tail-h below
+         the box, points its TIP exactly at --by (the sprite's top). */
     transform: translate3d(
-      calc(var(--bx, 0px) - var(--tail-x) * 100% - 3px),
-      calc(var(--by, 0px) - 100%),
+      calc(var(--bx, 0px) - var(--tail-x) * 100%),
+      calc(var(--by, 0px) - 100% - var(--tail-h)),
       0
     );
     will-change: transform;
-    --tail-x: 0.24; /* 0..1, set per utterance */
   }
 
   /* The stack carries the hard pixel shadow for the whole silhouette. clip-path
@@ -542,7 +547,9 @@
     color: var(--ink-soft);
   }
 
-  /* ── Tails ── only the matching one shows; the other is display:none. */
+  /* ── Tails ── only the matching one shows; the other is display:none. Anchor
+     at (--tail-x across the box, box bottom); cells are offset from there so
+     the TIP lands straight below the anchor and reaches down --tail-h to --by. */
   .tail-speech,
   .tail-think {
     position: absolute;
@@ -556,33 +563,33 @@
   .critter-bubble:global(.is-think) .tail-think {
     display: block;
   }
-  /* Speech: three pixel cells narrowing as they descend, tapering to a point
-     directly under the box edge — a downward pointer, not a staircase. Cells
-     are centered on the tail anchor so the taper is symmetric. */
+  /* Speech: pixel cells narrowing straight down to a centered 1-cell tip — a
+     downward pointer. Each cell is centered on the anchor (left = -half width). */
   .tail-speech i {
     position: absolute;
     background: var(--bg-inset);
     box-shadow: 0 0 0 1px var(--rule);
   }
   .tail-speech i:nth-child(1) {
-    width: 7px;
+    width: 6px;
     height: 3px;
-    top: -1px;
+    top: 0;
     left: -3px;
   }
   .tail-speech i:nth-child(2) {
-    width: 5px;
+    width: 4px;
     height: 3px;
-    top: 2px;
+    top: 3px;
     left: -2px;
   }
   .tail-speech i:nth-child(3) {
-    width: 3px;
+    width: 2px;
     height: 3px;
-    top: 5px;
+    top: 6px;
     left: -1px;
   }
-  /* Think: three trailing puffs that shrink toward the creature. */
+  /* Think: puffs shrinking straight down to the creature — biggest at the box,
+     smallest at the tip, all centered on the anchor (no rightward drift). */
   .tail-think i {
     position: absolute;
     background: var(--bg-card);
@@ -592,19 +599,19 @@
     width: 5px;
     height: 5px;
     top: 0;
-    left: 0;
+    left: -2px;
   }
   .tail-think i:nth-child(2) {
     width: 3px;
     height: 3px;
-    top: 6px;
-    left: 3px;
+    top: 4px;
+    left: -1px;
   }
   .tail-think i:nth-child(3) {
     width: 2px;
     height: 2px;
-    top: 11px;
-    left: 7px;
+    top: 7px;
+    left: -1px;
   }
 
   /* The bubble is part of the animated layer; reduced-motion runs no loop and
