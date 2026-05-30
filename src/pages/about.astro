@@ -34,7 +34,6 @@ import StampTray from "../components/StampTray.svelte";
 import MastheadFrame from "../components/crests/MastheadFrame.astro";
 import CrestBlackHole from "../components/crests/CrestBlackHole.astro";
 
-import PassportPhoto from "../components/primitives/PassportPhoto.astro";
 import MetalBarcode from "../components/primitives/MetalBarcode.astro";
 import PassportFields from "../components/primitives/PassportFields.astro";
 import PassportField from "../components/primitives/PassportField.astro";
@@ -92,19 +91,16 @@ const COORD = "47.62,-122.35";
               department="Field Office · Milky Way · Orion Arm"
               kicker="Cosmological Authority"
             >
-              <CrestBlackHole slot="crest" size={64} />
+              <CrestBlackHole slot="crest" size={88} />
             </MastheadFrame>
 
-            <!-- Full-width brushed-chrome barcode: the passport "machine
-                 zone" stripe, sitting as its own band directly under the
-                 masthead/crest. Reads FoilCard's cursor vars for the
-                 metal sheen. -->
-            <MetalBarcode height={26} />
-
-            <!-- Printed photo + identity. Centered column; the photo is
-                 small (a passport photo, not a hero). -->
+            <!-- Printed photo + identity. Centered column. The photo is
+                 the original flat pixel portrait (a printed passport
+                 photo); the animated night-sky version lives on the back. -->
             <div class="id-block">
-              <PassportPhoto />
+              <figure class="id-photo">
+                <img src="/portrait-placeholder.svg" alt="A pixelated portrait of Vinith." />
+              </figure>
               <h1 class="id-name">
                 <span class="id-given">{BIO.given}</span>
                 <span class="id-surname">{BIO.surname}</span>
@@ -131,12 +127,17 @@ const COORD = "47.62,-122.35";
             <section class="remarks">
               <h2 class="remarks-label">Remarks / Observations</h2>
               <p class="remarks-body">
-                Software engineer by day, perpetual tinkerer by temperament.
-                <em>I like breaking things, but automation makes my heart flutter</em>
-                — there's a particular joy in teaching a machine to do the tedious part forever. The rest
-                of me lives behind a camera and in a slowly accreting pile of drawings.
+                Software engineer by day, tinkerer by temperament.
+                <em>I like breaking things, but automation makes my heart flutter.</em>
+                The rest of me lives behind a camera.
               </p>
             </section>
+
+            <!-- Full-width brushed-chrome barcode: the passport "machine
+                 zone" stripe. Sits below the remarks, just above the
+                 footer, so the data page ends on a coded strip. Reads
+                 FoilCard's cursor vars for the metal sheen. -->
+            <MetalBarcode height={26} />
 
             <CardFooter email={EMAIL} coord={COORD} timezone="America/Los_Angeles" />
           </div>
@@ -149,24 +150,26 @@ const COORD = "47.62,-122.35";
           </div>
         </div>
       </div>
+    </FoilCard>
 
-      <!-- Flip control. Sits above the stamp layer, opts out of stamping.
-           Pinned to the cover's corner so it's reachable on either face. -->
+    <!-- Card controls, OUTSIDE the cover (like the stamp tray): flip on
+         the left, stamp tray on the right. Keeping the button out of the
+         card means it never overlaps the footer or gets stamped. -->
+    <div class="card-controls">
       <button
         type="button"
         class="flip-btn"
         data-flip-btn
-        data-no-stamp
         aria-pressed="false"
         aria-label="Flip the passport card"
       >
         <span class="flip-btn-glyph" aria-hidden="true">↻</span>
         <span class="flip-btn-text">Flip</span>
       </button>
-    </FoilCard>
 
-    <div class="stamp-tray-wrap">
-      <StampTray client:load stamps={STAMPS} />
+      <div class="stamp-tray-wrap">
+        <StampTray client:load stamps={STAMPS} />
+      </div>
     </div>
   </section>
 </Layout>
@@ -209,6 +212,31 @@ const COORD = "47.62,-122.35";
   }
   .about-page :global(.crest-slot) {
     margin: -6px 0 0 -6px;
+  }
+
+  /* Tighten the card's side padding a touch so the fields, remarks and
+     footer run wider, and the masthead title has room not to wrap. Also
+     trim the top gutter so the masthead sits closer to the card edge. */
+  .about-page :global(.foil-content) {
+    --foil-pad-x: 30px;
+    --foil-pad-t: 30px;
+
+    padding: 0;
+  }
+
+  /* Masthead overrides (the component is shared, so tune it here):
+     keep the institution title on ONE line (nowrap + a hair tighter
+     tracking so a slightly larger size still fits) and give the title a
+     warm accent. The department keeps the ink voice with only a faint
+     green cast — full --signal green was too loud. */
+  .about-page :global(.masthead .institution) {
+    font-size: 21px;
+    letter-spacing: 0;
+    white-space: nowrap;
+    color: var(--em);
+  }
+  .about-page :global(.masthead .department) {
+    color: color-mix(in oklab, var(--ink-soft) 78%, var(--signal));
   }
 
   /* Wisteria watermark, retuned for the TALL card. FoilCard's default
@@ -254,9 +282,15 @@ const COORD = "47.62,-122.35";
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
   }
+  /* The stage now bleeds to the card's inner edge (foil-content padding
+     is 0), so the FRONT re-applies the gutter to its own content. The
+     BACK stays full-bleed so the night-sky scene reaches every edge with
+     no bare-card band around it. Footer/StampArea read --foil-pad-* to
+     cancel this padding and bleed where they need to. */
   .face--front {
     position: relative;
     z-index: 2;
+    padding: var(--foil-pad-t) var(--foil-pad-x) var(--foil-pad-b);
   }
   .face--back {
     position: absolute;
@@ -303,7 +337,26 @@ const COORD = "47.62,-122.35";
     top: auto;
     bottom: calc(var(--fh) * -0.34);
   }
-  /* Phones: card narrows, so step the figure down to fit its width. */
+  /* Kill the seam at the card edges: the scene's sky/glow/haze layers
+     over-inset by only -8/-10px (tuned for the small 224px stage), so on
+     this large face the parallax shift exposed a strip of bare card on
+     the trailing edge. Over-cover generously so no shift can reveal an
+     edge. Tied to the layer rule in PortraitScene via :global. */
+  .face--back :global(.layer) {
+    inset: -32px -40px;
+  }
+  /* The foreground haze is an ellipse (125%×95% at 50% 38%) tuned for the
+     near-square 224×300 stage; on this tall narrow face it pinches the
+     LEFT/RIGHT edges into dark vertical bands that read as a seam. Re-aim
+     it as a tall full-width vignette that only deepens toward top/bottom,
+     so the sides stay clean to the card edge. */
+  .face--back :global(.haze) {
+    background: radial-gradient(
+      150% 120% at 50% 42%,
+      transparent 62%,
+      var(--stage-haze) 100%
+    ) !important;
+  }
   @media (max-width: 520px) {
     .face--back :global(.scene) {
       --scale: 8;
@@ -334,11 +387,11 @@ const COORD = "47.62,-122.35";
     opacity: 0.85;
   }
 
-  /* Barcode band: pull it up tight under the masthead rule (the
-     masthead carries its own bottom margin), then space the identity
-     block below it. Reads as the passport machine-zone stripe. */
+  /* Barcode band: now sits below the remarks, just above the footer.
+     A little breathing room above, tight to the footer below so the
+     coded strip reads as the end of the data page. */
   .about-page :global(.metal-barcode) {
-    margin: -10px 0 22px;
+    margin: 4px 0 14px;
   }
 
   /* ---- Identity block: photo + name + class + status. Centered, the
@@ -350,8 +403,22 @@ const COORD = "47.62,-122.35";
     gap: 6px;
     text-align: center;
   }
-  .id-block :global(.passport-photo) {
-    margin-bottom: 8px;
+  /* Printed passport photo: the original flat pixel portrait in the
+     same double-rule frame it always had (cream gutter + soft outer). */
+  .id-photo {
+    margin: 0 0 8px;
+  }
+  .id-photo img {
+    display: block;
+    width: 132px;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    image-rendering: pixelated;
+    background: var(--bg-inset);
+    border: 2px solid var(--rule);
+    box-shadow:
+      0 0 0 3px var(--bg-card),
+      0 0 0 4px var(--rule-soft);
   }
   .id-name {
     margin: 6px 0 0;
@@ -432,9 +499,10 @@ const COORD = "47.62,-122.35";
     margin: 0 auto;
   }
 
-  /* ---- Remarks: the prose block, in the serif voice. ------------- */
+  /* ---- Remarks: the prose block, in the serif voice. The barcode +
+          footer follow, so only a small gap is needed here. ---------- */
   .remarks {
-    margin: 0;
+    margin: 0 0 16px;
   }
   .remarks-label {
     margin: 0 0 7px;
@@ -460,18 +528,28 @@ const COORD = "47.62,-122.35";
     color: var(--ink);
   }
 
-  /* ---- Flip button: pinned to the cover's bottom-right corner, above
-          the stamp overlay. JRPG-menu feel — pixel label, hard edges,
-          hard-offset shadow that collapses on press (DESIGN.md). ---- */
+  /* ---- Card controls: a row UNDER the card (tracks its max-width),
+          flip on the left, stamp tray on the right. The flip button
+          lives here now — outside the cover — so it never overlaps the
+          footer or gets stamped. ----------------------------------- */
+  .card-controls {
+    width: 100%;
+    max-width: 460px;
+    margin-top: 14px;
+    padding: 0 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  /* Flip button: JRPG-menu feel — pixel label, hard edges, hard-offset
+     shadow that collapses on press (DESIGN.md). */
   .flip-btn {
-    position: absolute;
-    z-index: 9;
-    bottom: 14px;
-    right: 14px;
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 6px 10px;
+    padding: 8px 12px;
     background: var(--bg-raised);
     border: 2px solid var(--rule);
     box-shadow: 3px 3px 0 var(--rule);
@@ -504,17 +582,14 @@ const COORD = "47.62,-122.35";
     transform: rotate(180deg);
   }
 
-  /* Tray: outside the card, bottom-right. Tracks the card max-width. */
+  /* Tray sits at the row's right end; it no longer owns the full-width
+     wrapper (the controls row does the layout now). */
   .stamp-tray-wrap {
-    width: 100%;
-    max-width: 460px;
-    margin-top: 14px;
     display: flex;
     justify-content: flex-end;
-    padding: 0 4px;
   }
   @media (max-width: 720px) {
-    .stamp-tray-wrap {
+    .card-controls {
       padding: 0 16px;
     }
   }

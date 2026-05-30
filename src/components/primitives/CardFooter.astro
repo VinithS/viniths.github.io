@@ -159,11 +159,24 @@ const cipher = encodeContact(email);
        strip: cancel FoilCard's padding with its exposed vars. */
     margin: 0 calc(var(--foil-pad-x, 0px) * -1) calc(var(--foil-pad-b, 0px) * -1);
     padding: 12px var(--foil-pad-x, 22px);
-    background: var(--bg-inset);
-    /* A single hard seam joins the strip to the card border, the way
-       the flap-board's 2px top rule did. */
-    border-top: 2px solid var(--rule);
+
+    /* INVERTED ground: the strip is ink-colored, so it reads as a dark
+       bar in light mode and a light bar in dark mode — the photo-
+       negative of the card. Because --ink and the surface tokens each
+       flip per theme, this inverts automatically (DESIGN.md Rule 2: no
+       per-theme overrides). We must NOT redefine --ink here (the
+       background reads it); we only remap the soft/muted/rule tokens the
+       inner text uses, to surface colors that stay legible on the flip.
+       The --em sweep/bars and --signal dot read on either ground, so
+       they're left untouched. */
+    background: var(--ink);
+    border-top: 2px solid var(--ink);
+    color: var(--bg-raised);
     font-family: var(--font-pixel);
+
+    --ink-soft: var(--bg-card);
+    --ink-muted: var(--bg-inset);
+    --rule-soft: color-mix(in oklab, var(--bg-card), transparent 72%);
   }
 
   /* --- Telemetry row: coords + decoding email -------------------- */
@@ -199,7 +212,9 @@ const cipher = encodeContact(email);
     flex-shrink: 0;
   }
   .cf-cipher {
-    color: var(--ink);
+    /* On the inverted ground, plain --ink would vanish — use the bright
+       surface color so the email reads as the strip's primary text. */
+    color: var(--bg-raised);
     text-decoration: none;
     border-bottom: 1px dotted var(--rule-soft);
   }
