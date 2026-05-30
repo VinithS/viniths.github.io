@@ -1,0 +1,108 @@
+---
+/*
+  MetalBarcode — a full-width brushed-chrome barcode strip.
+
+  The same SANCTIONED DESIGN.md metal divergence as MastheadFrame's
+  serial pill (see that file's long comment): an achromatic steel sheen
+  with fine brushed striations, masked into irregular barcode bars, that
+  catches light as the cursor moves. It reads --mxn/--myn from an
+  ancestor FoilCard so one cursor drives the wisteria shine, this strip,
+  and the footer sweep together.
+
+  Lifted out of MastheadFrame into its own row so the barcode sits as a
+  distinct full-width band directly under the masthead/crest — the
+  passport "machine zone" stripe — rather than tucked in the header.
+
+  Metal needs both a bright highlight AND a dark groove to read, which a
+  single blend mode can't deliver across both papers, so the bars paint
+  at full opacity (mix-blend-mode: normal) and the steel ramp is
+  redefined per theme — the deliberate exception to "no [data-theme]
+  overrides."
+
+  Props:
+    - height  strip height in px (default 26)
+*/
+
+interface Props {
+  height?: number;
+}
+
+const { height = 26 } = Astro.props;
+---
+
+<div class="metal-barcode" style={`--bc-h:${height}px`} aria-hidden="true">
+  <span class="bc-band"></span>
+</div>
+
+<style>
+  .metal-barcode {
+    position: relative;
+    width: 100%;
+    height: var(--bc-h, 26px);
+    overflow: hidden;
+    /* Hairline rules top + bottom seat the strip as a "machine zone"
+       band, like the printed guides bracketing a passport's MRZ. */
+    border-top: 1px solid var(--rule-soft);
+    border-bottom: 1px solid var(--rule-soft);
+    /* Irregular barcode bars — denser + more varied than the serial
+       pill's so a full-width strip reads as a real code. The 64-unit
+       tile repeats across the width. */
+    -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 20' preserveAspectRatio='none'><g fill='%23000'><rect x='0' width='2' height='20'/><rect x='3' width='1' height='20'/><rect x='6' width='3' height='20'/><rect x='11' width='1' height='20'/><rect x='14' width='2' height='20'/><rect x='18' width='1' height='20'/><rect x='21' width='4' height='20'/><rect x='27' width='1' height='20'/><rect x='30' width='2' height='20'/><rect x='34' width='3' height='20'/><rect x='39' width='1' height='20'/><rect x='42' width='1' height='20'/><rect x='45' width='3' height='20'/><rect x='50' width='2' height='20'/><rect x='54' width='1' height='20'/><rect x='57' width='4' height='20'/><rect x='63' width='1' height='20'/></g></svg>")
+      repeat-x center / 64px 100%;
+    mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 20' preserveAspectRatio='none'><g fill='%23000'><rect x='0' width='2' height='20'/><rect x='3' width='1' height='20'/><rect x='6' width='3' height='20'/><rect x='11' width='1' height='20'/><rect x='14' width='2' height='20'/><rect x='18' width='1' height='20'/><rect x='21' width='4' height='20'/><rect x='27' width='1' height='20'/><rect x='30' width='2' height='20'/><rect x='34' width='3' height='20'/><rect x='39' width='1' height='20'/><rect x='42' width='1' height='20'/><rect x='45' width='3' height='20'/><rect x='50' width='2' height='20'/><rect x='54' width='1' height='20'/><rect x='57' width='4' height='20'/><rect x='63' width='1' height='20'/></g></svg>")
+      repeat-x center / 64px 100%;
+
+    /* Steel default (light theme): cool silver, hot specular band. */
+    --steel-low: #6b7178;
+    --steel-mid: #aeb6bd;
+    --steel-hi: #fdfefe;
+    --steel-shadow: #3c4045;
+  }
+
+  /* The metal face: diagonal steel ramp + fine brushed striations,
+     panned by the cursor via the inherited --mxn/--myn. */
+  .bc-band {
+    position: absolute;
+    inset: -30% -100%;
+    background:
+      repeating-linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.1) 0,
+        rgba(255, 255, 255, 0.1) 0.5px,
+        rgba(0, 0, 0, 0.08) 0.5px,
+        rgba(0, 0, 0, 0.08) 1.5px
+      ),
+      linear-gradient(
+        100deg,
+        var(--steel-shadow) 0%,
+        var(--steel-low) 16%,
+        var(--steel-mid) 34%,
+        var(--steel-hi) 50%,
+        var(--steel-mid) 62%,
+        var(--steel-low) 80%,
+        var(--steel-shadow) 100%
+      );
+    transform: translate3d(
+      calc((var(--mxn, 50) - 50) * -0.5%),
+      calc((var(--myn, 50) - 50) * -0.3%),
+      0
+    );
+    will-change: transform;
+  }
+
+  /* Dark theme: warmer gunmetal so the chrome sits inside the dusk.
+     (Deliberate per-theme override — same sanctioned exception as the
+     masthead serial barcode.) */
+  :root[data-theme="dark"] .metal-barcode {
+    --steel-low: #4a4e54;
+    --steel-mid: #878d94;
+    --steel-hi: #e8ecef;
+    --steel-shadow: #25282c;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bc-band {
+      transform: none;
+    }
+  }
+</style>

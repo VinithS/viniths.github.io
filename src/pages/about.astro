@@ -35,6 +35,7 @@ import MastheadFrame from "../components/crests/MastheadFrame.astro";
 import CrestBlackHole from "../components/crests/CrestBlackHole.astro";
 
 import PassportPhoto from "../components/primitives/PassportPhoto.astro";
+import MetalBarcode from "../components/primitives/MetalBarcode.astro";
 import PassportFields from "../components/primitives/PassportFields.astro";
 import PassportField from "../components/primitives/PassportField.astro";
 import ObserverStatus from "../components/ObserverStatus.svelte";
@@ -90,11 +91,15 @@ const COORD = "47.62,-122.35";
               institution="Bureau of Cosmic Census"
               department="Field Office · Milky Way · Orion Arm"
               kicker="Cosmological Authority"
-              serial={[{ k: "File", v: "Wisteria-I" }]}
-              holo
             >
               <CrestBlackHole slot="crest" size={64} />
             </MastheadFrame>
+
+            <!-- Full-width brushed-chrome barcode: the passport "machine
+                 zone" stripe, sitting as its own band directly under the
+                 masthead/crest. Reads FoilCard's cursor vars for the
+                 metal sheen. -->
+            <MetalBarcode height={26} />
 
             <!-- Printed photo + identity. Centered column; the photo is
                  small (a passport photo, not a hero). -->
@@ -206,6 +211,27 @@ const COORD = "47.62,-122.35";
     margin: -6px 0 0 -6px;
   }
 
+  /* Wisteria watermark, retuned for the TALL card. FoilCard's default
+     mask (`50% 180% / 62% auto`, set in BOTH themes) was tuned for the
+     old wide-short card; on this narrow-tall passport `180%` pushed the
+     wisteria off the bottom, so it read as missing. Re-center it as a
+     large background watermark behind the upper card. We must restate
+     the mask in the dark branch too, with higher specificity than
+     FoilCard's own `:root[data-theme="dark"] .foil-card` rule, or dark
+     keeps the broken 180% position. */
+  .about-page :global(.foil-card) {
+    --wisteria-shine-mask: var(--stamp-src) no-repeat 50% 30% / 124% auto;
+    /* Light uses multiply over cream — keep it a faint watermark so it
+       sits BEHIND the content, never competing (DESIGN.md: restraint). */
+    --wisteria-shine-opacity: 0.07;
+  }
+  :global(:root[data-theme="dark"]) .about-page :global(.foil-card) {
+    --wisteria-shine-mask: var(--stamp-src) no-repeat 50% 30% / 124% auto;
+    /* Dark paints normal-blend over dusk; it can carry a touch more
+       presence before it muddies the cream text. */
+    --wisteria-shine-opacity: 0.22;
+  }
+
   /* ---- Flip stage. perspective gives the rotate depth; only
           .passport-inner moves. ------------------------------------- */
   .passport-stage {
@@ -254,29 +280,33 @@ const COORD = "47.62,-122.35";
     height: 100%;
   }
   .face--back :global(.scene) {
-    /* Bigger figure (it has the room now) + stage-w set to the real
-       face width so the walk-in starts off-screen and rests centered. */
-    --scale: 7;
-    --stage-w: 372px;
+    /* Big bust filling the lower two-thirds. --scale 10.5 makes the
+       figure (48×64 src) ~504×672 device px — wider than the ~373 card,
+       so the bust crops at the shoulders and reads as a head-and-chest
+       portrait rather than a small full-body figure floating low.
+       --stage-w tracks the real face width so the walk-in starts fully
+       off-screen and rests centered. */
+    --scale: 10.5;
+    --stage-w: 373px;
+
     width: 100% !important;
     height: 100% !important;
     border: 0 !important;
     box-shadow: none !important;
   }
-  /* Anchor the bust to the BOTTOM edge instead of a fixed top offset,
-     so it "stands" on the card's lower rule with the tall sky above as
-     deep field — the small observer beneath the cosmos (DESIGN.md →
+  /* Anchor the bust to the BOTTOM edge so it "stands" on the card's
+     lower rule, the head reaching into the upper third and the tall sky
+     above as deep field — the observer beneath the cosmos (DESIGN.md →
      Scale as composition). The negative bottom clips the legs below the
-     waist, keeping the waist-up bust framing. Tied to --fh so it tracks
-     --scale. */
+     chest, keeping the bust framing while filling ~2/3 of the height. */
   .face--back :global(.actor) {
     top: auto;
-    bottom: calc(var(--fh) * -0.28);
+    bottom: calc(var(--fh) * -0.34);
   }
   /* Phones: card narrows, so step the figure down to fit its width. */
   @media (max-width: 520px) {
     .face--back :global(.scene) {
-      --scale: 5.6;
+      --scale: 8;
       --stage-w: 280px;
     }
   }
@@ -302,6 +332,13 @@ const COORD = "47.62,-122.35";
     bottom: 12px;
     left: 14px;
     opacity: 0.85;
+  }
+
+  /* Barcode band: pull it up tight under the masthead rule (the
+     masthead carries its own bottom margin), then space the identity
+     block below it. Reads as the passport machine-zone stripe. */
+  .about-page :global(.metal-barcode) {
+    margin: -10px 0 22px;
   }
 
   /* ---- Identity block: photo + name + class + status. Centered, the
