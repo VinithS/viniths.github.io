@@ -118,6 +118,12 @@
   const HOLD_BASE = 2200; // ms — minimum time a thought stays up
   const HOLD_PER_CHAR = 110; // ms added per character (longer lines linger)
 
+  // TEMP DEBUG: when true, ignore the Poisson timing and have a *random*
+  // creature speak on a fixed ~5s cadence so the feature is easy to see.
+  // Set back to false (or delete) to restore the organic timing.
+  const DEBUG_SPEAK = true;
+  const DEBUG_GAP = 5; // s
+
   let canvasEl;
   let bubbleEl; // speech wrapper — translated to the speaking creature each frame
   let bubbleTextEl; // the line of text inside the bubble
@@ -199,18 +205,23 @@
     let speaker = null; // the creature currently thinking, or null
     // First thought lands sooner (FIRST_*); every thought after it uses the
     // steady-state mean (SPEAK_*), set when the previous bubble clears.
-    let nextAt = nextGap(Math.random, {
-      mean: FIRST_MEAN,
-      min: SPEAK_MIN,
-      max: FIRST_MAX,
-    });
+    let nextAt = DEBUG_SPEAK
+      ? DEBUG_GAP
+      : nextGap(Math.random, {
+          mean: FIRST_MEAN,
+          min: SPEAK_MIN,
+          max: FIRST_MAX,
+        });
     let bubbleTimer = 0; // setTimeout handle for the hold→out→clear sequence
 
     function speak() {
       // Pick whoever is closest to the cursor if it's active, else a stable
       // rotation, so the "noticed" creature is usually the one that talks.
+      // DEBUG: pick a purely random creature so it's visibly "one random".
       let chosen = creatures[0];
-      if (mouseActive) {
+      if (DEBUG_SPEAK) {
+        chosen = creatures[Math.floor(Math.random() * creatures.length)];
+      } else if (mouseActive) {
         let best = Infinity;
         for (const c of creatures) {
           const d = Math.hypot(mouseX - c.x, mouseY - c.y);
@@ -240,13 +251,14 @@
           if (speaker) speaker.thinking = false;
           speaker = null;
           // Schedule the next thought from the steady-state mean.
-          nextAt =
-            clock +
-            nextGap(Math.random, {
-              mean: SPEAK_MEAN,
-              min: SPEAK_MIN,
-              max: SPEAK_MAX,
-            });
+          nextAt = DEBUG_SPEAK
+            ? clock + DEBUG_GAP
+            : clock +
+              nextGap(Math.random, {
+                mean: SPEAK_MEAN,
+                min: SPEAK_MIN,
+                max: SPEAK_MAX,
+              });
         }, OUT_MS);
       }, hold);
     }
@@ -486,7 +498,10 @@
       transform 160ms steps(3, end),
       opacity 160ms steps(3, end);
   }
-  .critter-bubble.is-on .bubble-box {
+  /* `is-on` is toggled from JS (classList), so Svelte's scoped-CSS compiler
+     can't see it in the markup and would prune this rule as "unused" —
+     leaving the bubble stuck at opacity:0. :global() keeps it. */
+  .critter-bubble:global(.is-on) .bubble-box {
     transform: translateY(0) scale(1);
     opacity: 1;
     transition:
