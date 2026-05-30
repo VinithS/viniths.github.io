@@ -67,19 +67,22 @@
   // Occasional-thought timing — a memoryless (Poisson) process, so thoughts
   // cluster and lull naturally instead of betraying a fixed rhythm. See
   // lib/critter-chatter for the gap sampler and the line picker.
-  const SPEAK_MEAN = 30; // s — steady-state average between thoughts
-  const SPEAK_MIN = 7; // s — floor so two thoughts never stack
-  const SPEAK_MAX = 75; // s — cap so a thought stays discoverable on a visit
-  const FIRST_MEAN = 13; // s — the first thought lands sooner on a fresh visit
-  const FIRST_MAX = 30; // s
+  // The clamps are rescaled to the mean: a too-high MIN would clamp many draws
+  // upward and pull the *effective* average above MEAN. With MEAN 10, MIN 3 /
+  // MAX 30 the realized average is ~9.9s (verified via E[clamp(Exp)]).
+  const SPEAK_MEAN = 10; // s — steady-state average between thoughts
+  const SPEAK_MIN = 3; // s — floor so two thoughts never stack
+  const SPEAK_MAX = 30; // s — cap so a thought stays discoverable on a visit
+  const FIRST_MEAN = 6; // s — the first thought lands sooner on a fresh visit
+  const FIRST_MAX = 14; // s
   const OUT_MS = 160; // ms — matches the CSS pop-out, gates the JS clear after
   const HOLD_BASE = 2200; // ms — minimum time a thought stays up
   const HOLD_PER_CHAR = 110; // ms added per character (longer lines linger)
 
   // TEMP DEBUG: when true, ignore the Poisson timing and have a *random*
-  // creature speak on a fixed ~5s cadence so the feature is easy to see.
-  // Set back to false (or delete) to restore the organic timing.
-  const DEBUG_SPEAK = true;
+  // creature speak on a fixed cadence (DEBUG_GAP) so the feature is easy to
+  // see. false → the organic Poisson timing (SPEAK_* above) is in effect.
+  const DEBUG_SPEAK = false;
   const DEBUG_GAP = 5; // s
 
   let canvasEl;
