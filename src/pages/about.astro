@@ -175,7 +175,7 @@ const mrz = [
      wraps within the stack. */
   .bio {
     display: grid;
-    grid-template-columns: 256px 1fr;
+    grid-template-columns: 224px 1fr;
     gap: 32px;
     align-items: start;
     margin-top: 4px;
@@ -208,10 +208,10 @@ const mrz = [
   }
 
   /* Column widths track PortraitScene's responsive stage widths
-     (256 → 216 → 232) so the stage never overflows its column. */
+     (224 → 196 → stacks) so the stage never overflows its column. */
   @media (max-width: 720px) {
     .bio {
-      grid-template-columns: 216px 1fr;
+      grid-template-columns: 196px 1fr;
       gap: 22px;
     }
   }

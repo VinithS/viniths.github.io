@@ -45,15 +45,18 @@
   --crease-shadow:    rgba(28,24,20,0.10);
   --crease-highlight: rgba(255,250,234,0.45);
 
-  /* --- Portrait stage atmosphere (/about PortraitScene).
+  /* --- Portrait sky (/about PortraitScene).
          Atmospheric fills like --crease-* / grain, so no --on-* pair.
-         sky = recessed back plane, floor = lit ground, shadow = cast
-         shadow under the figure, haze = foreground frame vignette. --- */
-  --stage-sky:    #e8dec1;
-  --stage-floor:  #dccfa6;
-  --stage-shadow: rgba(28, 24, 20, 0.24);
-  --stage-haze:   rgba(28, 24, 20, 0.10);
-  --stage-mark:   rgba(28, 24, 20, 0.18);
+         Light = warm twilight: deep periwinkle aloft fading to an amber
+         horizon, soft stars. sky-top/horizon drive the vertical gradient,
+         glow is the horizon bloom behind the bust, star/star-bright are
+         the two depths, haze is the foreground frame vignette. --- */
+  --sky-top:      #4a4f7a;
+  --sky-horizon:  #d8a05a;
+  --sky-glow:     rgba(232, 168, 96, 0.55);
+  --star:         rgba(255, 250, 234, 0.6);
+  --star-bright:  #fffaea;
+  --stage-haze:   rgba(28, 24, 20, 0.12);
 
   /* --- Grain overlay tuning --- */
   --grain-blend:   multiply;
@@ -97,15 +100,16 @@
   --crease-shadow:    rgba(0,0,0,0.30);
   --crease-highlight: rgba(237,228,206,0.18);
 
-  /* --- Portrait stage atmosphere (/about PortraitScene).
-         Dusk paper lit by a warm lamp: the back plane recedes into
-         the dark, the floor catches a little light, and the cast
-         shadow goes near-black to read against the dusk surface. --- */
-  --stage-sky:    #221d16;
-  --stage-floor:  #2b251c;
-  --stage-shadow: rgba(0, 0, 0, 0.50);
-  --stage-haze:   rgba(0, 0, 0, 0.34);
-  --stage-mark:   rgba(237, 228, 206, 0.16);
+  /* --- Portrait sky (/about PortraitScene).
+         Deep warm night: a near-black plum aloft settling to a warm
+         ember horizon, bright cream stars. Stays dusk-paper warm, not
+         cold space-black. --- */
+  --sky-top:      #161222;
+  --sky-horizon:  #4a2f33;
+  --sky-glow:     rgba(191, 90, 66, 0.45);
+  --star:         rgba(237, 228, 206, 0.55);
+  --star-bright:  #fff4d8;
+  --stage-haze:   rgba(0, 0, 0, 0.40);
 
   /* --- Grain overlay tuning --- */
   --grain-blend:   screen;

@@ -1,37 +1,37 @@
 <script>
   /*
-    PortraitScene — the passport photo that walks in.
+    PortraitScene — the passport photo that walks in, under a night sky.
 
     A Harry-Potter-portrait behaviour in the site's census idiom: on
-    load a pixel figure strolls in from the left of a clipped frame,
+    load a pixel bust strolls in from the left of a clipped 3:4 frame,
     pivots to face the viewer, and settles into a breathing idle whose
-    eyes track the pointer. Depth comes from parallax layers (void /
-    floor / actor / haze) that read FoilCard's inherited pointer vars
-    (--mxn / --myn / --active) — so the frame reads as a small diorama
-    you peek into, with no animation JS of its own.
+    eyes track the pointer — all beneath a starfield. Depth comes from
+    a parallax stack (sky → horizon glow → far stars → near stars →
+    bust → foreground haze) that reads FoilCard's inherited pointer
+    vars (--mxn / --myn / --active), so the frame reads as a window
+    onto a small night world. It ties into the site's emergent-observer
+    frame: the observer, framed against the cosmos that made it.
 
     Motion is ALL CSS (DESIGN.md: never JS for animation). This script
-    only flips `phase`; CSS keys every visual off `.scene--{phase}`.
-    Phase advances on `animationend` (by animationName), never on
-    timers, so the pivot can never fire before the walk has finished.
+    only flips `phase` + holds the deterministic star layout; CSS keys
+    every visual off `.scene--{phase}`. Phase advances on `animationend`
+    (matched by suffix — Svelte scopes @keyframes names), never timers.
 
       boot → enter → turn → idle        (future: coffee | reading | …)
 
-    Frames are SVG sprite strips in /public/portrait, authored on the
-    same 48×64 grid + palette as portrait-placeholder.svg and fully
-    swappable without touching this file.
+    The figure is the same swappable 48×64 sprite set as before; only
+    the framing changed (zoomed to a bust, legs cropped by the frame).
+    Stars are crisp pixel squares on a 1px grid, hand-placed so the
+    layout is deterministic across builds (DESIGN.md: every star maps
+    to intent), with a stepped twinkle on a few.
 
-    Reduced motion: jumps straight to `idle`, and the CSS media query
-    drops the walk, parallax, gaze, blink and breathing — leaving a
-    static front-facing framed portrait. (FoilCard keeps writing --mxn
-    even under reduced-motion, so this component neutralises the gaze /
-    parallax transforms itself rather than trusting --active.)
+    Reduced motion: jumps to `idle`; the media query drops the walk,
+    parallax, gaze, blink, breathing and twinkle, leaving a static
+    front-facing bust under a still sky.
   */
 
   import { onMount } from "svelte";
 
-  // boot: pre-hydration neutral; swapped in onMount so SSR markup
-  // doesn't lock a phase the client must immediately undo.
   let phase = $state("boot");
   let reduced = $state(false);
 
@@ -40,19 +40,35 @@
     phase = reduced ? "idle" : "enter";
   });
 
-  // animationend bubbles from .sprite up to .actor, so one handler on
-  // the actor catches both the actor's own walk-across and the
-  // sprite's turn-cycle. Infinite loops (walk-frames, idle, blink)
-  // never fire end, so they can't trip the machine.
-  //
-  // Svelte scopes @keyframes names (the runtime animationName is
-  // `svelte-<hash>-walk-across`, not `walk-across`), so match on the
-  // suffix rather than the full string.
   function onAnimEnd(e) {
     const name = e.animationName;
     if (name.endsWith("walk-across")) phase = "turn";
     else if (name.endsWith("turn-cycle")) phase = "idle";
   }
+
+  // Deterministic star layout (percent of stage). Most sit in the upper
+  // band + the side columns; the bust occludes anything behind its
+  // centre, so these read as sky around the figure. `tw` = twinkle
+  // stagger in ms (omitted = steady).
+  const FAR = [
+    { x: 12, y: 8 }, { x: 22, y: 17 }, { x: 8, y: 30 }, { x: 30, y: 6 },
+    { x: 43, y: 13 }, { x: 55, y: 7 }, { x: 67, y: 15 }, { x: 79, y: 9 },
+    { x: 88, y: 21 }, { x: 72, y: 27 }, { x: 18, y: 40 }, { x: 84, y: 41 },
+    { x: 6, y: 48 }, { x: 92, y: 34 }, { x: 38, y: 21 }, { x: 61, y: 31 },
+    { x: 48, y: 4 }, { x: 64, y: 23 }, { x: 14, y: 24 }, { x: 76, y: 36 },
+    { x: 28, y: 12 }, { x: 94, y: 13 }, { x: 4, y: 16 }, { x: 52, y: 26 },
+  ];
+  const NEAR = [
+    { x: 16, y: 12, tw: 0 }, { x: 34, y: 23, tw: 600 }, { x: 50, y: 9 },
+    { x: 70, y: 19, tw: 900 }, { x: 86, y: 29, tw: 300 }, { x: 26, y: 33 },
+    { x: 80, y: 53, tw: 1200 }, { x: 10, y: 19, tw: 450 },
+  ];
+  // Signature glints — the two accent pixels from the original portrait,
+  // promoted to stars: a yellow high-right, a red low-left.
+  const GLINTS = [
+    { x: 90, y: 13, c: "var(--yellow)", tw: 200 },
+    { x: 8, y: 62, c: "var(--red)", tw: 1500 },
+  ];
 </script>
 
 <figure class="portrait-scene">
@@ -60,20 +76,41 @@
     class="scene scene--{phase}"
     class:reduced
     role="img"
-    aria-label="A pixelated portrait of Vinith walking into frame."
+    aria-label="A pixelated portrait of Vinith walking into frame beneath a starry sky."
   >
-    <!-- back plane + one faint distant mark (deep-field) -->
-    <div class="layer void" aria-hidden="true">
-      <span class="mark"></span>
-    </div>
-    <!-- lit ground + horizon -->
-    <div class="layer floor" aria-hidden="true"></div>
+    <!-- night-sky gradient + horizon bloom (parallax: least) -->
+    <div class="layer sky" aria-hidden="true"></div>
+    <div class="layer glow" aria-hidden="true"></div>
 
-    <!-- the figure. Walk-across lives here; the sprite strip + turn +
-         breathing live on .sprite; gaze pupils + blink lid overlay the
-         idle face's baked sockets. -->
+    <!-- far stars: faint, small, shift a little -->
+    <div class="layer stars stars--far" aria-hidden="true">
+      {#each FAR as s}
+        <span class="star" style="left:{s.x}%;top:{s.y}%"></span>
+      {/each}
+    </div>
+    <!-- near stars: brighter, a few twinkle, shift more -->
+    <div class="layer stars stars--near" aria-hidden="true">
+      {#each NEAR as s}
+        <span
+          class="star star--bright"
+          class:tw={s.tw !== undefined}
+          style="left:{s.x}%;top:{s.y}%;{s.tw !== undefined
+            ? `animation-delay:${s.tw}ms`
+            : ''}"
+        ></span>
+      {/each}
+      {#each GLINTS as g}
+        <span
+          class="star star--glint tw"
+          style="left:{g.x}%;top:{g.y}%;--glint:{g.c};animation-delay:{g.tw}ms"
+        ></span>
+      {/each}
+    </div>
+
+    <!-- the bust. walk-across lives on .actor; sprite strip + turn +
+         breathing on .sprite; gaze pupils + blink lid overlay the idle
+         face's baked sockets. Legs fall below the frame and are clipped. -->
     <div class="actor" aria-hidden="true" onanimationend={onAnimEnd}>
-      <span class="cast"></span>
       <div class="sprite">
         <span class="eyes">
           <span class="pupil pupil--l"></span>
@@ -90,33 +127,31 @@
 
 <style>
   /* ---- Stage geometry (all tunable; everything derives from --scale).
-          --scale is the pixel-art zoom: 1 source px → --px device px. */
+          --scale is the pixel-art zoom: 1 source px → --px device px.
+          --bust-top drops the figure so the frame crops it at the
+          waist (legs overflow the bottom and are clipped). */
   .scene {
-    --scale: 2.6;
+    --scale: 4.8;
     --px: calc(var(--scale) * 1px);
-    --fw: calc(48 * var(--px)); /* one frame's width  */
-    --fh: calc(64 * var(--px)); /* one frame's height */
+    --fw: calc(48 * var(--px));
+    --fh: calc(64 * var(--px));
 
-    --stage-w: 256px;
-    --stage-h: 188px;
-    /* floor line measured from the stage top; the figure's feet rest
-       here (the cell has ~4 source px of empty space below the shoes,
-       so the actor's box bottom sits a touch below this). */
-    --floor-y: 158px;
+    --stage-w: 224px; /* 3:4 portrait */
+    --stage-h: 300px;
+    --bust-top: 64px;
 
     position: relative;
     width: var(--stage-w);
     height: var(--stage-h);
     overflow: hidden;
     isolation: isolate;
-    background: var(--stage-sky);
-    /* Passport double-rule frame, inherited from the old .portrait img:
-       hard inner rule + cream gutter + soft outer. */
+    background: var(--sky-top);
+    /* Passport double-rule frame: hard inner rule + cream gutter + soft
+       outer, same as the original printed photo frame. */
     border: 2px solid var(--rule);
     box-shadow:
       0 0 0 3px var(--bg-card),
       0 0 0 4px var(--rule-soft);
-    /* Keep the sprite + layer repaints from leaking to the card. */
     contain: layout paint;
   }
 
@@ -128,53 +163,91 @@
     transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
-  /* Back plane: faint, recedes. Shifts least, WITH the pan. */
-  .void {
+  /* Sky: vertical twilight/night gradient. Shifts least, WITH the pan. */
+  .sky {
     z-index: 0;
-    background: var(--stage-sky);
+    background: linear-gradient(
+      to bottom,
+      var(--sky-top) 0%,
+      color-mix(in oklab, var(--sky-top) 55%, var(--sky-horizon)) 62%,
+      var(--sky-horizon) 100%
+    );
     transform: translate(
       calc((var(--mxn) - 50) * 0.02px * var(--active)),
       calc((var(--myn) - 50) * 0.015px * var(--active))
     );
   }
-  /* The one faint distant mark — a single pixel, deep-field. */
-  .mark {
-    position: absolute;
-    top: 26%;
-    left: 30%;
-    width: var(--px);
-    height: var(--px);
-    background: var(--stage-mark);
-  }
-
-  /* Ground: a lit band below the horizon line. */
-  .floor {
-    z-index: 1;
-    top: var(--floor-y);
-    inset-inline: -10px;
-    bottom: -8px;
-    background: linear-gradient(
-      to bottom,
-      var(--stage-floor),
-      color-mix(in oklab, var(--stage-floor) 78%, var(--bg-raised))
+  /* Horizon bloom behind where the bust stands. */
+  .glow {
+    z-index: 0;
+    background: radial-gradient(
+      135% 80% at 50% 104%,
+      var(--sky-glow) 0%,
+      transparent 66%
     );
-    border-top: 1px solid var(--rule-soft);
     transform: translate(
-      calc((var(--mxn) - 50) * 0.035px * var(--active)),
-      calc((var(--myn) - 50) * 0.02px * var(--active))
+      calc((var(--mxn) - 50) * 0.02px * var(--active)),
+      calc((var(--myn) - 50) * 0.015px * var(--active))
     );
   }
 
-  /* ---- The figure ---------------------------------------------------- */
+  .stars {
+    z-index: 1;
+  }
+  .stars--far {
+    transform: translate(
+      calc((var(--mxn) - 50) * 0.045px * var(--active)),
+      calc((var(--myn) - 50) * 0.03px * var(--active))
+    );
+  }
+  .stars--near {
+    transform: translate(
+      calc((var(--mxn) - 50) * 0.09px * var(--active)),
+      calc((var(--myn) - 50) * 0.055px * var(--active))
+    );
+  }
+  /* Crisp pixel stars on a 1px grid (DESIGN.md: crispEdges ornament). */
+  .star {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: var(--star);
+    shape-rendering: crispedges;
+  }
+  .star--bright {
+    width: 3px;
+    height: 3px;
+    background: var(--star-bright);
+  }
+  .star--glint {
+    width: 3px;
+    height: 3px;
+    background: var(--glint);
+  }
+  /* Stepped twinkle: snap between dim and bright, never a smooth fade
+     (DESIGN.md: state changes use steps(), not eases). Staggered by the
+     inline animation-delay so the field doesn't pulse in unison. */
+  .tw {
+    animation: twinkle 1.7s steps(2, jump-none) infinite alternate;
+  }
+  @keyframes twinkle {
+    from {
+      opacity: 0.35;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* ---- The bust ------------------------------------------------------ */
   .actor {
     position: absolute;
     z-index: 2;
-    left: calc((var(--stage-w) - var(--fw)) / 2); /* centred rest */
-    bottom: calc(var(--stage-h) - var(--floor-y));
+    left: calc((var(--stage-w) - var(--fw)) / 2); /* centred */
+    top: var(--bust-top);
     width: var(--fw);
     height: var(--fh);
   }
-
   .sprite {
     position: absolute;
     inset: 0;
@@ -183,60 +256,38 @@
     will-change: background-position, transform;
   }
 
-  /* Soft ground-contact shadow (scene illustration, not a UI shadow):
-     anchored under the feet, rides in with the walk. */
-  .cast {
-    position: absolute;
-    left: 50%;
-    bottom: calc(4 * var(--px) - 3px);
-    width: calc(var(--fw) * 0.72);
-    height: 9px;
-    transform: translateX(-50%);
-    background: radial-gradient(
-      50% 50% at 50% 50%,
-      var(--stage-shadow),
-      transparent 72%
-    );
-    z-index: -1;
-  }
-
   /* ---- Per-phase sprite source + cadence ----------------------------- */
-  /* enter: 4-frame profile walk, looping while crossing. */
   .scene--enter .sprite {
     background-image: url("/portrait/walk.svg");
     background-size: calc(4 * var(--fw)) var(--fh);
-    animation: walk-frames 0.62s steps(4) infinite;
+    animation: walk-frames 0.6s steps(4) infinite;
   }
   .scene--enter .actor {
-    animation: walk-across 2.4s steps(20) forwards;
+    animation: walk-across 2.1s steps(18) forwards;
   }
 
-  /* turn: 2-frame pivot, one shot, holds the front frame. */
   .scene--turn .sprite {
     background-image: url("/portrait/turn.svg");
     background-size: calc(2 * var(--fw)) var(--fh);
-    animation: turn-cycle 0.46s steps(2, jump-none) 1 forwards;
+    animation: turn-cycle 0.44s steps(2, jump-none) 1 forwards;
   }
 
-  /* idle: 2-frame front breathing (long rest, brief inhale). */
   .scene--idle .sprite {
     background-image: url("/portrait/idle.svg");
     background-size: calc(2 * var(--fw)) var(--fh);
     animation: idle-breathe 3.6s steps(1, jump-end) infinite;
-    /* head-follow: the whole figure leans a hair toward the pointer. */
+    /* head-follow: the whole bust leans a hair toward the pointer. */
     transform: translate(
       calc((var(--mxn) - 50) / 50 * var(--px) * 0.8 * var(--active)),
       calc((var(--myn) - 50) / 50 * var(--px) * 0.45 * var(--active))
     );
     transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
-  /* subtle actor grounding parallax once settled */
   .scene--idle .actor {
-    transform: translateX(calc((var(--mxn) - 50) * 0.012px * var(--active)));
+    transform: translateX(calc((var(--mxn) - 50) * 0.014px * var(--active)));
     transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
-  /* boot (pre-hydration): show the idle rest frame so SSR isn't blank. */
   .scene--boot .sprite {
     background-image: url("/portrait/idle.svg");
     background-size: calc(2 * var(--fw)) var(--fh);
@@ -276,10 +327,10 @@
   }
 
   /* ---- Gaze: pupils + blink lid over the idle face's baked sockets.
-          Colours are the character's own pixel-art fills (matching the
-          sprite), the illustrated-voice exception DESIGN.md allows for
-          pixel art. Hidden outside idle (walk/turn frames draw their
-          own eyes). Coords are the idle.svg sockets, in source px. */
+          Colours are the character's own pixel-art fills (the
+          illustrated-voice exception DESIGN.md allows for pixel art).
+          Coords are the idle.svg sockets, in source px, so they track
+          the face at any --scale. Hidden outside idle. */
   .eyes {
     position: absolute;
     inset: 0;
@@ -307,7 +358,6 @@
   .pupil--r {
     left: calc(27 * var(--px));
   }
-  /* Eyelid: skin-toned, drops over the socket band on a slow blink. */
   .lid {
     position: absolute;
     left: calc(17 * var(--px));
@@ -333,13 +383,12 @@
     }
   }
 
-  /* ---- Foreground haze: an inset vignette, parallaxes most + opposite
-          the pan, so the frame edge reads as "in front of" the figure. */
+  /* ---- Foreground haze: inset vignette, parallaxes most + opposite. -- */
   .haze {
     z-index: 3;
     background: radial-gradient(
-      120% 90% at 50% 42%,
-      transparent 58%,
+      125% 95% at 50% 38%,
+      transparent 55%,
       var(--stage-haze) 100%
     );
     transform: translate(
@@ -348,42 +397,43 @@
     );
   }
 
-  /* ---- The figure (and its caption frame) live in a plain figure. --- */
   .portrait-scene {
     margin: 0;
-    width: var(--stage-w, 256px);
+    width: var(--stage-w, 224px);
   }
 
-  /* ---- Responsive: scale the whole stage as one unit. ---------------- */
+  /* ---- Responsive: scale the whole stage as one unit, keep 3:4. ------ */
   @media (max-width: 720px) {
     .scene {
-      --scale: 2.2;
-      --stage-w: 216px;
-      --stage-h: 160px;
-      --floor-y: 134px;
+      --scale: 4.2;
+      --stage-w: 196px;
+      --stage-h: 262px;
+      --bust-top: 46px;
     }
   }
   @media (max-width: 520px) {
     .scene {
-      --scale: 2.4;
-      --stage-w: 232px;
-      --stage-h: 172px;
-      --floor-y: 144px;
+      --scale: 4.5;
+      --stage-w: 210px;
+      --stage-h: 280px;
+      --bust-top: 49px;
     }
   }
 
-  /* ---- Reduced motion: static front-facing framed portrait. --------- */
+  /* ---- Reduced motion: static front-facing bust under a still sky. -- */
   @media (prefers-reduced-motion: reduce) {
     .scene .sprite,
     .scene .actor,
-    .scene .lid {
+    .scene .lid,
+    .scene .tw {
       animation: none !important;
     }
     .scene .sprite,
     .scene .actor,
     .scene .pupil,
-    .scene .void,
-    .scene .floor,
+    .scene .sky,
+    .scene .glow,
+    .scene .stars,
     .scene .haze {
       transform: none !important;
     }
