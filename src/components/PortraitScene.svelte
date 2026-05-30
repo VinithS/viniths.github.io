@@ -25,6 +25,14 @@
     layout is deterministic across builds (DESIGN.md: every star maps
     to intent), with a stepped twinkle on a few.
 
+    The scene lives on the BACK face of the /about flip card, hidden
+    until the card is flipped. So the walk-in is gated on a
+    `passport:flip` event (dispatched on document by about.astro) rather
+    than firing on mount — the figure walks in WHEN REVEALED, the way a
+    passport photo "comes alive" once you turn to it. It stays on `boot`
+    (a still front-facing bust) until the first reveal, and won't replay
+    on subsequent flips.
+
     Reduced motion: jumps to `idle`; the media query drops the walk,
     parallax, gaze, blink, breathing and twinkle, leaving a static
     front-facing bust under a still sky.
@@ -34,10 +42,26 @@
 
   let phase = $state("boot");
   let reduced = $state(false);
+  let walked = false; // walk-in plays once, on first reveal
 
   onMount(() => {
     reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    phase = reduced ? "idle" : "enter";
+    // Reduced motion: settle straight to idle; no reveal gating needed.
+    if (reduced) {
+      phase = "idle";
+      return;
+    }
+
+    // Gate the walk-in on the first flip to this (back) face, so the
+    // figure enters when revealed rather than silently on page load.
+    const onFlip = (e) => {
+      if (e.detail?.face === "back" && !walked) {
+        walked = true;
+        phase = "enter";
+      }
+    };
+    document.addEventListener("passport:flip", onFlip);
+    return () => document.removeEventListener("passport:flip", onFlip);
   });
 
   function onAnimEnd(e) {
@@ -51,17 +75,40 @@
   // centre, so these read as sky around the figure. `tw` = twinkle
   // stagger in ms (omitted = steady).
   const FAR = [
-    { x: 12, y: 8 }, { x: 22, y: 17 }, { x: 8, y: 30 }, { x: 30, y: 6 },
-    { x: 43, y: 13 }, { x: 55, y: 7 }, { x: 67, y: 15 }, { x: 79, y: 9 },
-    { x: 88, y: 21 }, { x: 72, y: 27 }, { x: 18, y: 40 }, { x: 84, y: 41 },
-    { x: 6, y: 48 }, { x: 92, y: 34 }, { x: 38, y: 21 }, { x: 61, y: 31 },
-    { x: 48, y: 4 }, { x: 64, y: 23 }, { x: 14, y: 24 }, { x: 76, y: 36 },
-    { x: 28, y: 12 }, { x: 94, y: 13 }, { x: 4, y: 16 }, { x: 52, y: 26 },
+    { x: 12, y: 8 },
+    { x: 22, y: 17 },
+    { x: 8, y: 30 },
+    { x: 30, y: 6 },
+    { x: 43, y: 13 },
+    { x: 55, y: 7 },
+    { x: 67, y: 15 },
+    { x: 79, y: 9 },
+    { x: 88, y: 21 },
+    { x: 72, y: 27 },
+    { x: 18, y: 40 },
+    { x: 84, y: 41 },
+    { x: 6, y: 48 },
+    { x: 92, y: 34 },
+    { x: 38, y: 21 },
+    { x: 61, y: 31 },
+    { x: 48, y: 4 },
+    { x: 64, y: 23 },
+    { x: 14, y: 24 },
+    { x: 76, y: 36 },
+    { x: 28, y: 12 },
+    { x: 94, y: 13 },
+    { x: 4, y: 16 },
+    { x: 52, y: 26 },
   ];
   const NEAR = [
-    { x: 16, y: 12, tw: 0 }, { x: 34, y: 23, tw: 600 }, { x: 50, y: 9 },
-    { x: 70, y: 19, tw: 900 }, { x: 86, y: 29, tw: 300 }, { x: 26, y: 33 },
-    { x: 80, y: 53, tw: 1200 }, { x: 10, y: 19, tw: 450 },
+    { x: 16, y: 12, tw: 0 },
+    { x: 34, y: 23, tw: 600 },
+    { x: 50, y: 9 },
+    { x: 70, y: 19, tw: 900 },
+    { x: 86, y: 29, tw: 300 },
+    { x: 26, y: 33 },
+    { x: 80, y: 53, tw: 1200 },
+    { x: 10, y: 19, tw: 450 },
   ];
   // Signature glints — the two accent pixels from the original portrait,
   // promoted to stars: a yellow high-right, a red low-left.
@@ -94,9 +141,7 @@
         <span
           class="star star--bright"
           class:tw={s.tw !== undefined}
-          style="left:{s.x}%;top:{s.y}%;{s.tw !== undefined
-            ? `animation-delay:${s.tw}ms`
-            : ''}"
+          style="left:{s.x}%;top:{s.y}%;{s.tw !== undefined ? `animation-delay:${s.tw}ms` : ''}"
         ></span>
       {/each}
       {#each GLINTS as g}
@@ -180,11 +225,7 @@
   /* Horizon bloom behind where the bust stands. */
   .glow {
     z-index: 0;
-    background: radial-gradient(
-      135% 80% at 50% 104%,
-      var(--sky-glow) 0%,
-      transparent 66%
-    );
+    background: radial-gradient(135% 80% at 50% 104%, var(--sky-glow) 0%, transparent 66%);
     transform: translate(
       calc((var(--mxn) - 50) * 0.02px * var(--active)),
       calc((var(--myn) - 50) * 0.015px * var(--active))
@@ -386,11 +427,7 @@
   /* ---- Foreground haze: inset vignette, parallaxes most + opposite. -- */
   .haze {
     z-index: 3;
-    background: radial-gradient(
-      125% 95% at 50% 38%,
-      transparent 55%,
-      var(--stage-haze) 100%
-    );
+    background: radial-gradient(125% 95% at 50% 38%, transparent 55%, var(--stage-haze) 100%);
     transform: translate(
       calc((var(--mxn) - 50) * -0.09px * var(--active)),
       calc((var(--myn) - 50) * -0.05px * var(--active))

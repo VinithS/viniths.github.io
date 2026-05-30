@@ -1,0 +1,367 @@
+---
+/*
+  CardFooter — the slim "contact strip" at the base of the passport's
+  front face. Replaces the tall DisplayFlipBoard flap-board with two
+  hairline pixel rows that keep its essential signals:
+
+    1. .cf-telemetry — coordinates + the XOR-encrypted email. The email
+       never appears in served HTML (data-cfe); it scramble-settles to
+       the real address on hover/focus and becomes a mailto: link, the
+       same decoding idiom the flap-board used.
+    2. .cf-status   — pulsing dot + LINK · 1200 BAUD · LOCKED, the amber
+       SWEEP RAIL (the travelling glow the owner asked to keep), signal
+       bars, and a live local clock (the "alive" signal).
+
+  Sweep + clock + scramble logic are lifted from DisplayFlipBoard so the
+  retired board's behavior survives in this lighter form. The clock uses
+  Intl in the page's configured timezone.
+
+  Props:
+    - email     plaintext address; encoded at build time, decoded client-side
+    - coord     coordinate string shown before the email (static label text)
+    - timezone  IANA tz for the live clock (e.g. "America/Los_Angeles")
+*/
+
+import { encodeContact } from "../../lib/obfuscate";
+
+interface Props {
+  email: string;
+  coord: string;
+  timezone: string;
+}
+
+const { email, coord, timezone } = Astro.props;
+const cipher = encodeContact(email);
+---
+
+<div class="card-footer" data-card-footer>
+  <!-- Telemetry: static coords + decoding email. [encrypted] is the
+       served placeholder; the script swaps in the real address. -->
+  <div class="cf-telemetry">
+    <span class="cf-coord"><span class="cf-tag">COORD</span> {coord}</span>
+    <span class="cf-leader" aria-hidden="true"></span>
+    <span class="cf-xmit">
+      <span class="cf-tag">XMIT</span>
+      <a class="cf-cipher" href="#" data-cfe={cipher} aria-label="Reveal contact email">
+        {"[encrypted]".split("").map((ch) => <span class="flap">{ch}</span>)}
+      </a>
+    </span>
+  </div>
+
+  <!-- Status bar: link pod + sweep rail + telemetry pod (bars + clock). -->
+  <div class="cf-status">
+    <span class="cf-pod cf-pod--left">
+      <span class="cf-dot" aria-hidden="true"></span>
+      <span class="cf-link-text">LINK · 1200 BAUD · LOCKED</span>
+    </span>
+    <span class="cf-sweep" aria-hidden="true"></span>
+    <span class="cf-pod cf-pod--right">
+      <span class="cf-bars" aria-hidden="true"
+        ><span></span><span></span><span></span><span></span></span
+      >
+      <span class="cf-clock" data-cf-clock data-tz={timezone}>--:--:--</span>
+    </span>
+  </div>
+</div>
+
+<script>
+  // Compact scramble-settle, lifted from DisplayFlipBoard: each cell's
+  // .flap children cycle random glyphs then lock onto the target, char
+  // by char. Reused here only for the email reveal.
+  function decodeCfe(hex: string): string {
+    try {
+      const k = parseInt(hex.substring(0, 2), 16);
+      let out = "";
+      for (let i = 2; i < hex.length; i += 2) {
+        out += String.fromCharCode(parseInt(hex.substring(i, i + 2), 16) ^ k);
+      }
+      return out;
+    } catch (_) {
+      return "";
+    }
+  }
+
+  const CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789/.@·,-";
+
+  function scrambleSettle(el: HTMLElement, target: string, speed = 38) {
+    el.innerHTML = "";
+    const flaps = target.split("").map((ch) => {
+      const s = document.createElement("span");
+      s.className = "flap flap--flipping";
+      s.textContent = ch === " " ? " " : ch;
+      el.appendChild(s);
+      return s;
+    });
+    const targetChars = target.split("");
+    const starts = flaps.map((_, i) => i * 4);
+    const durations = flaps.map((_, i) => 14 + i * 2);
+    let tick = 0;
+    const iv = window.setInterval(() => {
+      let settled = 0;
+      flaps.forEach((flap, i) => {
+        const local = tick - starts[i];
+        if (local < 0) return;
+        if (local >= durations[i]) {
+          flap.textContent = targetChars[i] === " " ? " " : targetChars[i];
+          flap.classList.remove("flap--flipping");
+          settled++;
+          return;
+        }
+        flap.textContent = CHARSET[Math.floor(Math.random() * CHARSET.length)];
+      });
+      tick++;
+      if (settled === flaps.length) window.clearInterval(iv);
+    }, speed);
+  }
+
+  document.querySelectorAll<HTMLElement>("[data-card-footer]").forEach((footer) => {
+    // Email reveal: decode once on first hover/focus, rewrite as a
+    // mailto link, then scramble-settle to the plaintext.
+    const cipherEl = footer.querySelector<HTMLAnchorElement>(".cf-cipher");
+    if (cipherEl) {
+      const hex = cipherEl.getAttribute("data-cfe") || "";
+      let revealed = false;
+      const reveal = () => {
+        if (revealed) return;
+        revealed = true;
+        const addr = decodeCfe(hex);
+        cipherEl.setAttribute("href", "mailto:" + addr);
+        scrambleSettle(cipherEl, addr);
+      };
+      cipherEl.addEventListener("pointerenter", reveal);
+      cipherEl.addEventListener("focus", reveal);
+    }
+
+    // Live local clock in the configured timezone. One ticker; the
+    // "alive" signal that the document is being actively received.
+    const clock = footer.querySelector<HTMLElement>("[data-cf-clock]");
+    if (clock) {
+      const tz = clock.getAttribute("data-tz") || undefined;
+      const fmt = new Intl.DateTimeFormat("en-GB", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+        timeZone: tz,
+      });
+      const tick = () => {
+        clock.textContent = fmt.format(new Date());
+      };
+      tick();
+      window.setInterval(tick, 1000);
+    }
+  });
+</script>
+
+<style>
+  .card-footer {
+    /* Bleed to the card edges over the inset paper, like the old fused
+       strip: cancel FoilCard's padding with its exposed vars. */
+    margin: 0 calc(var(--foil-pad-x, 0px) * -1) calc(var(--foil-pad-b, 0px) * -1);
+    padding: 12px var(--foil-pad-x, 22px);
+    background: var(--bg-inset);
+    /* A single hard seam joins the strip to the card border, the way
+       the flap-board's 2px top rule did. */
+    border-top: 2px solid var(--rule);
+    font-family: var(--font-pixel);
+  }
+
+  /* --- Telemetry row: coords + decoding email -------------------- */
+  .cf-telemetry {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 8px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .cf-tag {
+    color: var(--ink-muted);
+    margin-right: 5px;
+  }
+  .cf-coord {
+    font-variant-numeric: tabular-nums;
+  }
+  /* Dot-leader fills the gap between coord and email — the "printed
+     guide" run the MRZ rows used. */
+  .cf-leader {
+    flex: 1;
+    height: 1px;
+    min-width: 16px;
+    background-image: linear-gradient(to right, var(--rule-soft) 0 50%, transparent 50% 100%);
+    background-size: 4px 1px;
+    background-repeat: repeat-x;
+  }
+  .cf-xmit {
+    flex-shrink: 0;
+  }
+  .cf-cipher {
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--rule-soft);
+  }
+  .cf-cipher:hover,
+  .cf-cipher:focus-visible {
+    color: var(--em);
+    border-bottom-color: var(--em);
+    outline: none;
+  }
+  .flap {
+    display: inline-block;
+  }
+  /* While cycling, glyphs ride at the em color so the decode reads as
+     "live" — settles back to ink as each char locks. */
+  .flap--flipping {
+    color: var(--em);
+  }
+
+  /* --- Status row: link pod + sweep rail + clock pod ------------- */
+  .cf-status {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 9px;
+    font-size: 8px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    line-height: 1;
+  }
+  .cf-pod {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .cf-pod--left {
+    color: var(--ink-soft);
+  }
+  .cf-pod--right {
+    align-items: baseline;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Pulsing link dot — present/alive. --signal is the site's status
+     role token (green in both themes). */
+  .cf-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--signal);
+    box-shadow: 0 0 5px color-mix(in oklab, var(--signal), transparent 35%);
+    animation: cf-pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes cf-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    45% {
+      opacity: 0.35;
+    }
+  }
+
+  /* THE LIGHT RAIL the owner asked to keep: a thin rule with an amber
+     glow travelling left→right. Ported from DisplayFlipBoard's
+     .flip-sweep. --em carries the amber (terracotta in light, gold in
+     dark) so it tracks the theme. */
+  .cf-sweep {
+    flex: 1;
+    height: 1px;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--rule-soft) 15%,
+      var(--rule-soft) 85%,
+      transparent 100%
+    );
+  }
+  .cf-sweep::after {
+    content: "";
+    position: absolute;
+    top: -3px;
+    left: 0;
+    width: 20%;
+    height: 7px;
+    background: linear-gradient(90deg, transparent 0%, var(--em) 50%, transparent 100%);
+    opacity: 0.65;
+    transform: translateX(-100%);
+    animation: cf-sweep 4.2s linear infinite;
+    will-change: transform;
+  }
+  @keyframes cf-sweep {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(500%);
+    }
+  }
+
+  /* Signal-strength bars — radio hunting for a lock. */
+  .cf-bars {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 9px;
+  }
+  .cf-bars span {
+    width: 2px;
+    background: var(--em);
+    opacity: 0.9;
+  }
+  .cf-bars span:nth-child(1) {
+    height: 30%;
+  }
+  .cf-bars span:nth-child(2) {
+    height: 55%;
+  }
+  .cf-bars span:nth-child(3) {
+    height: 80%;
+  }
+  .cf-bars span:nth-child(4) {
+    height: 100%;
+    animation: cf-bar-pulse 3.4s ease-in-out infinite;
+  }
+  @keyframes cf-bar-pulse {
+    0%,
+    60%,
+    100% {
+      opacity: 0.9;
+    }
+    70% {
+      opacity: 0.25;
+    }
+    80% {
+      opacity: 0.9;
+    }
+  }
+
+  .cf-clock {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--ink-soft);
+  }
+
+  /* Drop the right telemetry pod on narrow cards — the status row
+     can't hold all three segments without squishing. */
+  @media (max-width: 520px) {
+    .cf-pod--right {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cf-dot,
+    .cf-sweep::after,
+    .cf-bars span:nth-child(4) {
+      animation: none !important;
+    }
+  }
+</style>

@@ -1,0 +1,138 @@
+---
+/*
+  PassportPhoto — the small, STILL printed photo on the passport's front
+  face. A passport photo doesn't move; flip the card and it "comes alive"
+  as the full <PortraitScene> on the back.
+
+  Same visual language as PortraitScene (3:4 frame, double-rule passport
+  border, night-sky bust) but static and zero-JS: a front-facing idle
+  bust (frame 0 of idle.svg) under a handful of crisp pixel stars. The
+  two signature glints (yellow high-right, red low-left) carry over so
+  the still and the living portrait read as the same window.
+
+  Sizing derives from --scale (source-px → device-px), same as the scene.
+*/
+---
+
+<figure class="passport-photo" aria-hidden="true">
+  <div class="pp-stage">
+    <div class="pp-sky"></div>
+    <div class="pp-glow"></div>
+    <div class="pp-stars">
+      <span class="pp-star" style="left:14%;top:12%"></span>
+      <span class="pp-star" style="left:33%;top:22%"></span>
+      <span class="pp-star" style="left:52%;top:9%"></span>
+      <span class="pp-star" style="left:71%;top:18%"></span>
+      <span class="pp-star" style="left:86%;top:30%"></span>
+      <span class="pp-star pp-star--bright" style="left:24%;top:33%"></span>
+      <span class="pp-star pp-star--bright" style="left:64%;top:27%"></span>
+      <span class="pp-star pp-glint pp-glint--y" style="left:88%;top:13%"></span>
+      <span class="pp-star pp-glint pp-glint--r" style="left:9%;top:62%"></span>
+    </div>
+    <div class="pp-bust"></div>
+  </div>
+</figure>
+
+<style>
+  /* Stage geometry mirrors PortraitScene but smaller — a passport photo,
+     not a window. --scale is the pixel-art zoom; the frame crops the
+     bust at the waist via --bust-top (legs overflow + are clipped). */
+  .pp-stage {
+    --scale: 2.4;
+    --px: calc(var(--scale) * 1px);
+    --fw: calc(48 * var(--px));
+    --fh: calc(64 * var(--px));
+
+    --stage-w: 108px; /* 3:4, matching the living portrait's framing */
+    --stage-h: 144px;
+    --bust-top: 30px;
+
+    position: relative;
+    width: var(--stage-w);
+    height: var(--stage-h);
+    overflow: hidden;
+    isolation: isolate;
+    background: var(--sky-top);
+    /* Passport double-rule frame: hard inner rule + cream gutter + soft
+       outer — identical to PortraitScene's printed-photo frame. */
+    border: 2px solid var(--rule);
+    box-shadow:
+      0 0 0 3px var(--bg-card),
+      0 0 0 4px var(--rule-soft);
+    contain: layout paint;
+  }
+
+  .passport-photo {
+    margin: 0;
+    width: var(--stage-w, 108px);
+  }
+
+  .pp-sky,
+  .pp-glow,
+  .pp-stars {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .pp-sky {
+    background: linear-gradient(
+      to bottom,
+      var(--sky-top) 0%,
+      color-mix(in oklab, var(--sky-top) 55%, var(--sky-horizon)) 62%,
+      var(--sky-horizon) 100%
+    );
+  }
+  .pp-glow {
+    background: radial-gradient(135% 80% at 50% 104%, var(--sky-glow) 0%, transparent 66%);
+  }
+
+  /* Crisp pixel stars on a 1px grid (DESIGN.md: crispEdges ornament). */
+  .pp-star {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: var(--star);
+    shape-rendering: crispedges;
+  }
+  .pp-star--bright {
+    width: 3px;
+    height: 3px;
+    background: var(--star-bright);
+  }
+  .pp-glint {
+    width: 3px;
+    height: 3px;
+  }
+  .pp-glint--y {
+    background: var(--yellow);
+  }
+  .pp-glint--r {
+    background: var(--red);
+  }
+
+  /* Front-facing idle bust, frame 0 of the shared idle sprite. Centred,
+     dropped so the frame crops it at the waist. Static — no animation. */
+  .pp-bust {
+    position: absolute;
+    left: calc((var(--stage-w) - var(--fw)) / 2);
+    top: var(--bust-top);
+    width: var(--fw);
+    height: var(--fh);
+    background-image: url("/portrait/idle.svg");
+    background-size: calc(2 * var(--fw)) var(--fh);
+    background-position-x: 0;
+    background-repeat: no-repeat;
+    image-rendering: pixelated;
+  }
+
+  /* Track the page's responsive portrait sizes loosely — the photo is
+     small enough that it only needs a gentle step down on phones. */
+  @media (max-width: 520px) {
+    .pp-stage {
+      --scale: 2.2;
+      --stage-w: 99px;
+      --stage-h: 132px;
+      --bust-top: 28px;
+    }
+  }
+</style>

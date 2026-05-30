@@ -1,31 +1,44 @@
 ---
 /*
-  /about — Bureau of Cosmic Census passport page.
+  /about — Bureau of Cosmic Census passport, as a two-faced FLIP CARD.
 
-  The card is shaped like the data page of a real passport: masthead
-  at the top (crest + issuing body + field office), a two-column
-  biographical block (portrait + cycling status on the left,
-  passport-style data fields on the right), a remarks box, and a
-  machine-readable zone strip. The fused flip-board below acts as the
-  passport's RFID / contact strip.
+  A passport cover (FoilCard) holds a single page that flips:
 
-  The stamping mechanic stays: passports get stamped, so it's on-
-  theme. StampArea bleeds to the card edges itself via FoilCard's
-  --foil-pad-* vars; the digital strip opts out via data-no-stamp.
+    FRONT — the data page (stampable). A dense, single-column ID card:
+      masthead → barcode → small STILL passport photo → name +
+      classification → cycling status verb → 2×2 field grid → Remarks
+      prose → slim contact footer. The portrait is small here (a printed
+      photo), so nothing forces the empty space the old wide layout had.
+      Single column = the mobile layout for free.
+
+    BACK — the living portrait (NOT stampable). The full animated
+      PortraitScene gets the whole card: walk-in (on reveal), turn,
+      idle, gaze, parallax starfield. "A passport photo doesn't move;
+      turn to it and it comes alive."
+
+  The FoilCard cover itself does NOT flip — it stays put and owns the
+  cursor/pointer vars + foil shine. Only the page inside (.passport-inner)
+  rotates. The back face inherits the cover's pointer vars for parallax.
+
+  Composition follows DESIGN.md "Scale as composition": a narrow card
+  sits small in a wide field — the human entry against the institution,
+  one star in a chart, not a hero shot. The leftover space is deliberate
+  deep field, not an accidental gap.
 */
 
 import Layout from "../layouts/Layout.astro";
 import FoilCard from "../components/primitives/FoilCard.astro";
-import DisplayFlipBoard from "../components/primitives/displays/DisplayFlipBoard.astro";
 import StampArea from "../components/StampArea.svelte";
 import StampTray from "../components/StampTray.svelte";
 
 import MastheadFrame from "../components/crests/MastheadFrame.astro";
 import CrestBlackHole from "../components/crests/CrestBlackHole.astro";
 
+import PassportPhoto from "../components/primitives/PassportPhoto.astro";
 import PassportFields from "../components/primitives/PassportFields.astro";
 import PassportField from "../components/primitives/PassportField.astro";
 import ObserverStatus from "../components/ObserverStatus.svelte";
+import CardFooter from "../components/primitives/CardFooter.astro";
 import PortraitScene from "../components/PortraitScene.svelte";
 
 // Same four stamps as before. Passport theme — stamping fits.
@@ -42,8 +55,7 @@ const STAMPS = [
   { id: "date", kind: "date", label: "Date" },
 ];
 
-// Biographical data. The MRZ on the digital display is built from
-// these same fields so the two representations stay in sync.
+// Biographical data. The footer telemetry + name are built from these.
 const BIO = {
   surname: "SHARMA",
   given: "VINITH",
@@ -54,98 +66,98 @@ const BIO = {
   issued: "1997",
 };
 
-// Two-line MRZ block. Row 1 is the passport header (subject + origin
-// + issue reg). Row 2 carries the live telemetry — coords on the
-// left, encrypted email on the right, both with small pixel labels.
-// Cipher segments keep the email out of the served HTML: it's
-// XOR-encoded at build time and decoded client-side on reveal.
 const EMAIL = "vinith.sharma13@gmail.com";
-
-const mrz = [
-  [
-    { kind: "text" as const, value: `P<COS ${BIO.surname}<<<${BIO.given}` },
-    { kind: "text" as const, value: `ORIGIN ${BIO.seat.toUpperCase()}` },
-    { kind: "text" as const, value: `EM<<REG ${BIO.issued}` },
-  ],
-  [
-    { kind: "text" as const, value: `COORD 47.62,-122.35` },
-    {
-      kind: "cipher" as const,
-      label: "XMIT",
-      display: "[encrypted]",
-      email: EMAIL,
-    },
-  ],
-];
+const COORD = "47.62,-122.35";
 ---
 
 <Layout title="About · Vinith">
   <section class="about-page">
-    <FoilCard maxWidth={960} stampSrc="/assets/wisteria.svg">
-      <!-- StampArea spans the whole card via negative insets that read
-           FoilCard's exposed --foil-pad-* vars. Anything marked
-           data-no-stamp (like the display) is skipped by hit-testing. -->
-      <StampArea client:load ageMs={30000} />
+    <FoilCard maxWidth={460} stampSrc="/assets/wisteria.svg" ticks={false}>
+      <!-- The flip stage. perspective lives on .passport-stage; only
+           .passport-inner rotates. data-flipped is toggled by the
+           button below via the inline script. -->
+      <div class="passport-stage" data-passport>
+        <div class="passport-inner">
+          <!-- ===== FRONT: the data page (stampable) ===== -->
+          <div class="face face--front">
+            <!-- StampArea covers the FRONT only. It bleeds to the card
+                 edges via FoilCard's --foil-pad-* vars. The flip button
+                 + back face are marked data-no-stamp so the stamp hit
+                 test skips them. -->
+            <StampArea client:load ageMs={30000} />
 
-      <MastheadFrame
-        institution="Bureau of Cosmic Census"
-        department="Field Office · Milky Way · Orion Arm"
-        kicker="Cosmological Authority"
-        serial={[
-          { k: "File", v: "Wisteria-I" },
-          { k: "Issued", v: BIO.issued },
-        ]}
-        holo
-      >
-        <CrestBlackHole slot="crest" size={82} />
-      </MastheadFrame>
+            <MastheadFrame
+              institution="Bureau of Cosmic Census"
+              department="Field Office · Milky Way · Orion Arm"
+              kicker="Cosmological Authority"
+              serial={[{ k: "File", v: "Wisteria-I" }]}
+              holo
+            >
+              <CrestBlackHole slot="crest" size={64} />
+            </MastheadFrame>
 
-      <!-- Bio block: the animated portrait stage + status on the left,
-           passport field grid on the right. PortraitScene owns its own
-           framed stage (the figure walks in, turns, idles + tracks the
-           cursor); it reads FoilCard's pointer vars for parallax/gaze.
-           The column is pinned to the stage width so a long status verb
-           wraps within the stack rather than shoving the fields right. -->
-      <div class="bio">
-        <div class="bio-portrait">
-          <PortraitScene client:load />
-          <ObserverStatus client:load />
+            <!-- Printed photo + identity. Centered column; the photo is
+                 small (a passport photo, not a hero). -->
+            <div class="id-block">
+              <PassportPhoto />
+              <h1 class="id-name">
+                <span class="id-given">{BIO.given}</span>
+                <span class="id-surname">{BIO.surname}</span>
+              </h1>
+              <div class="id-class">{BIO.classification}</div>
+              <div class="id-status">
+                <ObserverStatus client:load />
+              </div>
+            </div>
+
+            <div class="crease" role="separator"></div>
+
+            <PassportFields class="id-fields">
+              <PassportField label="Genus">{BIO.genus}</PassportField>
+              <PassportField label="Vocation">{BIO.vocation}</PassportField>
+              <PassportField label="Plane of Emergence">{BIO.seat}</PassportField>
+              <PassportField label="Issued" mono>{BIO.issued}</PassportField>
+            </PassportFields>
+
+            <div class="crease" role="separator"></div>
+
+            <!-- Remarks: the one block of real prose, in the owner's
+                 voice. The pull-line is kept verbatim, italicized. -->
+            <section class="remarks">
+              <h2 class="remarks-label">Remarks / Observations</h2>
+              <p class="remarks-body">
+                Software engineer by day, perpetual tinkerer by temperament.
+                <em>I like breaking things, but automation makes my heart flutter</em>
+                — there's a particular joy in teaching a machine to do the tedious part forever. The rest
+                of me lives behind a camera and in a slowly accreting pile of drawings.
+              </p>
+            </section>
+
+            <CardFooter email={EMAIL} coord={COORD} timezone="America/Los_Angeles" />
+          </div>
+
+          <!-- ===== BACK: the living portrait (NOT stampable) ===== -->
+          <div class="face face--back" data-no-stamp>
+            <PortraitScene client:load />
+            <span class="back-coord" aria-hidden="true">J0412+3841</span>
+            <span class="back-mark" aria-hidden="true">Living Portrait</span>
+          </div>
         </div>
-
-        <PassportFields class="bio-fields">
-          <PassportField label="Surname / Nom">
-            {BIO.surname}
-          </PassportField>
-          <PassportField label="Given Names / Prénoms">
-            {BIO.given}
-          </PassportField>
-          <PassportField label="Genus">
-            {BIO.genus}
-          </PassportField>
-          <PassportField label="Classification">
-            {BIO.classification}
-          </PassportField>
-          <PassportField label="Plane of Emergence">
-            {BIO.seat}
-          </PassportField>
-          <PassportField label="Vocation">
-            {BIO.vocation}
-          </PassportField>
-        </PassportFields>
       </div>
 
-      <!-- data-no-stamp opts this subtree out of the StampArea's hit
-           test — clicks and ghost cursor skip over the dark strip.
-           The MRZ rides *inside* the display's dark bezel as the
-           last block, so the whole "printed below the waterline"
-           region reads as one module. -->
-      <div data-no-stamp>
-        <DisplayFlipBoard
-          fused
-          mrz={mrz}
-          timezone="America/Los_Angeles"
-        />
-      </div>
+      <!-- Flip control. Sits above the stamp layer, opts out of stamping.
+           Pinned to the cover's corner so it's reachable on either face. -->
+      <button
+        type="button"
+        class="flip-btn"
+        data-flip-btn
+        data-no-stamp
+        aria-pressed="false"
+        aria-label="Flip the passport card"
+      >
+        <span class="flip-btn-glyph" aria-hidden="true">↻</span>
+        <span class="flip-btn-text">Flip</span>
+      </button>
     </FoilCard>
 
     <div class="stamp-tray-wrap">
@@ -153,6 +165,29 @@ const mrz = [
     </div>
   </section>
 </Layout>
+
+<script>
+  // Flip mechanic. Toggles [data-flipped] on the stage (CSS does the
+  // 3D rotate) and dispatches `passport:flip` on document so the
+  // PortraitScene on the back can start its walk-in WHEN REVEALED.
+  // Same event idiom as the site's `cosmos:select`. Reduced motion is
+  // handled in CSS (instant swap) — the event still fires so the scene
+  // advances to idle.
+  const stage = document.querySelector("[data-passport]");
+  const btn = document.querySelector("[data-flip-btn]");
+
+  if (stage && btn) {
+    btn.addEventListener("click", () => {
+      const flipped = stage.toggleAttribute("data-flipped");
+      btn.setAttribute("aria-pressed", String(flipped));
+      document.dispatchEvent(
+        new CustomEvent("passport:flip", {
+          detail: { face: flipped ? "back" : "front" },
+        })
+      );
+    });
+  }
+</script>
 
 <style>
   .about-page {
@@ -162,41 +197,281 @@ const mrz = [
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 48px 0 32px;
+    /* Deep-field padding: the narrow card sits small in a wide field
+       (DESIGN.md → Scale as composition). The emptiness is the point. */
+    padding: 64px 0 40px;
     perspective: 1600px;
   }
   .about-page :global(.crest-slot) {
-    margin: -10px 0 0 -10px;
+    margin: -6px 0 0 -6px;
   }
 
-  /* Bio block: animated portrait stage + field grid. Left column is
-     pinned to the stage width so a long status verb can't grow the
-     column and shove the fields right. Anything wider than the stage
-     wraps within the stack. */
-  .bio {
-    display: grid;
-    grid-template-columns: 224px 1fr;
-    gap: 32px;
-    align-items: start;
-    margin-top: 4px;
+  /* ---- Flip stage. perspective gives the rotate depth; only
+          .passport-inner moves. ------------------------------------- */
+  .passport-stage {
+    position: relative;
+    perspective: 1800px;
   }
-  /* Portrait stack: stage + status. justify-items:start pins both
-     children to the stack's left edge so the status aligns with the
-     stage's left edge. The stack is the column's full width; any long
-     verb wraps rather than pushing the grid. */
-  .bio-portrait {
-    display: grid;
-    justify-items: start;
-    gap: 12px;
-    padding: 0 0 5px;
-    min-width: 0;
+  .passport-inner {
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.7s cubic-bezier(0.5, 0.05, 0.2, 1);
+  }
+  .passport-stage[data-flipped] .passport-inner {
+    transform: rotateY(180deg);
+  }
+
+  /* Both faces stack in the same box; backface-hidden keeps each from
+     showing through the other. The stage takes its height from the
+     FRONT (the back is absolutely positioned over it). */
+  .face {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .face--front {
+    position: relative;
+    z-index: 2;
+  }
+  .face--back {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    transform: rotateY(180deg);
+    /* Opaque night sky so the front never ghosts through. PortraitScene
+       fills the face; the corner marks ride on top. */
+    background: var(--sky-top);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  /* The living portrait fills the whole back face. The sky layers fill
+     the scene automatically; the figure, though, is sized/placed from
+     the scene's vars (built for a small 224×300 stage), so we re-scale
+     and re-anchor it here for the tall face. */
+  .face--back :global(.portrait-scene) {
+    width: 100%;
+    height: 100%;
+  }
+  .face--back :global(.scene) {
+    /* Bigger figure (it has the room now) + stage-w set to the real
+       face width so the walk-in starts off-screen and rests centered. */
+    --scale: 7;
+    --stage-w: 372px;
+    width: 100% !important;
+    height: 100% !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+  /* Anchor the bust to the BOTTOM edge instead of a fixed top offset,
+     so it "stands" on the card's lower rule with the tall sky above as
+     deep field — the small observer beneath the cosmos (DESIGN.md →
+     Scale as composition). The negative bottom clips the legs below the
+     waist, keeping the waist-up bust framing. Tied to --fh so it tracks
+     --scale. */
+  .face--back :global(.actor) {
+    top: auto;
+    bottom: calc(var(--fh) * -0.28);
+  }
+  /* Phones: card narrows, so step the figure down to fit its width. */
+  @media (max-width: 520px) {
+    .face--back :global(.scene) {
+      --scale: 5.6;
+      --stage-w: 280px;
+    }
+  }
+
+  /* Corner marks on the back: a designation + a quiet press mark, the
+     sky-vocabulary register (DESIGN.md). */
+  .back-coord,
+  .back-mark {
+    position: absolute;
+    z-index: 3;
+    font-family: var(--font-pixel);
+    font-size: 8px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--star-bright);
+    pointer-events: none;
+  }
+  .back-coord {
+    top: 12px;
+    right: 14px;
+  }
+  .back-mark {
+    bottom: 12px;
+    left: 14px;
+    opacity: 0.85;
+  }
+
+  /* ---- Identity block: photo + name + class + status. Centered, the
+          photo small (a printed passport photo). ------------------- */
+  .id-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+  }
+  .id-block :global(.passport-photo) {
+    margin-bottom: 8px;
+  }
+  .id-name {
+    margin: 6px 0 0;
+    font-family: var(--font-serif);
+    font-variation-settings:
+      "opsz" 72,
+      "SOFT" 20,
+      "wght" 600;
+    font-size: clamp(26px, 7vw, 34px);
+    line-height: 0.98;
+    letter-spacing: 0.01em;
+    color: var(--ink);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0 0.32em;
+  }
+  .id-surname {
+    text-transform: uppercase;
+  }
+  .id-class {
+    font-family: var(--font-pixel);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--em);
+  }
+  .id-status {
+    margin-top: 8px;
+  }
+  /* Center the status spinner+verb within the column (its own styles
+     left-align it for the old layout). */
+  .id-status :global(.obs) {
+    justify-content: center;
+  }
+
+  /* ---- Paper-crease divider: shadow line over a warm highlight line,
+          fading at the ends — the same engraved fold the ledger rows
+          use (LedgerRow.astro). Reads as the page physically creased,
+          not a flat rule. Both tokens are per-theme in global.css. -- */
+  .crease {
+    position: relative;
+    height: 2px;
+    margin: 20px 0;
+  }
+  .crease::before,
+  .crease::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+  }
+  .crease::before {
+    top: 0;
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      var(--crease-shadow) 12%,
+      var(--crease-shadow) 88%,
+      transparent 100%
+    );
+  }
+  .crease::after {
+    top: 1px;
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      var(--crease-highlight) 12%,
+      var(--crease-highlight) 88%,
+      transparent 100%
+    );
+  }
+
+  /* Fields sit centered under the identity block. PassportFields draws
+     its own 2-col grid + center rule. */
+  .about-page :global(.id-fields) {
+    margin: 0 auto;
+  }
+
+  /* ---- Remarks: the prose block, in the serif voice. ------------- */
+  .remarks {
+    margin: 0;
+  }
+  .remarks-label {
+    margin: 0 0 7px;
+    font-family: var(--font-pixel);
+    font-size: 8px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--em);
+  }
+  .remarks-body {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-variation-settings:
+      "opsz" 16,
+      "SOFT" 40,
+      "wght" 400;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+  .remarks-body em {
+    font-style: italic;
+    color: var(--ink);
+  }
+
+  /* ---- Flip button: pinned to the cover's bottom-right corner, above
+          the stamp overlay. JRPG-menu feel — pixel label, hard edges,
+          hard-offset shadow that collapses on press (DESIGN.md). ---- */
+  .flip-btn {
+    position: absolute;
+    z-index: 9;
+    bottom: 14px;
+    right: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: var(--bg-raised);
+    border: 2px solid var(--rule);
+    box-shadow: 3px 3px 0 var(--rule);
+    cursor: pointer;
+    font-family: var(--font-pixel);
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink);
+    transition:
+      transform 0.08s steps(2),
+      box-shadow 0.08s steps(2),
+      color 0.15s ease;
+  }
+  .flip-btn:hover {
+    color: var(--em);
+  }
+  .flip-btn:active {
+    transform: translate(3px, 3px);
+    box-shadow: 0 0 0 var(--rule);
+  }
+  .flip-btn-glyph {
+    font-size: 12px;
+    line-height: 1;
+    transition: transform 0.7s cubic-bezier(0.5, 0.05, 0.2, 1);
+  }
+  /* Reflect flip state via aria-pressed (set by the script) so the
+     glyph spins with the card. */
+  .flip-btn[aria-pressed="true"] .flip-btn-glyph {
+    transform: rotate(180deg);
   }
 
   /* Tray: outside the card, bottom-right. Tracks the card max-width. */
   .stamp-tray-wrap {
     width: 100%;
-    max-width: 960px;
-    margin-top: 12px;
+    max-width: 460px;
+    margin-top: 14px;
     display: flex;
     justify-content: flex-end;
     padding: 0 4px;
@@ -207,22 +482,10 @@ const mrz = [
     }
   }
 
-  /* Column widths track PortraitScene's responsive stage widths
-     (224 → 196 → stacks) so the stage never overflows its column. */
-  @media (max-width: 720px) {
-    .bio {
-      grid-template-columns: 196px 1fr;
-      gap: 22px;
-    }
-  }
-  @media (max-width: 520px) {
-    .bio {
-      grid-template-columns: 1fr;
-      justify-items: start;
-    }
-    .bio-portrait {
-      justify-items: start;
-      padding: 0 0 4px;
+  @media (prefers-reduced-motion: reduce) {
+    .passport-inner,
+    .flip-btn-glyph {
+      transition: none;
     }
   }
 </style>
