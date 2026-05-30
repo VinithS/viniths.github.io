@@ -21,7 +21,7 @@
        re-read when data-theme flips (MutationObserver on <html>).
   */
   import { onMount } from "svelte";
-  import { nextGap, pickLine } from "../../lib/critter-chatter";
+  import { nextGap, pickLine, pickBubble } from "../../lib/critter-chatter";
 
   // A few tiny species as pixel bitmaps. '.' = transparent, 'B' = body
   // (accent), 'E' = eye (paper), 'P' = pupil (ink). Two frames each: the
@@ -32,22 +32,8 @@
       w: 7,
       h: 6,
       frames: [
-        [
-          ".BBBBB.",
-          "BBBBBBB",
-          "BEPBPEB",
-          "BBBBBBB",
-          "BBBBBBB",
-          "B.B.B.B",
-        ],
-        [
-          ".BBBBB.",
-          "BBBBBBB",
-          "BEPBPEB",
-          "BBBBBBB",
-          "BBBBBBB",
-          ".B.B.B.",
-        ],
+        [".BBBBB.", "BBBBBBB", "BEPBPEB", "BBBBBBB", "BBBBBBB", "B.B.B.B"],
+        [".BBBBB.", "BBBBBBB", "BEPBPEB", "BBBBBBB", "BBBBBBB", ".B.B.B."],
       ],
     },
     {
@@ -55,24 +41,8 @@
       w: 6,
       h: 7,
       frames: [
-        [
-          "B....B",
-          ".B..B.",
-          ".BBBB.",
-          "BPBBPB",
-          "BBBBBB",
-          "BBBBBB",
-          "B.BB.B",
-        ],
-        [
-          "B....B",
-          ".B..B.",
-          ".BBBB.",
-          "BPBBPB",
-          "BBBBBB",
-          "BBBBBB",
-          ".BB.BB",
-        ],
+        ["B....B", ".B..B.", ".BBBB.", "BPBBPB", "BBBBBB", "BBBBBB", "B.BB.B"],
+        ["B....B", ".B..B.", ".BBBB.", "BPBBPB", "BBBBBB", "BBBBBB", ".BB.BB"],
       ],
     },
     {
@@ -80,20 +50,8 @@
       w: 8,
       h: 5,
       frames: [
-        [
-          "..BBBB..",
-          ".BBBBBB.",
-          "BEPBBPEB",
-          "BBBBBBBB",
-          "B.BB.BB.",
-        ],
-        [
-          "..BBBB..",
-          ".BBBBBB.",
-          "BEPBBPEB",
-          "BBBBBBBB",
-          ".BB.BB.B",
-        ],
+        ["..BBBB..", ".BBBBBB.", "BEPBBPEB", "BBBBBBBB", "B.BB.BB."],
+        ["..BBBB..", ".BBBBBB.", "BEPBBPEB", "BBBBBBBB", ".BB.BB.B"],
       ],
     },
   ];
@@ -126,6 +84,7 @@
 
   let canvasEl;
   let bubbleEl; // speech wrapper — translated to the speaking creature each frame
+  let bubbleBoxEl; // the pixel box — clip-path + bevel set per utterance
   let bubbleTextEl; // the line of text inside the bubble
   let reduced = false;
 
@@ -238,10 +197,17 @@
         mouseActive && Math.hypot(mouseX - chosen.x, mouseY - chosen.y) < SEEK_RADIUS;
       const resting = Math.hypot(chosen.vx, chosen.vy) < MAX_SPEED * 0.4;
       const line = pickLine(Math.random, { nearCursor, resting });
+      const bubble = pickBubble(Math.random, line);
 
       speaker = chosen;
       chosen.thinking = true;
       bubbleTextEl.textContent = line;
+      // Shape the pixel box for this utterance: clip-path silhouette (shared
+      // with the ::before frame via --clip), tail kind (pointer vs. trailing
+      // dots, toggled by class), and where the tail sits along the width.
+      bubbleBoxEl.style.setProperty("--clip", bubble.clip);
+      bubbleEl.classList.toggle("is-think", bubble.kind === "think");
+      bubbleEl.style.setProperty("--tail-x", String(bubble.tailX));
       bubbleEl.classList.add("is-on");
 
       const hold = HOLD_BASE + line.length * HOLD_PER_CHAR;
@@ -445,13 +411,31 @@
 
 <canvas bind:this={canvasEl} class="critters" aria-hidden="true"></canvas>
 
-<!-- Speech wrapper: JS translates it to the speaking creature each frame (via
-     --bx/--by); the inner box owns the stepped pop so the transforms don't
-     fight. aria-hidden — ambient ornament, not content. -->
-<div bind:this={bubbleEl} class="critter-bubble" aria-hidden="true">
-  <div class="bubble-box">
-    <span bind:this={bubbleTextEl} class="bubble-text"></span>
-    <span class="bubble-tail"></span>
+<!-- Pixel thought/speech bubble. JS translates the wrapper to the speaking
+     creature each frame (via --bx/--by) and sets data-kind + --clip per
+     utterance; the inner box owns the stepped pop so the transforms don't
+     fight. aria-hidden — ambient ornament, not content.
+       .bubble-box   clip-path silhouette + 2-tone inset bevel (light shading)
+       ::before      the 1px ink frame, same clip, drawn just inside the edge
+       tails         pointer pixels for speech, trailing dots for think -->
+<div bind:this={bubbleEl} class="critter-bubble" data-kind="speech" aria-hidden="true">
+  <div class="bubble-stack">
+    <div bind:this={bubbleBoxEl} class="bubble-box">
+      <!-- two independently-clipped layers: full-size ink, then a 1px-inset
+           gradient fill → a crisp 1px frame that also outlines the chamfers.
+           (A single clipped border/::before would be clipped away.) -->
+      <span class="bubble-ink" aria-hidden="true"></span>
+      <span class="bubble-fill" aria-hidden="true"></span>
+      <span bind:this={bubbleTextEl} class="bubble-text"></span>
+    </div>
+    <!-- speech: stepped pointer made of stacked pixel cells -->
+    <span class="tail-speech" aria-hidden="true">
+      <i></i><i></i><i></i>
+    </span>
+    <!-- think: trailing puffs that shrink toward the creature -->
+    <span class="tail-think" aria-hidden="true">
+      <i></i><i></i><i></i>
+    </span>
   </div>
 </div>
 
@@ -468,71 +452,150 @@
     pointer-events: none;
   }
 
-  /* Speech bubble — co-planar with the creatures (same z-index/plane), so a
+  /* Pixel bubble — co-planar with the creatures (same z-index/plane), so a
      far-background creature gets a far-background thought. The wrapper is
      translated to the speaker each frame; --bx/--by are set from JS. The
-     -100%/-100% nudge anchors the box's bottom-left tail near the sprite. */
+     -100% Y lifts the box above the sprite so the tail points down at it. */
   .critter-bubble {
     position: fixed;
     top: 0;
     left: 0;
     z-index: 0;
     pointer-events: none;
-    transform: translate3d(calc(var(--bx, 0px) - 6px), calc(var(--by, 0px) - 100%), 0);
+    transform: translate3d(calc(var(--bx, 0px) - 8px), calc(var(--by, 0px) - 100%), 0);
     will-change: transform;
+    --tail-x: 0.24; /* 0..1, set per utterance */
   }
-  .bubble-box {
-    /* Hard-edged paper chip: 1px rule, 0 radius, hard-offset shadow — the
-       site's structural-honesty idiom (DESIGN.md → Structural honesty). */
+
+  /* The stack carries the hard pixel shadow for the whole silhouette. clip-path
+     clips a box-shadow, so we use drop-shadow on this (unclipped) parent — it
+     traces both the clipped box AND the tail pixels. */
+  .bubble-stack {
     position: relative;
-    transform: translateY(-8px) scale(0.4);
-    transform-origin: 0 100%;
+    transform: translateY(-6px) scale(0.2);
+    transform-origin: calc(var(--tail-x) * 100%) 100%;
     opacity: 0;
-    background: var(--bg-card);
-    border: 1px solid var(--rule);
-    box-shadow: 2px 2px 0 var(--rule);
-    padding: 4px 9px 5px;
-    white-space: nowrap;
-    /* Stepped pop-out: state change, so it steps rather than tweens. */
+    filter: drop-shadow(2px 2px 0 var(--rule));
+    /* Stepped pop, not a tween — retro state change (DESIGN.md → motion). */
     transition:
-      transform 160ms steps(3, end),
-      opacity 160ms steps(3, end);
+      transform 180ms steps(4, end),
+      opacity 120ms steps(2, end);
   }
   /* `is-on` is toggled from JS (classList), so Svelte's scoped-CSS compiler
-     can't see it in the markup and would prune this rule as "unused" —
-     leaving the bubble stuck at opacity:0. :global() keeps it. */
-  .critter-bubble:global(.is-on) .bubble-box {
+     can't see it in the markup and would prune these rules as "unused",
+     leaving the bubble stuck at opacity:0 (the bug that hid it before).
+     :global() on the JS-driven classes keeps them. */
+  .critter-bubble:global(.is-on) .bubble-stack {
     transform: translateY(0) scale(1);
     opacity: 1;
-    transition:
-      transform 200ms steps(3, end),
-      opacity 200ms steps(3, end);
+  }
+
+  /* The box sizes to the text; the two fill layers are clipped independently
+     so the frame survives (clip-path clips children, so a clipped child inset
+     by 1px reads as a 1px border, chamfers included). */
+  .bubble-box {
+    position: relative;
+    padding: 6px 10px 7px;
+    white-space: nowrap;
+  }
+  .bubble-ink,
+  .bubble-fill {
+    position: absolute;
+    z-index: -1;
+    clip-path: var(--clip, none);
+  }
+  /* Full-size ink silhouette = the 1px frame seen at the edges. */
+  .bubble-ink {
+    inset: 0;
+    background: var(--rule);
+  }
+  /* Inset 1px → leaves the ink showing as a hairline frame. Hard-stop vertical
+     gradient = very-light pixel shading: bright top band, paper body, dim
+     bottom band. */
+  .bubble-fill {
+    inset: 1px;
+    background: linear-gradient(
+      var(--bg-raised) 0 3px,
+      var(--bg-card) 3px calc(100% - 3px),
+      var(--bg-inset) calc(100% - 3px) 100%
+    );
   }
   .bubble-text {
-    /* The wistful serif voice — Fraunces italic, never Silkscreen for prose
-       (DESIGN.md → Typography). Small, soft ink: a quiet thought. */
-    font-family: var(--font-serif);
-    font-style: italic;
-    font-variation-settings:
-      "opsz" 16,
-      "SOFT" 80,
-      "wght" 380;
-    font-size: 13px;
-    line-height: 1;
+    position: relative; /* above the two fill layers */
+    /* Arcade-HUD dialogue → Silkscreen, uppercase + tracked, like a JRPG
+       textbox. (DESIGN.md reserves Silkscreen for labels/HUD, not prose; a
+       pixel speech bubble is HUD chrome, so it earns the pixel face here.) */
+    font-family: var(--font-pixel);
+    font-size: 9px;
+    line-height: 1.1;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
     color: var(--ink-soft);
   }
-  /* Little square tail (pixel chip), bottom-left, pointing down at the sprite.
-     Two stacked squares fake the bordered notch with hard edges, no radius. */
-  .bubble-tail {
+
+  /* ── Tails ── only the matching one shows; the other is display:none. */
+  .tail-speech,
+  .tail-think {
     position: absolute;
-    left: 7px;
-    bottom: -4px;
-    width: 4px;
-    height: 4px;
+    top: 100%;
+    left: calc(var(--tail-x) * 100%);
+    display: none;
+  }
+  .critter-bubble:not(:global(.is-think)) .tail-speech {
+    display: block;
+  }
+  .critter-bubble:global(.is-think) .tail-think {
+    display: block;
+  }
+  /* Speech: three pixel cells narrowing as they descend, tapering to a point
+     directly under the box edge — a downward pointer, not a staircase. Cells
+     are centered on the tail anchor so the taper is symmetric. */
+  .tail-speech i {
+    position: absolute;
+    background: var(--bg-inset);
+    box-shadow: 0 0 0 1px var(--rule);
+  }
+  .tail-speech i:nth-child(1) {
+    width: 7px;
+    height: 3px;
+    top: -1px;
+    left: -3px;
+  }
+  .tail-speech i:nth-child(2) {
+    width: 5px;
+    height: 3px;
+    top: 2px;
+    left: -2px;
+  }
+  .tail-speech i:nth-child(3) {
+    width: 3px;
+    height: 3px;
+    top: 5px;
+    left: -1px;
+  }
+  /* Think: three trailing puffs that shrink toward the creature. */
+  .tail-think i {
+    position: absolute;
     background: var(--bg-card);
-    border-right: 1px solid var(--rule);
-    border-bottom: 1px solid var(--rule);
-    transform: rotate(45deg);
+    box-shadow: 0 0 0 1px var(--rule);
+  }
+  .tail-think i:nth-child(1) {
+    width: 5px;
+    height: 5px;
+    top: 0;
+    left: 0;
+  }
+  .tail-think i:nth-child(2) {
+    width: 3px;
+    height: 3px;
+    top: 6px;
+    left: 3px;
+  }
+  .tail-think i:nth-child(3) {
+    width: 2px;
+    height: 2px;
+    top: 11px;
+    left: 7px;
   }
 
   /* The bubble is part of the animated layer; reduced-motion runs no loop and

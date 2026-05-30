@@ -1,5 +1,13 @@
 import { test, expect } from "@playwright/test";
-import { LINES, ALL_LINES, nextGap, pickLine } from "../src/lib/critter-chatter";
+import {
+  LINES,
+  ALL_LINES,
+  nextGap,
+  pickLine,
+  BUBBLES,
+  registerOf,
+  pickBubble,
+} from "../src/lib/critter-chatter";
 
 // Deterministic PRNG (mulberry32) so the distribution assertions below are
 // reproducible — a flaky statistical test is worse than no test.
@@ -100,5 +108,67 @@ test.describe("pickLine — context-weighted line selection", () => {
       return quiet / N;
     };
     expect(fractionQuiet(true)).toBeGreaterThan(fractionQuiet(false));
+  });
+});
+
+test.describe("BUBBLES — the pixel bubble styles", () => {
+  test("has at least 3 styles with unique ids", () => {
+    expect(BUBBLES.length).toBeGreaterThanOrEqual(3);
+    const ids = BUBBLES.map((b) => b.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  test("offers both a speech and a thought kind (mixed set)", () => {
+    expect(BUBBLES.some((b) => b.kind === "speech")).toBe(true);
+    expect(BUBBLES.some((b) => b.kind === "think")).toBe(true);
+  });
+
+  test("every style carries a non-empty clip-path polygon", () => {
+    for (const b of BUBBLES) {
+      expect(typeof b.clip).toBe("string");
+      expect(b.clip).toContain("polygon(");
+    }
+  });
+});
+
+test.describe("registerOf — which voice a line belongs to", () => {
+  test("classifies a line from each register", () => {
+    expect(registerOf(LINES.cosmic[0])).toBe("cosmic");
+    expect(registerOf(LINES.meta[0])).toBe("meta");
+    expect(registerOf(LINES.cute[0])).toBe("cute");
+  });
+
+  test("defaults unknown lines to cosmic", () => {
+    expect(registerOf("a line that does not exist")).toBe("cosmic");
+  });
+});
+
+test.describe("pickBubble — bubble style for an utterance", () => {
+  test("always returns a known bubble", () => {
+    const ids = new Set(BUBBLES.map((b) => b.id));
+    for (let i = 0; i < 50; i++) {
+      const rng = makeRng(i + 1);
+      expect(ids.has(pickBubble(rng, ALL_LINES[i % ALL_LINES.length]).id)).toBe(true);
+    }
+  });
+
+  test("cosmic lines get a thought bubble (internal wondering)", () => {
+    for (const line of LINES.cosmic) {
+      const rng = makeRng(3);
+      expect(pickBubble(rng, line).kind).toBe("think");
+    }
+  });
+
+  test("meta and cute lines get a speech bubble (talking to you)", () => {
+    for (const line of [...LINES.meta, ...LINES.cute]) {
+      const rng = makeRng(3);
+      expect(pickBubble(rng, line).kind).toBe("speech");
+    }
+  });
+
+  test("is deterministic for a given rng + line", () => {
+    const a = pickBubble(makeRng(8), "boop");
+    const b = pickBubble(makeRng(8), "boop");
+    expect(a.id).toBe(b.id);
   });
 });
