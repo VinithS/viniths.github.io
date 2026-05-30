@@ -290,6 +290,12 @@ const COORD = "47.62,-122.35";
   .face--front {
     position: relative;
     z-index: 2;
+    /* Explicit identity rotation so Firefox places the front face in 3D
+       space and actually backface-culls it when .passport-inner flips.
+       Without a transform of its own, Gecko keeps painting the
+       (now-mirrored) front over the back — Chrome culls it regardless,
+       Firefox does not. */
+    transform: rotateY(0deg);
     padding: var(--foil-pad-t) var(--foil-pad-x) var(--foil-pad-b);
   }
   .face--back {
