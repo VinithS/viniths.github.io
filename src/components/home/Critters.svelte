@@ -466,19 +466,19 @@
     z-index: 0;
     pointer-events: none;
     --tail-x: 0.24; /* 0..1, horizontal anchor across the box; set per utterance */
-    /* Vertical lift of box-bottom above --by, tuned so the tail TIP just meets
-       the sprite's HEAD (--by is the sprite top). Measured tip-bottom vs --by:
-       tail-h -6px → +15px (sprite feet), +6px → -10px (above head), 0 → -4px
-       (right at the head). */
+    /* Vertical offset of box-bottom from --by. Was tuned so the tail TIP met
+       the sprite's head; --lift then floats the WHOLE assembly (box + tail)
+       higher so it starts from a point above the creature, with a clear gap. */
     --tail-h: 0px;
+    --lift: 16px; /* extra rise of the whole bubble+tail above the creature */
     /* X: anchor the TAIL (at --tail-x across the box width) to --bx, not the
          box edge — else a wide line shoves the tail right of the sprite.
          translateX % resolves against the wrapper's own width (≈ box width).
-       Y: box-bottom at (--by - tail-h) so the tail, which hangs tail-h below
-         the box, points its TIP exactly at --by (the sprite's top). */
+       Y: lift the whole assembly by (tail-h + lift) above --by; the tail still
+         hangs straight down from the box, just starting higher up. */
     transform: translate3d(
       calc(var(--bx, 0px) - var(--tail-x) * 100%),
-      calc(var(--by, 0px) - 100% - var(--tail-h)),
+      calc(var(--by, 0px) - 100% - var(--tail-h) - var(--lift)),
       0
     );
     will-change: transform;
